@@ -1,0 +1,58 @@
+import type { Language } from "./types";
+
+export const UI_STRINGS: Record<Language, Record<string, string>> = {
+  en: {
+    appName: "CollegeConnect AI",
+    tagline: "Your digital college help desk",
+    inputPlaceholder: "Ask about admissions, fees, exams, placements...",
+    send: "Send",
+    welcome:
+      "Hi! I'm CollegeConnect AI. Ask me anything about admissions, fees, exams, placements, hostel, or notices — I'll answer from official college documents and show you the source.",
+    source: "Source",
+    confidence: "Confidence",
+    grounded: "Grounded in official document",
+    notGrounded: "No matching document found",
+    demoNotice:
+      "Prototype notice: answers are retrieved from a small demo document set, not the full live college repository.",
+    backendOffline:
+      "Could not reach the CollegeConnect backend. Please make sure the API server is running.",
+    categoriesLabel: "Quick topics",
+    thinking: "Searching official documents...",
+  },
+  hi: {
+    appName: "कॉलेजकनेक्ट AI",
+    tagline: "आपका डिजिटल कॉलेज हेल्प डेस्क",
+    inputPlaceholder: "प्रवेश, शुल्क, परीक्षा, प्लेसमेंट के बारे में पूछें...",
+    send: "भेजें",
+    welcome:
+      "नमस्ते! मैं कॉलेजकनेक्ट AI हूं। प्रवेश, शुल्क, परीक्षा, प्लेसमेंट, छात्रावास या सूचनाओं के बारे में कुछ भी पूछें — मैं आधिकारिक कॉलेज दस्तावेज़ों से उत्तर दूंगा और स्रोत दिखाऊंगा।",
+    source: "स्रोत",
+    confidence: "विश्वास स्तर",
+    grounded: "आधिकारिक दस्तावेज़ पर आधारित",
+    notGrounded: "कोई मिलान दस्तावेज़ नहीं मिला",
+    demoNotice:
+      "प्रोटोटाइप सूचना: उत्तर एक छोटे डेमो दस्तावेज़ सेट से प्राप्त किए गए हैं, पूर्ण लाइव कॉलेज रिपॉजिटरी से नहीं।",
+    backendOffline:
+      "कॉलेजकनेक्ट बैकएंड तक नहीं पहुंच सका। कृपया सुनिश्चित करें कि API सर्वर चल रहा है।",
+    categoriesLabel: "त्वरित विषय",
+    thinking: "आधिकारिक दस्तावेज़ खोजे जा रहे हैं...",
+  },
+  mr: {
+    appName: "कॉलेजकनेक्ट AI",
+    tagline: "तुमचे डिजिटल कॉलेज हेल्प डेस्क",
+    inputPlaceholder: "प्रवेश, शुल्क, परीक्षा, प्लेसमेंटबद्दल विचारा...",
+    send: "पाठवा",
+    welcome:
+      "नमस्कार! मी कॉलेजकनेक्ट AI आहे. प्रवेश, शुल्क, परीक्षा, प्लेसमेंट, वसतिगृह किंवा सूचनांबद्दल काहीही विचारा — मी अधिकृत महाविद्यालयीन दस्तऐवजांमधून उत्तर देईन आणि स्रोत दाखवेन.",
+    source: "स्रोत",
+    confidence: "विश्वासार्हता",
+    grounded: "अधिकृत दस्तऐवजावर आधारित",
+    notGrounded: "जुळणारा दस्तऐवज सापडला नाही",
+    demoNotice:
+      "प्रोटोटाइप सूचना: उत्तरे एका लहान डेमो दस्तऐवज संचातून घेतली आहेत, संपूर्ण लाइव्ह महाविद्यालयीन संग्रहातून नाहीत.",
+    backendOffline:
+      "कॉलेजकनेक्ट बॅकएंडशी संपर्क होऊ शकला नाही. कृपया API सर्व्हर सुरू असल्याची खात्री करा.",
+    categoriesLabel: "जलद विषय",
+    thinking: "अधिकृत दस्तऐवज शोधले जात आहेत...",
+  },
+};

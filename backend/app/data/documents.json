@@ -1,0 +1,137 @@
+[
+  {
+    "id": "adm-001",
+    "category": "admissions",
+    "keywords": ["admission", "documents", "eligibility", "apply", "application", "prvesh", "daakhila"],
+    "source": {
+      "title": "UG Admission Notice 2026-27",
+      "document": "Admissions_Circular_2026.pdf",
+      "section": "Section 3: Required Documents"
+    },
+    "answer": {
+      "en": "For undergraduate admission you need: 10th & 12th mark sheets, transfer certificate, migration certificate, category/caste certificate (if applicable), Aadhaar card, passport-size photographs, and the online application fee receipt.",
+      "hi": "स्नातक प्रवेश के लिए आवश्यक दस्तावेज़: 10वीं और 12वीं की मार्कशीट, स्थानांतरण प्रमाण पत्र, माइग्रेशन प्रमाण पत्र, जाति/श्रेणी प्रमाण पत्र (यदि लागू हो), आधार कार्ड, पासपोर्ट साइज़ फोटो और ऑनलाइन आवेदन शुल्क रसीद।",
+      "mr": "पदवी प्रवेशासाठी आवश्यक कागदपत्रे: दहावी व बारावीची गुणपत्रिका, बदली प्रमाणपत्र, स्थलांतर प्रमाणपत्र, जात/प्रवर्ग प्रमाणपत्र (लागू असल्यास), आधार कार्ड, पासपोर्ट आकाराचे फोटो आणि ऑनलाइन अर्ज शुल्क पावती."
+    }
+  },
+  {
+    "id": "adm-002",
+    "category": "admissions",
+    "keywords": ["admission deadline", "last date", "apply date", "prospectus"],
+    "source": {
+      "title": "UG Admission Notice 2026-27",
+      "document": "Admissions_Circular_2026.pdf",
+      "section": "Section 1: Key Dates"
+    },
+    "answer": {
+      "en": "The last date to submit the admission application for the 2026-27 academic year is 15th July 2026. Merit lists will be published on the college website in three rounds.",
+      "hi": "शैक्षणिक वर्ष 2026-27 के लिए प्रवेश आवेदन जमा करने की अंतिम तिथि 15 जुलाई 2026 है। मेरिट सूची कॉलेज की वेबसाइट पर तीन चरणों में प्रकाशित की जाएगी।",
+      "mr": "शैक्षणिक वर्ष 2026-27 साठी प्रवेश अर्ज सादर करण्याची अंतिम तारीख 15 जुलै 2026 आहे. गुणवत्ता यादी महाविद्यालयाच्या संकेतस्थळावर तीन फेऱ्यांमध्ये प्रसिद्ध केली जाईल."
+    }
+  },
+  {
+    "id": "fee-001",
+    "category": "fees",
+    "keywords": ["fee", "fees", "payment", "deadline", "installment", "shulk"],
+    "source": {
+      "title": "Fee Structure & Payment Schedule 2026",
+      "document": "Fees_Accounts_Notice_2026.pdf",
+      "section": "Section 2: Payment Deadlines"
+    },
+    "answer": {
+      "en": "Tuition fees for the odd semester must be paid by 10th August 2026 and for the even semester by 10th January 2027. A late fee of Rs. 500 per week applies after the deadline. Payments can be made online via the student portal.",
+      "hi": "विषम सेमेस्टर की शिक्षण शुल्क 10 अगस्त 2026 तक और सम सेमेस्टर की शुल्क 10 जनवरी 2027 तक जमा करनी होगी। समय सीमा के बाद प्रति सप्ताह 500 रुपये विलंब शुल्क लागू होगा। भुगतान छात्र पोर्टल के माध्यम से ऑनलाइन किया जा सकता है।",
+      "mr": "विषम सत्राची शिकवणी फी 10 ऑगस्ट 2026 पर्यंत आणि सम सत्राची फी 10 जानेवारी 2027 पर्यंत भरावी लागेल. मुदतीनंतर दर आठवड्याला रु. 500 विलंब शुल्क आकारले जाईल. विद्यार्थी पोर्टलद्वारे ऑनलाइन पेमेंट करता येते."
+    }
+  },
+  {
+    "id": "fee-002",
+    "category": "fees",
+    "keywords": ["scholarship", "financial aid", "chatravrutti", "shishyavrutti"],
+    "source": {
+      "title": "Scholarship Guidelines 2026",
+      "document": "Fees_Accounts_Notice_2026.pdf",
+      "section": "Section 5: Scholarships"
+    },
+    "answer": {
+      "en": "The college offers merit-based scholarships, state government scholarships (for SC/ST/OBC/EWS categories), and a need-based fee waiver. Applications open on the National/State Scholarship Portal after admission confirmation; the college scholarship cell assists with document verification.",
+      "hi": "कॉलेज मेधा आधारित छात्रवृत्ति, राज्य सरकार छात्रवृत्ति (SC/ST/OBC/EWS श्रेणियों के लिए), और आवश्यकता आधारित शुल्क माफी प्रदान करता है। प्रवेश की पुष्टि के बाद राष्ट्रीय/राज्य छात्रवृत्ति पोर्टल पर आवेदन खुलते हैं; कॉलेज छात्रवृत्ति प्रकोष्ठ दस्तावेज़ सत्यापन में सहायता करता है।",
+      "mr": "महाविद्यालय गुणवत्तेवर आधारित शिष्यवृत्ती, राज्य शासन शिष्यवृत्ती (SC/ST/OBC/EWS प्रवर्गांसाठी) आणि गरजेवर आधारित शुल्क सवलत देते. प्रवेश निश्चितीनंतर राष्ट्रीय/राज्य शिष्यवृत्ती पोर्टलवर अर्ज सुरू होतात; महाविद्यालयाचा शिष्यवृत्ती कक्ष कागदपत्र पडताळणीसाठी मदत करतो."
+    }
+  },
+  {
+    "id": "exam-001",
+    "category": "examinations",
+    "keywords": ["exam", "examination", "schedule", "timetable", "pariksha"],
+    "source": {
+      "title": "Examination Schedule - Semester Odd 2026",
+      "document": "Exam_Controller_Notice_Sept2026.pdf",
+      "section": "Section 1: Theory Exam Timetable"
+    },
+    "answer": {
+      "en": "The odd semester theory examinations are scheduled from 25th November to 12th December 2026. The detailed subject-wise timetable will be released on the college notice board and student portal by 1st November 2026.",
+      "hi": "विषम सेमेस्टर की सैद्धांतिक परीक्षाएं 25 नवंबर से 12 दिसंबर 2026 तक निर्धारित हैं। विषयवार विस्तृत समय सारणी 1 नवंबर 2026 तक कॉलेज नोटिस बोर्ड और छात्र पोर्टल पर जारी की जाएगी।",
+      "mr": "विषम सत्राच्या सैद्धांतिक परीक्षा 25 नोव्हेंबर ते 12 डिसेंबर 2026 दरम्यान नियोजित आहेत. विषयनिहाय सविस्तर वेळापत्रक 1 नोव्हेंबर 2026 पर्यंत महाविद्यालयाच्या सूचना फलकावर व विद्यार्थी पोर्टलवर प्रसिद्ध केले जाईल."
+    }
+  },
+  {
+    "id": "exam-002",
+    "category": "examinations",
+    "keywords": ["revaluation", "retest", "backlog", "supplementary"],
+    "source": {
+      "title": "Examination Rules Handbook 2026",
+      "document": "Exam_Controller_Notice_Sept2026.pdf",
+      "section": "Section 4: Revaluation & Backlog"
+    },
+    "answer": {
+      "en": "Students may apply for revaluation within 10 days of result declaration through the exam portal, with a fee of Rs. 300 per subject. Backlog exams for failed subjects are conducted along with the next regular semester exam.",
+      "hi": "छात्र परिणाम घोषित होने के 10 दिनों के भीतर परीक्षा पोर्टल के माध्यम से पुनर्मूल्यांकन के लिए आवेदन कर सकते हैं, जिसका शुल्क प्रति विषय 300 रुपये है। अनुत्तीर्ण विषयों की बैकलॉग परीक्षाएं अगली नियमित सेमेस्टर परीक्षा के साथ आयोजित की जाती हैं।",
+      "mr": "विद्यार्थी निकाल जाहीर झाल्यानंतर 10 दिवसांच्या आत परीक्षा पोर्टलद्वारे पुनर्मूल्यांकनासाठी अर्ज करू शकतात, ज्याचे शुल्क प्रति विषय रु. 300 आहे. नापास विषयांच्या बॅकलॉग परीक्षा पुढील नियमित सत्र परीक्षेसोबत घेतल्या जातात."
+    }
+  },
+  {
+    "id": "place-001",
+    "category": "placements",
+    "keywords": ["placement", "job", "drive", "recruitment", "naukri"],
+    "source": {
+      "title": "Placement Cell Update - September 2026",
+      "document": "Placement_Cell_Bulletin_Sept2026.pdf",
+      "section": "Section 1: Upcoming Drives"
+    },
+    "answer": {
+      "en": "The next campus placement drive is scheduled for 20th October 2026 with participation from IT and core engineering companies. Eligible final-year students must register through the placement cell portal by 10th October 2026.",
+      "hi": "अगली कैंपस प्लेसमेंट ड्राइव 20 अक्टूबर 2026 को निर्धारित है, जिसमें आईटी और कोर इंजीनियरिंग कंपनियां भाग लेंगी। योग्य अंतिम वर्ष के छात्रों को 10 अक्टूबर 2026 तक प्लेसमेंट सेल पोर्टल के माध्यम से पंजीकरण कराना होगा।",
+      "mr": "पुढील कॅम्पस प्लेसमेंट ड्राइव्ह 20 ऑक्टोबर 2026 रोजी नियोजित असून त्यात आयटी व कोअर इंजिनिअरिंग कंपन्या सहभागी होतील. पात्र अंतिम वर्षाच्या विद्यार्थ्यांनी 10 ऑक्टोबर 2026 पर्यंत प्लेसमेंट सेल पोर्टलद्वारे नोंदणी करावी."
+    }
+  },
+  {
+    "id": "hostel-001",
+    "category": "hostel",
+    "keywords": ["hostel", "room", "mess", "accommodation", "vasatigruh"],
+    "source": {
+      "title": "Hostel Admission & Fee Notice 2026-27",
+      "document": "Hostel_Facilities_Notice_2026.pdf",
+      "section": "Section 2: Hostel Fees"
+    },
+    "answer": {
+      "en": "Hostel accommodation fee is Rs. 45,000 per year (double-sharing) or Rs. 60,000 per year (single room), inclusive of mess charges. Fees are payable in two installments at the start of each semester.",
+      "hi": "छात्रावास आवास शुल्क 45,000 रुपये प्रति वर्ष (डबल-शेयरिंग) या 60,000 रुपये प्रति वर्ष (सिंगल रूम) है, जिसमें मेस शुल्क शामिल है। शुल्क प्रत्येक सेमेस्टर की शुरुआत में दो किश्तों में देय है।",
+      "mr": "वसतिगृह निवास शुल्क वार्षिक रु. 45,000 (डबल-शेअरिंग) किंवा रु. 60,000 (सिंगल रूम) असून त्यात मेस शुल्काचा समावेश आहे. शुल्क प्रत्येक सत्राच्या सुरुवातीला दोन हप्त्यांमध्ये भरावे लागते."
+    }
+  },
+  {
+    "id": "notice-001",
+    "category": "notices",
+    "keywords": ["notice", "announcement", "latest", "circular", "suchna"],
+    "source": {
+      "title": "General Notice Board",
+      "document": "College_Notices_Sept2026.pdf",
+      "section": "Latest Announcements"
+    },
+    "answer": {
+      "en": "Latest notice: The college will remain closed on 2nd October 2026 for Gandhi Jayanti. Regular classes resume from 3rd October 2026. Check the notice board or student portal for further updates.",
+      "hi": "नवीनतम सूचना: गांधी जयंती के अवसर पर कॉलेज 2 अक्टूबर 2026 को बंद रहेगा। नियमित कक्षाएं 3 अक्टूबर 2026 से फिर से शुरू होंगी। आगे के अपडेट के लिए सूचना बोर्ड या छात्र पोर्टल देखें।",
+      "mr": "ताजी सूचना: गांधी जयंतीनिमित्त महाविद्यालय 2 ऑक्टोबर 2026 रोजी बंद राहील. नियमित वर्ग 3 ऑक्टोबर 2026 पासून पुन्हा सुरू होतील. पुढील अद्यतनांसाठी सूचना फलक किंवा विद्यार्थी पोर्टल पहा."
+    }
+  }
+]
