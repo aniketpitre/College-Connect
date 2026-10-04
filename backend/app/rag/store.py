@@ -17,11 +17,22 @@ STOPWORDS = {
     "a", "an", "the", "is", "are", "was", "be", "to", "of", "and", "or", "in", "on", "for",
     "by", "with", "at", "from", "what", "when", "where", "which", "who", "how", "do", "does",
     "i", "my", "me", "can", "will", "there", "this", "that", "it", "any", "about", "tell",
+    "need", "want", "know", "please", "get", "should", "much", "many",
 }
 
 
+def _normalize(token: str) -> str:
+    # Light stemming so "exams"/"fees"/"documents" match "exam"/"fee"/"document".
+    return token[:-1] if len(token) > 3 and token.endswith("s") and not token.endswith("ss") else token
+
+
 def tokenize(text: str) -> list[str]:
-    return [t for t in re.findall(r"\w+", text.lower()) if t not in STOPWORDS]
+    return [_normalize(t) for t in re.findall(r"\w+", text.lower()) if t not in STOPWORDS]
+
+
+def _related(a: str, b: str) -> bool:
+    """Same word, or one is a prefix of the other ("exam" ~ "examination")."""
+    return a == b or (min(len(a), len(b)) >= 4 and (a.startswith(b) or b.startswith(a)))
 
 
 class Index:
@@ -52,15 +63,19 @@ class Index:
         return scored[:k]
 
     def bm25_search(self, query: str, k: int, category: str | None, k1: float = 1.5, b: float = 0.75) -> list[tuple[dict, float]]:
-        q_terms = tokenize(query)
+        # Each query term counts once, through its best-matching related document term.
+        expanded = [[v for v in self._idf if _related(t, v)] for t in tokenize(query)]
         scored = []
         for i in self._candidates(category):
             tf, length = self._tf[i], len(self._tokens[i])
             score = 0.0
-            for t in q_terms:
-                if t in tf:
-                    f = tf[t]
-                    score += self._idf[t] * f * (k1 + 1) / (f + k1 * (1 - b + b * length / self._avg_len))
+            for variants in expanded:
+                best = 0.0
+                for v in variants:
+                    if v in tf:
+                        f = tf[v]
+                        best = max(best, self._idf[v] * f * (k1 + 1) / (f + k1 * (1 - b + b * length / self._avg_len)))
+                score += best
             if score > 0:
                 scored.append((self.chunks[i], score))
         scored.sort(key=lambda p: p[1], reverse=True)
