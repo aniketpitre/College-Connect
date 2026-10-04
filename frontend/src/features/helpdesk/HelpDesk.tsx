@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { askQuestion } from "./api";
-import { UI_STRINGS } from "./i18n";
-import type { Category, ChatMessage, Language } from "./types";
+import { Link } from "react-router";
+import "./HelpDesk.css";
+import { askQuestion } from "../../lib/api";
+import { UI_STRINGS } from "../../i18n";
+import type { Category, ChatMessage, Language } from "../../lib/types";
 
 const LANGUAGES: { code: Language; label: string }[] = [
   { code: "en", label: "EN" },
@@ -27,7 +29,7 @@ export default function HelpDesk() {
   const suggestions = office ? office.questions : t.generalQuestions;
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    scrollRef.current?.scrollTo?.({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
   function pickOffice(cat: Category | undefined) {
@@ -110,7 +112,7 @@ export default function HelpDesk() {
           </nav>
           <div className="sidebar-foot">
             <p>{t.disclaimer}</p>
-            <a href="#/admin">{t.admin} →</a>
+            <Link to="/app/admin">{t.admin} →</Link>
           </div>
         </aside>
 

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { AdminAuthError, fetchAdminStats } from "./api";
-import { UI_STRINGS } from "./i18n";
-import type { AdminStats, Category, LoggedQuery } from "./types";
+import { Link } from "react-router";
+import { AdminAuthError, fetchAdminStats } from "../../lib/api";
+import { UI_STRINGS } from "../../i18n";
+import type { AdminStats, Category, LoggedQuery } from "../../lib/types";
 import "./Admin.css";
 
 const TOKEN_KEY = "cc-admin-token";
@@ -81,9 +82,9 @@ export default function Admin() {
             refresh();
           }}
         >
-          <a className="brand" href="#">
+          <Link className="brand" to="/">
             <span className="seal">CC</span> CollegeConnect AI
-          </a>
+          </Link>
           <h1>Admin portal</h1>
           <p>Enter the admin token configured on the server (ADMIN_TOKEN).</p>
           <input
@@ -109,9 +110,9 @@ export default function Admin() {
   return (
     <div className="admin">
       <header className="admin-bar">
-        <a className="brand" href="#">
+        <Link className="brand" to="/">
           <span className="seal">CC</span> CollegeConnect AI <span className="admin-tag">Admin</span>
-        </a>
+        </Link>
         <div className="admin-actions">
           <div className="seg" role="group" aria-label="Time range">
             {[7, 30, 90].map((d) => (

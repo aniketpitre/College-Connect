@@ -1,4 +1,4 @@
-import type { Category, Language } from "./types";
+import type { Category, Language } from "../lib/types";
 
 export interface Office {
   category: Category;
