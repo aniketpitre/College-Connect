@@ -1,5 +1,7 @@
 # CollegeConnect AI
 
+> **Roadmap:** CollegeConnect is growing into a full college ERP (student and staff logins, fees and receipts, attendance, exams, certificates) with this AI help desk built in. See the [product spec](docs/erp/01-product-spec.md) and the [implementation plan](docs/erp/02-implementation-plan.md).
+
 A multilingual, source-grounded web application that acts as a digital college help desk — students ask questions in natural language (English / Hindi / Marathi) and get answers generated from official college documents, with source references (Ask → Retrieve → Answer → Cite).
 
 ## How it works (RAG pipeline)
