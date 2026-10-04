@@ -35,17 +35,17 @@ function snapshot(): Language {
   return current;
 }
 
+/** Switch the language everywhere (and remember it on this device). */
+export function chooseLanguage(l: Language) {
+  current = l;
+  saveLanguage(l);
+  listeners.forEach((fn) => fn());
+}
+
 /** The page language, remembered across visits and shared by every screen (changing it anywhere updates all). */
 export function useLanguage(): [Language, (l: Language) => void] {
   const language = useSyncExternalStore(subscribe, snapshot, snapshot);
-  return [
-    language,
-    (l: Language) => {
-      current = l;
-      saveLanguage(l);
-      listeners.forEach((fn) => fn());
-    },
-  ];
+  return [language, chooseLanguage];
 }
 
 /** Tests start each case from the saved setting. */

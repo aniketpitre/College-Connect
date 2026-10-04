@@ -264,7 +264,7 @@ def create(ctx: AuthContext, body: StudentCreate, ip: str) -> dict[str, Any]:
     return {"student": view(doc), "temporary_password": temp}
 
 
-def _apply_changes(
+def apply_changes(
     ctx: AuthContext,
     student: dict[str, Any],
     changes: dict[str, Any],
@@ -323,7 +323,7 @@ def update(ctx: AuthContext, student_id: ObjectId, body: StudentUpdate, ip: str)
     check_placement(merged)
 
     def work(session: ClientSession) -> None:
-        _apply_changes(ctx, student, changes, action="students.updated", ip=ip, reason=reason, session=session)
+        apply_changes(ctx, student, changes, action="students.updated", ip=ip, reason=reason, session=session)
 
     run_in_transaction(work)
     return view(get_student(student_id))
@@ -490,7 +490,7 @@ def decide_request(ctx: AuthContext, request_id: str, approve: bool, reason: str
         if approve:
             merged = {**student, **req["changes"]}
             check_placement(merged)
-            _apply_changes(
+            apply_changes(
                 ctx, student, req["changes"], action="students.change_approved", ip=ip, reason=reason, session=session
             )
         else:

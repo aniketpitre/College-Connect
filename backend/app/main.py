@@ -9,6 +9,7 @@ from app.core.errors import install_error_handlers
 from app.modules.auth import router as auth
 from app.modules.helpdesk import admin as helpdesk_admin
 from app.modules.helpdesk import router as helpdesk
+from app.modules.onboarding import router as onboarding
 from app.modules.setup import router as setup
 from app.modules.students import router as students
 from app.modules.system import router as system
@@ -26,6 +27,7 @@ ROUTERS: list[APIRouter] = [
     users.router,
     setup.router,
     students.router,
+    onboarding.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

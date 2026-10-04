@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
+import { apiFetch } from "../lib/api";
 import { NAV_LABELS } from "../i18n/nav";
 import { hasPermission, useLogout, useMe } from "../lib/auth";
 import { useLanguage } from "../lib/language";
@@ -39,6 +41,12 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const [language] = useLanguage();
   const t = NAV_LABELS[language];
+  // Keep the account's saved language in step with the one chosen on this device.
+  useEffect(() => {
+    if (me && me.language !== language && me.session_state === "active") {
+      apiFetch("/me/preferences", { method: "PATCH", body: JSON.stringify({ language }) }).catch(() => undefined);
+    }
+  }, [me, language]);
   const items = NAV.filter(
     (item) => (!item.permission || hasPermission(me, item.permission)) && (!item.kind || item.kind === me?.kind),
   );

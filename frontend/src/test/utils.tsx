@@ -55,6 +55,8 @@ export function makeMe(overrides: Partial<Me> = {}): Me {
     mfa_enabled: false,
     mfa_required: false,
     session_state: "active",
+    language: null,
+    onboarding_required: false,
     ...overrides,
   };
 }

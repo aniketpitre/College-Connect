@@ -19,6 +19,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import SetupPage from "./pages/SetupPage";
 import TwoStepPage from "./pages/TwoStepPage";
 import VerifyPage from "./pages/VerifyPage";
+import WelcomePage from "./pages/WelcomePage";
 import RequireAuth from "./RequireAuth";
 
 /** Old links used "/#/admin"; send them to the new address. */
@@ -43,6 +44,14 @@ export default function App() {
         element={
           <RequireAuth>
             <ChangePasswordPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/app/welcome"
+        element={
+          <RequireAuth>
+            <WelcomePage />
           </RequireAuth>
         }
       />

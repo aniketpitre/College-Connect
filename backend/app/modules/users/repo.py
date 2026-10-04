@@ -132,4 +132,7 @@ def me_payload(user: dict[str, Any], session_state: str) -> dict[str, Any]:
         **public_user(user),
         "permissions": sorted(permissions_for(user.get("roles", []))),
         "session_state": session_state,
+        "language": user.get("language"),
+        # Students finish the first-login steps (contact, privacy notice, language) once.
+        "onboarding_required": user.get("kind") == "student" and not user.get("onboarded_at"),
     }
