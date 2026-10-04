@@ -8,6 +8,7 @@ import FeesHome from "../features/fees/FeesHome";
 import OpeningPage from "../features/fees/OpeningPage";
 import ReportsPage from "../features/fees/ReportsPage";
 import StudentFeesPage from "../features/fees/StudentFeesPage";
+import MyFeesPage from "../features/portal/MyFeesPage";
 import ProfilePage from "../features/profile/ProfilePage";
 import HelpDesk from "../features/helpdesk/HelpDesk";
 import InstitutionSetupPage from "../features/setup/InstitutionSetupPage";
@@ -74,6 +75,7 @@ export default function App() {
         <Route index element={<PortalHome />} />
         <Route path="account" element={<AccountPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="my-fees" element={<MyFeesPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="setup" element={<InstitutionSetupPage />} />
         <Route path="fees" element={<FeesHome />} />

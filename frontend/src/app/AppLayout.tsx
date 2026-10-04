@@ -15,7 +15,7 @@ interface NavItem {
   /** Shown only to users with this permission. */
   permission?: string;
   /** Shown only to this kind of account. */
-  kind?: "student";
+  kind?: "student" | "staff";
   /** The plan phase that builds this screen; shown disabled until then. */
   phase?: number;
 }
@@ -23,8 +23,9 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/app", label: "home" },
   { to: "/app/profile", label: "profile", kind: "student" },
+  { to: "/app/my-fees", label: "fees", kind: "student" },
   { to: "/app/students", label: "students", permission: "students.read" },
-  { to: "/app/fees", label: "fees", permission: "fees.read" },
+  { to: "/app/fees", label: "fees", permission: "fees.read", kind: "staff" },
   { to: "/app/approvals", label: "approvals", permission: "approvals.decide" },
   { to: "/app/notices", label: "notices", phase: 1 },
   { to: "/app/attendance", label: "attendance", phase: 2 },
