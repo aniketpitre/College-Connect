@@ -1,10 +1,12 @@
 import logging
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.auth import csrf_guard
 from app.core.config import settings
 from app.core.errors import install_error_handlers
+from app.modules.auth import router as auth
 from app.modules.helpdesk import admin as helpdesk_admin
 from app.modules.helpdesk import router as helpdesk
 from app.modules.system import router as system
@@ -15,7 +17,17 @@ API_V1 = "/api/v1"
 # Paths used before versioning (the live help desk calls these); kept as aliases, hidden from the docs.
 LEGACY_PREFIX = "/api"
 
-ROUTERS: list[APIRouter] = [system.router, helpdesk.router, helpdesk_admin.router]
+ROUTERS: list[APIRouter] = [system.router, auth.router, helpdesk.router, helpdesk_admin.router]
+
+
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    if request.url.path.startswith("/api/") and "/docs" not in request.url.path:
+        response.headers.setdefault("Cache-Control", "no-store")
+    return response
 
 
 def create_app() -> FastAPI:
@@ -37,6 +49,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.middleware("http")(csrf_guard)
+    app.middleware("http")(security_headers)
     install_error_handlers(app)
 
     for router in ROUTERS:

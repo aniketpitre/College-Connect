@@ -12,6 +12,24 @@
   padding: 10px 20px;
   border-bottom: 1px solid var(--line);
 }
+.portal-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.portal-user-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.portal-user-role {
+  font-size: 0.74rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
 .portal-body {
   flex: 1;
   display: grid;
@@ -109,6 +127,9 @@
   .portal-link {
     flex-shrink: 0;
     gap: 6px;
+  }
+  .portal-user-name {
+    display: none;
   }
   .portal-top,
   .portal-main {
