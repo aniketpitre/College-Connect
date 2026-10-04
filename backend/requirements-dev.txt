@@ -1,0 +1,6 @@
+# Development and CI only (not installed on Vercel)
+-r requirements.txt
+pytest>=8.3
+httpx>=0.27
+ruff>=0.15
+mypy>=1.15

@@ -172,6 +172,10 @@ preview deployment checked · plan/spec updated if behaviour differs.
 
 **Goal:** a safe base to build on; the app behaves exactly as today.
 
+> **Delivery note:** development runs from a single branch, so only one pull request can be open
+> at a time. Phase 0 therefore ships as **one PR with one commit per item (0.1–0.4)**; later
+> phases follow the same pattern (one PR per phase or per group of items, one commit per item).
+
 | PR | Content | Done when |
 |---|---|---|
 | 0.1 | **CI:** GitHub Actions — backend ruff + mypy + pytest against a MongoDB replica-set service container; frontend oxlint + `tsc` + build | Runs on every PR; branch protection on `main` |

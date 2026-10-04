@@ -1,0 +1,159 @@
+/* Shared components: data table, status badge, money, empty state, confirm dialog */
+.money {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.money.negative {
+  color: var(--danger);
+}
+
+.status-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.status-badge.tone-success {
+  border-color: rgba(62, 142, 130, 0.5);
+  color: var(--teal-ink);
+}
+.status-badge.tone-warning {
+  border-color: rgba(201, 162, 39, 0.6);
+  color: var(--brass-ink);
+}
+.status-badge.tone-danger {
+  border-color: rgba(163, 58, 44, 0.45);
+  color: var(--danger);
+}
+.status-badge.tone-info {
+  border-color: rgba(36, 49, 87, 0.35);
+  color: var(--ink-soft);
+}
+
+.empty-state {
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  background: var(--paper-card);
+}
+.empty-state-title {
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+
+.data-table-search {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin-bottom: 12px;
+  background: var(--paper-card);
+  color: var(--ink);
+}
+.data-table-scroll {
+  overflow-x: auto;
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.data-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.data-table th {
+  text-align: left;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.data-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+.data-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.data-table-pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.data-table-pager button {
+  border: 1px solid var(--line);
+  background: var(--paper-card);
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+.data-table-pager button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.confirm-dialog {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 24px;
+  max-width: min(460px, calc(100vw - 32px));
+  color: var(--ink);
+  background: var(--paper-card);
+}
+.confirm-dialog::backdrop {
+  background: rgba(20, 33, 61, 0.45);
+}
+.confirm-dialog h2 {
+  font-family: var(--serif);
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+.confirm-message {
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+.confirm-reason {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.confirm-reason textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.confirm-actions .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}

@@ -5,6 +5,7 @@ The index is small enough to load into every serverless instance and search with
 plain Python. For thousands of documents, swap this module for a hosted vector DB
 (e.g. Postgres + pgvector, Upstash Vector) behind the same `search()` signature.
 """
+
 import json
 import math
 import re
@@ -14,10 +15,52 @@ from functools import lru_cache
 from app.rag.config import INDEX_PATH
 
 STOPWORDS = {
-    "a", "an", "the", "is", "are", "was", "be", "to", "of", "and", "or", "in", "on", "for",
-    "by", "with", "at", "from", "what", "when", "where", "which", "who", "how", "do", "does",
-    "i", "my", "me", "can", "will", "there", "this", "that", "it", "any", "about", "tell",
-    "need", "want", "know", "please", "get", "should", "much", "many",
+    "a",
+    "an",
+    "the",
+    "is",
+    "are",
+    "was",
+    "be",
+    "to",
+    "of",
+    "and",
+    "or",
+    "in",
+    "on",
+    "for",
+    "by",
+    "with",
+    "at",
+    "from",
+    "what",
+    "when",
+    "where",
+    "which",
+    "who",
+    "how",
+    "do",
+    "does",
+    "i",
+    "my",
+    "me",
+    "can",
+    "will",
+    "there",
+    "this",
+    "that",
+    "it",
+    "any",
+    "about",
+    "tell",
+    "need",
+    "want",
+    "know",
+    "please",
+    "get",
+    "should",
+    "much",
+    "many",
 }
 
 
@@ -58,11 +101,13 @@ class Index:
         for i in self._candidates(category):
             v = self.chunks[i]["embedding"]
             vn = math.sqrt(sum(x * x for x in v)) or 1.0
-            scored.append((self.chunks[i], sum(a * b for a, b in zip(query_vec, v)) / (qn * vn)))
+            scored.append((self.chunks[i], sum(a * b for a, b in zip(query_vec, v, strict=True)) / (qn * vn)))
         scored.sort(key=lambda p: p[1], reverse=True)
         return scored[:k]
 
-    def bm25_search(self, query: str, k: int, category: str | None, k1: float = 1.5, b: float = 0.75) -> list[tuple[dict, float]]:
+    def bm25_search(
+        self, query: str, k: int, category: str | None, k1: float = 1.5, b: float = 0.75
+    ) -> list[tuple[dict, float]]:
         # Each query term counts once, through its best-matching related document term.
         expanded = [[v for v in self._idf if _related(t, v)] for t in tokenize(query)]
         scored = []

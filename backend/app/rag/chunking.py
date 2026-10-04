@@ -1,4 +1,5 @@
 """Turn knowledge-base files into citable chunks."""
+
 import re
 from pathlib import Path
 
@@ -16,13 +17,14 @@ def _parse_front_matter(text: str) -> tuple[dict, str]:
         if ":" in line:
             key, value = line.split(":", 1)
             meta[key.strip()] = value.strip()
-    return meta, text[match.end():]
+    return meta, text[match.end() :]
 
 
 def _split_sections(body: str) -> list[tuple[str, str]]:
     """Split markdown on '## ' headings -> [(section_title, text)]."""
     sections: list[tuple[str, str]] = []
-    current_title, current_lines = "Overview", []
+    current_title = "Overview"
+    current_lines: list[str] = []
     for line in body.splitlines():
         if line.startswith("## "):
             if "\n".join(current_lines).strip():
@@ -48,10 +50,10 @@ def _split_long(text: str) -> list[str]:
     if current.strip():
         pieces.append(current.strip())
     # A single paragraph can still exceed the limit; hard-split it.
-    out = []
+    out: list[str] = []
     for piece in pieces:
         step = CHUNK_MAX_CHARS - CHUNK_OVERLAP_CHARS
-        out.extend(piece[i:i + CHUNK_MAX_CHARS] for i in range(0, len(piece), step))
+        out.extend(piece[i : i + CHUNK_MAX_CHARS] for i in range(0, len(piece), step))
     return out
 
 
@@ -67,8 +69,9 @@ def chunk_file(path: Path, knowledge_dir: Path) -> list[dict]:
     if category not in CATEGORIES:
         raise ValueError(f"{path}: put documents under one of {sorted(CATEGORIES)}/")
 
+    meta: dict[str, str] = {}
     if path.suffix.lower() == ".pdf":
-        meta, sections = {}, _read_pdf(path)
+        sections = _read_pdf(path)
     else:
         meta, body = _parse_front_matter(path.read_text(encoding="utf-8"))
         sections = _split_sections(body)
@@ -79,20 +82,21 @@ def chunk_file(path: Path, knowledge_dir: Path) -> list[dict]:
     chunks = []
     for section, text in sections:
         for n, piece in enumerate(_split_long(text)):
-            chunks.append({
-                "id": f"{path.stem}::{section}::{n}",
-                "category": meta.get("category", category),
-                "title": title,
-                "document": document,
-                "section": section,
-                "text": piece,
-            })
+            chunks.append(
+                {
+                    "id": f"{path.stem}::{section}::{n}",
+                    "category": meta.get("category", category),
+                    "title": title,
+                    "document": document,
+                    "section": section,
+                    "text": piece,
+                }
+            )
     return chunks
 
 
 def chunk_knowledge_base(knowledge_dir: Path) -> list[dict]:
     files = sorted(
-        p for p in knowledge_dir.rglob("*")
-        if p.suffix.lower() in {".md", ".txt", ".pdf"} and p.parent != knowledge_dir
+        p for p in knowledge_dir.rglob("*") if p.suffix.lower() in {".md", ".txt", ".pdf"} and p.parent != knowledge_dir
     )
     return [chunk for f in files for chunk in chunk_file(f, knowledge_dir)]

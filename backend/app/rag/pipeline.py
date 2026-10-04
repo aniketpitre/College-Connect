@@ -1,20 +1,27 @@
 """Ask -> Retrieve -> Answer -> Cite."""
+
 import logging
 
 import anthropic
 import httpx
 
 from app.rag import generator
-from app.rag.config import MIN_SIMILARITY, TOP_K
+from app.rag.config import EMBEDDING_MODEL, MIN_SIMILARITY, TOP_K
 from app.rag.embeddings import embed, embeddings_available
 from app.rag.store import get_index
 
 log = logging.getLogger(__name__)
 
 NOT_FOUND = {
-    "en": "I couldn't find an approved document matching your question. Please rephrase, or contact the relevant department office.",
-    "hi": "आपके प्रश्न से मेल खाता कोई स्वीकृत दस्तावेज़ नहीं मिला। कृपया प्रश्न को दोबारा लिखें या संबंधित विभाग कार्यालय से संपर्क करें।",
-    "mr": "तुमच्या प्रश्नाशी जुळणारा कोणताही मंजूर दस्तऐवज सापडला नाही. कृपया प्रश्न पुन्हा मांडा किंवा संबंधित विभाग कार्यालयाशी संपर्क साधा.",
+    "en": (
+        "I couldn't find an approved document matching your question. "
+        "Please rephrase, or contact the relevant department office."
+    ),
+    "hi": ("आपके प्रश्न से मेल खाता कोई स्वीकृत दस्तावेज़ नहीं मिला। कृपया प्रश्न को दोबारा लिखें या संबंधित विभाग कार्यालय से संपर्क करें।"),
+    "mr": (
+        "तुमच्या प्रश्नाशी जुळणारा कोणताही मंजूर दस्तऐवज सापडला नाही. "
+        "कृपया प्रश्न पुन्हा मांडा किंवा संबंधित विभाग कार्यालयाशी संपर्क साधा."
+    ),
 }
 
 EXTRACTIVE_MIN_CONFIDENCE = 0.3
@@ -43,7 +50,7 @@ def _retrieve(question: str, language: str, category: str | None) -> tuple[list[
 
     if index.has_embeddings and embeddings_available():
         try:
-            query_vec = embed([question], input_type="query", model=index.embedding_model)[0]
+            query_vec = embed([question], input_type="query", model=index.embedding_model or EMBEDDING_MODEL)[0]
             hits = [h for h in index.vector_search(query_vec, TOP_K, category) if h[1] >= MIN_SIMILARITY]
             # Heuristic: map cosine similarity above the cut-off onto 0.5-0.95.
             confidence = min(0.95, 0.5 + 1.5 * (hits[0][1] - MIN_SIMILARITY)) if hits else 0.0

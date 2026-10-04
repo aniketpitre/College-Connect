@@ -1,4 +1,5 @@
 """Voyage AI embeddings (Anthropic's recommended embeddings provider), called over plain HTTPS."""
+
 import httpx
 
 from app.rag.config import EMBEDDING_MODEL, VOYAGE_API_KEY
@@ -19,7 +20,7 @@ def embed(texts: list[str], input_type: str, model: str = EMBEDDING_MODEL) -> li
             res = client.post(
                 VOYAGE_URL,
                 headers={"Authorization": f"Bearer {VOYAGE_API_KEY}"},
-                json={"input": texts[i:i + BATCH_SIZE], "model": model, "input_type": input_type},
+                json={"input": texts[i : i + BATCH_SIZE], "model": model, "input_type": input_type},
             )
             res.raise_for_status()
             data = sorted(res.json()["data"], key=lambda d: d["index"])

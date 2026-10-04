@@ -1,0 +1,11 @@
+line-length = 120
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM"]
+ignore = [
+    "S101",  # assert is fine in tests
+]
+
+[lint.per-file-ignores]
+"tests/**" = ["S105", "S106"]  # test fixtures use fake tokens/passwords

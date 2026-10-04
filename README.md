@@ -58,19 +58,28 @@ College-Connect/
 
 ## Running locally
 
+Requirements: Python 3.12, Node 22, and Docker (for a local MongoDB).
+
+### Database
+
+```
+cd backend
+sh scripts/dev_mongo.sh            # local MongoDB 7 replica set on localhost:27017
+```
+
 ### Backend
 
 ```
 cd backend
 python -m venv .venv
 .venv\Scripts\activate            # Windows  (macOS/Linux: source .venv/bin/activate)
-pip install -r requirements.txt
-copy .env.example .env            # then fill in ANTHROPIC_API_KEY (and optionally VOYAGE_API_KEY)
-python -m scripts.ingest          # or: python -m scripts.ingest --no-embed
+pip install -r requirements-dev.txt
+copy .env.example .env            # set MONGODB_URI (see comments), MONGODB_DB=collegeconnect_dev, ADMIN_TOKEN
+python -m scripts.seed_demo       # demo data (refuses the production database name)
 uvicorn app.main:app --reload --port 8000
 ```
 
-API docs: http://localhost:8000/docs
+API docs: http://localhost:8000/api/v1/docs
 
 ### Frontend
 
@@ -80,7 +89,16 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173.
+Open http://localhost:5173 (Vite proxies `/api` to the backend on port 8000).
+
+### Checks (the same ones CI runs on every pull request)
+
+```
+cd backend  && ruff check . && ruff format --check . && mypy app scripts && python -m pytest -q
+cd frontend && npm run lint && npm test && npm run build
+```
+
+Database tests run against the local MongoDB; without it they are skipped.
 
 ## Adding documents
 
