@@ -6,7 +6,7 @@ import "./Admin.css";
 
 const TOKEN_KEY = "cc-admin-token";
 const LANG_NAMES = { en: "English", hi: "Hindi", mr: "Marathi" } as const;
-const OFFICE_NAMES = Object.fromEntries(UI_STRINGS.en.depts.map((d) => [d.category, d.title])) as Record<Category, string>;
+const OFFICE_NAMES = Object.fromEntries(UI_STRINGS.en.officesList.map((o) => [o.category, o.title])) as Record<Category, string>;
 
 function readToken(): string {
   try {
@@ -81,7 +81,7 @@ export default function Admin() {
             refresh();
           }}
         >
-          <a className="brand" href="#top">
+          <a className="brand" href="#">
             <span className="seal">CC</span> CollegeConnect AI
           </a>
           <h1>Admin portal</h1>
@@ -109,7 +109,7 @@ export default function Admin() {
   return (
     <div className="admin">
       <header className="admin-bar">
-        <a className="brand" href="#top">
+        <a className="brand" href="#">
           <span className="seal">CC</span> CollegeConnect AI <span className="admin-tag">Admin</span>
         </a>
         <div className="admin-actions">

@@ -17,6 +17,8 @@ NOT_FOUND = {
     "mr": "तुमच्या प्रश्नाशी जुळणारा कोणताही मंजूर दस्तऐवज सापडला नाही. कृपया प्रश्न पुन्हा मांडा किंवा संबंधित विभाग कार्यालयाशी संपर्क साधा.",
 }
 
+EXTRACTIVE_MIN_CONFIDENCE = 0.3
+
 EXTRACTIVE_NOTE = {
     "en": "",
     "hi": "\n\n(उत्तर जनरेशन अभी उपलब्ध नहीं है; मूल दस्तावेज़ का अंश दिखाया गया है।)",
@@ -99,6 +101,15 @@ def answer_question(question: str, language: str, category: str | None = None) -
         }
 
     if not generator.llm_available():
+        # Without an LLM to judge relevance, a weak keyword match is more likely wrong than right.
+        if confidence < EXTRACTIVE_MIN_CONFIDENCE:
+            return {
+                "answer": NOT_FOUND[language],
+                "category": category or "notices",
+                "sources": [],
+                "confidence": 0.0,
+                "grounded": False,
+            }
         return _extractive(language, hits, confidence)
 
     chunks = [c for c, _ in hits]
