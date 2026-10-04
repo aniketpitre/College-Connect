@@ -1,17 +1,19 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, Query, Request, Response, UploadFile
+from fastapi.responses import PlainTextResponse
 
 from app.core.auth import AuthContext, require, signed_in
 from app.core.files import MAX_BYTES
 from app.core.rbac import P
 from app.core.requestinfo import client_ip
-from app.modules.students import service
+from app.modules.students import importer, service
 from app.modules.students.schemas import (
     ChangeRequestIn,
     Decision,
     DocumentDecision,
     DocumentType,
+    PromotionIn,
     StudentCreate,
     StudentStatus,
     StudentUpdate,
@@ -54,6 +56,33 @@ def list_students(
 @router.post("/students", status_code=201)
 def create_student(body: StudentCreate, request: Request, ctx: AuthContext = MANAGE) -> dict[str, Any]:
     return service.create(ctx, body, client_ip(request))
+
+
+@router.get("/students/imports/template.csv", response_class=PlainTextResponse)
+def import_template(ctx: AuthContext = Depends(require(P.STUDENTS_IMPORT))) -> PlainTextResponse:
+    return PlainTextResponse(
+        importer.template_csv(),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="students-template.csv"'},
+    )
+
+
+@router.post("/students/imports")
+async def validate_import(file: UploadFile = File(...), ctx: AuthContext = Depends(require(P.STUDENTS_IMPORT))) -> dict:
+    data = await file.read(importer.MAX_FILE_BYTES + 1)
+    return importer.validate(ctx, file.filename or "students", data)
+
+
+@router.post("/students/imports/{import_id}/commit")
+def commit_import(import_id: str, request: Request, ctx: AuthContext = Depends(require(P.STUDENTS_IMPORT))) -> dict:
+    return importer.commit_chunk(ctx, import_id, client_ip(request))
+
+
+@router.post("/students/promote")
+def promote(body: PromotionIn, request: Request, ctx: AuthContext = MANAGE) -> dict[str, Any]:
+    return importer.promote(
+        ctx, body.programme_id, body.from_year, body.hold_back, body.dry_run, body.reason, client_ip(request)
+    )
 
 
 @router.get("/students/change-requests")

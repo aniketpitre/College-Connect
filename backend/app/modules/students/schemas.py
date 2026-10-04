@@ -152,3 +152,11 @@ class Decision(BaseModel):
 class DocumentDecision(BaseModel):
     verified: bool
     reason: str | None = Field(None, max_length=300)
+
+
+class PromotionIn(BaseModel):
+    programme_id: str
+    from_year: int = Field(..., ge=1, le=6)
+    hold_back: list[str] = Field(default_factory=list, description="Student ids who stay in this year")
+    dry_run: bool = True
+    reason: str | None = Field(None, max_length=300)

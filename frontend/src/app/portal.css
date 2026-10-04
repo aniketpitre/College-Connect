@@ -130,3 +130,21 @@
   padding: 18px 20px;
   margin-bottom: 16px;
 }
+
+@media print {
+  .portal-top,
+  .portal-nav,
+  .no-print {
+    display: none !important;
+  }
+  .portal-body {
+    display: block;
+  }
+  .portal-main {
+    padding: 0;
+    max-width: none;
+  }
+  body {
+    background: #fff;
+  }
+}

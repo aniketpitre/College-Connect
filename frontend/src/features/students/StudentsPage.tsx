@@ -67,6 +67,11 @@ export default function StudentsPage() {
           <h1>Students</h1>
         </div>
         <div className="row-actions">
+          {canManage && (
+            <Link className="btn btn-ghost" to="/app/students/promote">
+              Promote a class
+            </Link>
+          )}
           {hasPermission(me, "students.import") && (
             <Link className="btn btn-ghost" to="/app/students/import">
               Import from Excel

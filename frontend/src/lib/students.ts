@@ -216,3 +216,68 @@ export function useCorrectionOptions() {
     staleTime: 300_000,
   });
 }
+
+// --- import and promotion ---
+
+export interface ImportError {
+  row: number;
+  field: string;
+  message: string;
+  prn: string | null;
+}
+export interface ImportReport {
+  id: string;
+  filename: string;
+  status: "validated" | "has_errors" | "committing" | "done";
+  total: number;
+  valid: number;
+  committed: number;
+  error_count: number;
+  errors: ImportError[];
+  preview?: { line: number; prn: string; name: string }[];
+}
+export interface Credential {
+  prn: string;
+  name: string;
+  temporary_password: string;
+}
+export interface PromotionPlan {
+  programme: string;
+  from_year: string;
+  to_year: string | null;
+  academic_year: string;
+  students: { id: string; prn: string; name: string; outcome: "promoted" | "graduates" | "held_back" | "already_promoted" }[];
+  counts: Record<"promoted" | "graduates" | "held_back" | "already_promoted", number>;
+  dry_run: boolean;
+}
+
+export const IMPORT_TEMPLATE_URL = "/api/v1/students/imports/template.csv";
+
+export function useValidateImport() {
+  return useMutation({
+    mutationFn: (file: File) => {
+      const form = new FormData();
+      form.set("file", file);
+      return apiFetch<ImportReport>("/students/imports", { method: "POST", body: form });
+    },
+  });
+}
+
+export function useCommitImport() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<ImportReport & { done: boolean; credentials: Credential[] }>(`/students/imports/${id}/commit`, { method: "POST" }),
+    onSuccess: invalidate,
+  });
+}
+
+export function usePromote() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: { programme_id: string; from_year: number; hold_back: string[]; dry_run: boolean; reason?: string }) =>
+      apiFetch<PromotionPlan>("/students/promote", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: (plan) => {
+      if (!plan.dry_run) invalidate();
+    },
+  });
+}

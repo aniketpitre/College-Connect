@@ -4,6 +4,8 @@ import AnalyticsPage from "../features/analytics/AnalyticsPage";
 import ProfilePage from "../features/profile/ProfilePage";
 import HelpDesk from "../features/helpdesk/HelpDesk";
 import InstitutionSetupPage from "../features/setup/InstitutionSetupPage";
+import ImportPage from "../features/students/ImportPage";
+import PromotePage from "../features/students/PromotePage";
 import StudentDetailPage from "../features/students/StudentDetailPage";
 import StudentsPage from "../features/students/StudentsPage";
 import UsersPage from "../features/users/UsersPage";
@@ -59,6 +61,8 @@ export default function App() {
         <Route path="users" element={<UsersPage />} />
         <Route path="setup" element={<InstitutionSetupPage />} />
         <Route path="students" element={<StudentsPage />} />
+        <Route path="students/import" element={<ImportPage />} />
+        <Route path="students/promote" element={<PromotePage />} />
         <Route path="students/:id" element={<StudentDetailPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
       </Route>

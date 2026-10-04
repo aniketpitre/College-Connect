@@ -63,19 +63,19 @@ def _plain(value: Any) -> Any:
     return value
 
 
-def _jsonable(value: Any) -> Any:
+def jsonable(value: Any) -> Any:
     if isinstance(value, ObjectId):
         return str(value)
     if isinstance(value, datetime):
         return value.isoformat()
     if isinstance(value, dict):
-        return {k: _jsonable(v) for k, v in value.items()}
+        return {k: jsonable(v) for k, v in value.items()}
     if isinstance(value, list):
-        return [_jsonable(v) for v in value]
+        return [jsonable(v) for v in value]
     return value
 
 
-def _fields_to_doc(ctx: AuthContext, data: dict[str, Any]) -> dict[str, Any]:
+def fields_to_doc(ctx: AuthContext, data: dict[str, Any]) -> dict[str, Any]:
     """Validated request fields → stored fields (ids as ObjectIds, Aadhaar as last 4, consent record)."""
     doc: dict[str, Any] = {}
     for key, value in data.items():
@@ -94,7 +94,7 @@ def _fields_to_doc(ctx: AuthContext, data: dict[str, Any]) -> dict[str, Any]:
     return doc
 
 
-def _check_placement(merged: dict[str, Any]) -> None:
+def check_placement(merged: dict[str, Any]) -> None:
     """Programme, year, division and category must exist, be active and fit together."""
     db = get_db()
     programme = db.programmes.find_one({"_id": merged.get("programme_id")})
@@ -216,9 +216,9 @@ def my_student(ctx: AuthContext) -> dict[str, Any]:
 
 def create(ctx: AuthContext, body: StudentCreate, ip: str) -> dict[str, Any]:
     data = body.model_dump(exclude_none=True)
-    fields = _fields_to_doc(ctx, data)
+    fields = fields_to_doc(ctx, data)
     fields.setdefault("status", "active")
-    _check_placement(fields)
+    check_placement(fields)
     temp = temporary_password()
     db = get_db()
 
@@ -255,7 +255,7 @@ def create(ctx: AuthContext, body: StudentCreate, ip: str) -> dict[str, Any]:
             target_type="student",
             target_id=doc["_id"],
             ip=ip,
-            details={"after": _jsonable(fields)},
+            details={"after": jsonable(fields)},
             session=session,
         )
         return doc
@@ -303,8 +303,8 @@ def _apply_changes(
         ip=ip,
         reason=reason,
         details={
-            "before": _jsonable({k: student.get(k) for k in changed}),
-            "after": _jsonable(changed),
+            "before": jsonable({k: student.get(k) for k in changed}),
+            "after": jsonable(changed),
         },
         session=session,
     )
@@ -314,13 +314,13 @@ def update(ctx: AuthContext, student_id: ObjectId, body: StudentUpdate, ip: str)
     student = get_student(student_id)
     data = body.model_dump(exclude_unset=True)
     reason = data.pop("reason", None)
-    changes = _fields_to_doc(ctx, data)
+    changes = fields_to_doc(ctx, data)
     if "status" in changes and changes["status"] != student.get("status") and not reason:
         raise AppError(422, "Give a reason for changing the student's status.", field="reason")
     merged = {**student, **changes}
     if ("year_of_study" in changes or "programme_id" in changes) and "division_id" not in changes:
         merged["division_id"] = changes["division_id"] = None  # the old division belongs to the old class
-    _check_placement(merged)
+    check_placement(merged)
 
     def work(session: ClientSession) -> None:
         _apply_changes(ctx, student, changes, action="students.updated", ip=ip, reason=reason, session=session)
@@ -378,7 +378,7 @@ def history(student_id: ObjectId) -> list[dict[str, Any]]:
             "action": e["action"],
             "by": names.get(e.get("actor_id")),
             "reason": e.get("reason"),
-            "details": _jsonable(e.get("details")),
+            "details": jsonable(e.get("details")),
         }
         for e in entries
     ]
@@ -391,8 +391,8 @@ def _request_view(req: dict[str, Any], student: dict[str, Any] | None = None) ->
     result = {
         "id": str(req["_id"]),
         "student_id": str(req["student_id"]),
-        "changes": _jsonable(req["changes"]),
-        "current": _jsonable(req.get("current", {})),
+        "changes": jsonable(req["changes"]),
+        "current": jsonable(req.get("current", {})),
         "reason": req["reason"],
         "status": req["status"],
         "decision_reason": req.get("decision_reason"),
@@ -409,9 +409,9 @@ def request_change(ctx: AuthContext, body: ChangeRequestIn, ip: str) -> dict[str
     data = body.changes.model_dump(exclude_unset=True)
     if not data:
         raise AppError(422, "Say what should be corrected.", field="changes")
-    changes = _fields_to_doc(ctx, data)
+    changes = fields_to_doc(ctx, data)
     if "category_id" in changes:
-        _check_placement({**student, "category_id": changes["category_id"]})
+        check_placement({**student, "category_id": changes["category_id"]})
     changes = {k: v for k, v in changes.items() if student.get(k) != v}
     if not changes:
         raise AppError(422, "These details are already on your record.", field="changes")
@@ -489,7 +489,7 @@ def decide_request(ctx: AuthContext, request_id: str, approve: bool, reason: str
         student = get_student(req["student_id"], session=session)
         if approve:
             merged = {**student, **req["changes"]}
-            _check_placement(merged)
+            check_placement(merged)
             _apply_changes(
                 ctx, student, req["changes"], action="students.change_approved", ip=ip, reason=reason, session=session
             )
