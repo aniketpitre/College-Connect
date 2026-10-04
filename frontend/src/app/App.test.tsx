@@ -63,7 +63,11 @@ describe("portal access", () => {
   });
 
   it("sends accounts that still need 2-step verification to that step", async () => {
-    mockApi(() => ({ status: 200, body: makeMe({ session_state: "mfa_setup" }) }));
+    mockApi((_m, path) =>
+      path === "/auth/me"
+        ? { status: 200, body: makeMe({ session_state: "mfa_setup" }) }
+        : { status: 200, body: { secret: "JBSWY3DPEHPK3PXP", otpauth_uri: "otpauth://totp/x", qr_svg: "data:image/svg+xml,x" } },
+    );
     renderApp("/app");
     expect(await screen.findByRole("heading", { name: "2-step verification" })).toBeTruthy();
   });

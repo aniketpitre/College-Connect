@@ -55,3 +55,10 @@ def reset_password(
 @router.post("/{user_id}/unlock")
 def unlock(user_id: str, request: Request, ctx: AuthContext = Depends(require(P.USERS_UPDATE))) -> dict:
     return service.unlock(ctx, repo.parse_id(user_id), client_ip(request))
+
+
+@router.post("/{user_id}/reset-2-step")
+def reset_mfa(
+    user_id: str, body: ReasonBody, request: Request, ctx: AuthContext = Depends(require(P.USERS_READ))
+) -> dict:
+    return service.reset_mfa(ctx, repo.parse_id(user_id), body.reason, client_ip(request))

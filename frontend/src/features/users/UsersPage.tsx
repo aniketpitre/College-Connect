@@ -8,6 +8,7 @@ import { hasPermission, useMe } from "../../lib/auth";
 import {
   useCreateUser,
   useResetPassword,
+  useResetTwoStep,
   useRoles,
   useUnlockUser,
   useUpdateUser,
@@ -33,9 +34,11 @@ export default function UsersPage() {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [resetting, setResetting] = useState<User | null>(null);
+  const [resettingMfa, setResettingMfa] = useState<User | null>(null);
   const [tempPassword, setTempPassword] = useState<{ name: string; identifier: string; password: string } | null>(null);
   const reset = useResetPassword();
   const unlock = useUnlockUser();
+  const resetMfa = useResetTwoStep();
 
   const canCreateStaff = hasPermission(me, "users.create.staff");
   const canCreateStudent = hasPermission(me, "users.create.student");
@@ -93,6 +96,11 @@ export default function UsersPage() {
           {canReset(u) && u.id !== me?.id && (
             <button type="button" className="link-btn" onClick={() => setResetting(u)}>
               Reset password
+            </button>
+          )}
+          {canReset(u) && u.mfa_enabled && u.id !== me?.id && (
+            <button type="button" className="link-btn" onClick={() => setResettingMfa(u)}>
+              Reset 2-step
             </button>
           )}
         </div>
@@ -163,6 +171,21 @@ export default function UsersPage() {
             { id: user.id, reason },
             { onSuccess: (r) => setTempPassword({ name: user.name, identifier: user.kind === "student" ? `PRN ${user.prn}` : user.email ?? "", password: r.temporary_password }) },
           );
+        }}
+      />
+
+      <ConfirmDialog
+        open={resettingMfa !== null}
+        title={`Reset 2-step verification for ${resettingMfa?.name ?? ""}?`}
+        message="Only for a lost phone with no recovery codes: confirm who they are first. They will be signed out everywhere and must set up 2-step verification again at their next sign-in."
+        confirmLabel="Reset 2-step"
+        requireReason
+        danger
+        onCancel={() => setResettingMfa(null)}
+        onConfirm={(reason) => {
+          const user = resettingMfa!;
+          setResettingMfa(null);
+          resetMfa.mutate({ id: user.id, reason });
         }}
       />
 

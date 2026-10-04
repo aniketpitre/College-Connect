@@ -89,7 +89,7 @@ attendance, marks, results and certificates, and a cited multilingual AI help de
 | Frontend | **React + TypeScript + Vite** (existing), **React Router**, **TanStack Query**, **React Hook Form + Zod** | Real routes per role, cached server data, validated forms |
 | Passwords | **argon2-cffi** (Argon2id) | Current best practice |
 | Sessions | Random token in an **HttpOnly, Secure, SameSite=Lax cookie**; only its SHA-256 hash stored | Revocable: sign out everywhere, disable on TC |
-| 2-step codes | **pyotp** (TOTP) + email OTP | Authenticator app or email |
+| 2-step codes | **pyotp** (TOTP) + one-time recovery codes | Authenticator app; email OTP deferred (see 1.3) |
 | PDFs / QR | **fpdf2** + **segno** (pure Python) | Small, no native libraries — fits serverless |
 | Files | **Vercel Blob** (private) | Functions have no persistent disk |
 | Scheduled jobs | **Vercel Cron** → secret-protected `/api/cron/*` | Reminders and escalations (Hobby = daily) |
@@ -192,7 +192,7 @@ preview deployment checked · plan/spec updated if behaviour differs.
 ### 5.1 Features
 
 **Identity & access**
-- Staff login (email + password), student login (PRN + temporary password → forced change), password reset (email OTP), 2-step verification for sensitive roles, sessions with "sign out everywhere", lockout, login history.
+- Staff login (email + password), student login (PRN + temporary password → forced change), password reset (emailed one-time link), 2-step verification for sensitive roles, sessions with "sign out everywhere", lockout, login history.
 - Roles R1–R9 and R13 from the spec, with the permission matrix and scope checks.
 - First-login flow for students: set password → confirm contact → accept privacy notice → choose language.
 
@@ -254,7 +254,7 @@ fees, receipts, notices · Public: Verify page.
 |---|---|
 | 1.1 | Users, Argon2 passwords, sessions, login/logout, `/me`, lockout, rate limits, audit log, `create_admin` script |
 | 1.2 | RBAC permissions + scope checks + permission tests; replace `ADMIN_TOKEN` with real roles |
-| 1.3 | 2-step verification (TOTP + email OTP); password reset by email |
+| 1.3 | 2-step verification (TOTP + recovery codes; admin reset for lost phones); password reset by emailed link; "My account" page (devices, login history) |
 | 1.4 | Institution setup module + admin screens |
 | 1.5 | Student records: CRUD, search, change requests, documents in Vercel Blob |
 | 1.6 | Excel/CSV import with validation report; bulk student accounts; bulk promotion |
@@ -266,6 +266,13 @@ fees, receipts, notices · Public: Verify page.
 | 1.12 | Student portal v1 (home, profile, fees, receipts, notices) |
 | 1.13 | Notices v1 + email delivery |
 | 1.14 | Audit viewer, data exports; demo seed (BCA, 3 years, 60 students); Playwright e2e |
+
+**Delivered in the "Phase 1A" PR (1.1–1.3):** first System Admin is created at `/setup` with the
+`SETUP_TOKEN` environment variable (instead of a `create_admin` script). Email OTP as a second
+factor is deferred: TOTP plus one-time recovery codes covers the required roles, and email is not
+a strong second factor when the same mailbox can reset the password. Students without an email
+address on record reset through the office (temporary password). Reset emails need
+`EMAIL_API_KEY`; without it the link is only written to the server log.
 
 ### 5.6 Acceptance criteria
 - Office imports 60 students from Excel; errors are reported row by row; each student gets a login.

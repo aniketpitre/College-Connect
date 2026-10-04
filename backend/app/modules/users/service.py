@@ -185,3 +185,23 @@ def unlock(ctx: AuthContext, user_id: ObjectId, ip: str) -> dict[str, Any]:
     get_db().users.update_one({"_id": user_id}, {"$set": {"failed_logins": 0, "locked_until": None}})
     audit.record("users.unlocked", actor_id=ctx.user_id, target_type="user", target_id=user_id, ip=ip)
     return repo.public_user(repo.get_user(user_id))
+
+
+def reset_mfa(ctx: AuthContext, user_id: ObjectId, reason: str | None, ip: str) -> dict[str, Any]:
+    """For a lost phone without recovery codes: turns 2-step off so the user can set it up again."""
+    target = repo.get_user(user_id)
+    needed = P.USERS_RESET_STUDENT if target["kind"] == "student" else P.USERS_RESET_STAFF
+    if needed not in ctx.permissions:
+        raise AppError(403, "You can't reset 2-step verification for this account.", "forbidden")
+    if user_id == ctx.user_id:
+        raise AppError(409, "Ask another administrator to reset your 2-step verification.", "conflict")
+    if not reason or len(reason.strip()) < 5:
+        raise AppError(422, "Give a reason (it is recorded in the audit log).", "validation_error", "reason")
+    if not target.get("mfa", {}).get("enabled"):
+        raise AppError(409, "2-step verification is not on for this account.", "conflict")
+    get_db().users.update_one({"_id": user_id}, {"$unset": {"mfa": ""}})
+    revoke_user_sessions(user_id)
+    audit.record(
+        "users.mfa_reset_by_staff", actor_id=ctx.user_id, target_type="user", target_id=user_id, ip=ip, reason=reason
+    )
+    return repo.public_user(repo.get_user(user_id))

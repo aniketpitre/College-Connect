@@ -95,3 +95,12 @@ export function useUnlockUser() {
     onSuccess: invalidate,
   });
 }
+
+export function useResetTwoStep() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      apiFetch<User>(`/users/${id}/reset-2-step`, { method: "POST", body: JSON.stringify({ reason }) }),
+    onSuccess: invalidate,
+  });
+}

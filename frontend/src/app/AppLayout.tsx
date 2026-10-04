@@ -19,6 +19,7 @@ const NAV: NavItem[] = [
   { to: "/app/attendance", label: "Attendance", phase: 2 },
   { to: "/app/exams", label: "Exams & results", phase: 2 },
   { to: "/app/certificates", label: "Certificates", phase: 2 },
+  { to: "/app/account", label: "My account" },
   { to: "/app/users", label: "Users", permission: "users.read" },
   { to: "/app/analytics", label: "Help desk analytics", permission: "analytics.view" },
 ];

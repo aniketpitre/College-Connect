@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Language } from "./types";
 
 const KEY = "cc-lang";
@@ -19,4 +20,16 @@ export function saveLanguage(language: Language) {
   } catch {
     // ignore
   }
+}
+
+/** The page language, remembered across visits. */
+export function useLanguage(): [Language, (l: Language) => void] {
+  const [language, setLanguage] = useState<Language>(savedLanguage);
+  return [
+    language,
+    (l: Language) => {
+      setLanguage(l);
+      saveLanguage(l);
+    },
+  ];
 }
