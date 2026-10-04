@@ -297,7 +297,16 @@ function StructureModal({ setup, heads, yearId, structure, onClose }: { setup: S
         ))}
         <div className="line-foot">
           <span>
-            <button type="button" className="link-btn" onClick={() => setInsts([...insts, { label: `Installment ${insts.length + 1}`, due_date: "", amount: "" }])}>
+            <button
+              type="button"
+              className="link-btn"
+              onClick={() =>
+                setInsts([
+                  ...insts.map((x, k) => (insts.length === 1 && k === 0 && x.label === "Full fee" ? { ...x, label: "Installment 1" } : x)),
+                  { label: `Installment ${insts.length + 1}`, due_date: "", amount: "" },
+                ])
+              }
+            >
               + Add installment
             </button>{" "}
             <button type="button" className="link-btn" onClick={split}>

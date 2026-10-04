@@ -177,8 +177,13 @@
   border-color: var(--ink);
   box-shadow: 0 0 0 1px var(--ink);
 }
+.mode-picker label {
+  white-space: nowrap;
+}
 .mode-picker input {
   accent-color: var(--ink);
+  width: auto;
+  margin: 0;
 }
 .done-card {
   max-width: 560px;
