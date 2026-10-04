@@ -4,7 +4,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import meta, query
+from app.routers import admin, meta, query
 
 logging.basicConfig(level=logging.INFO)
 
@@ -29,3 +29,4 @@ app.add_middleware(
 
 app.include_router(query.router)
 app.include_router(meta.router)
+app.include_router(admin.router)

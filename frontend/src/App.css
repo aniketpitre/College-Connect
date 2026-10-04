@@ -654,6 +654,15 @@ section.alt {
   font-variant-numeric: tabular-nums;
 }
 
+.dash-link {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid var(--brass);
+}
+
 footer {
   background: var(--ink);
   color: rgba(241, 239, 232, 0.75);

@@ -64,6 +64,7 @@ export interface Strings {
   dash2_h: string;
   dash2_p: string;
   dash2_rows: [string, string][];
+  dash2_link: string;
   footer_note: string;
 }
 
@@ -148,6 +149,7 @@ export const UI_STRINGS: Record<Language, Strings> = {
     dash2_h: "Campus overview",
     dash2_p: "Manage notices, documents, the chatbot's knowledge base, and usage analytics.",
     dash2_rows: [["Queries this week", "4,208"], ["Documents indexed", "132"], ["Open notices", "7"]],
+    dash2_link: "Open the admin portal →",
     footer_note: "Answers come from approved college documents. Always confirm important deadlines with the cited source.",
   },
   hi: {
@@ -224,6 +226,7 @@ export const UI_STRINGS: Record<Language, Strings> = {
     dash2_h: "कैंपस अवलोकन",
     dash2_p: "सूचनाएं, दस्तावेज़, चैटबॉट का ज्ञान आधार, और उपयोग विश्लेषण प्रबंधित करें।",
     dash2_rows: [["इस सप्ताह के प्रश्न", "4,208"], ["अनुक्रमित दस्तावेज़", "132"], ["खुली सूचनाएं", "7"]],
+    dash2_link: "एडमिन पोर्टल खोलें →",
     footer_note: "उत्तर आधिकारिक कॉलेज दस्तावेज़ों से तैयार किए जाते हैं। महत्वपूर्ण समय-सीमाओं के लिए हमेशा उद्धृत स्रोत देखें।",
   },
   mr: {
@@ -300,6 +303,7 @@ export const UI_STRINGS: Record<Language, Strings> = {
     dash2_h: "कॅम्पस आढावा",
     dash2_p: "सूचना, कागदपत्रे, चॅटबॉटचा ज्ञानसंच, आणि वापर विश्लेषण व्यवस्थापित करा.",
     dash2_rows: [["या आठवड्यातील प्रश्न", "4,208"], ["अनुक्रमित कागदपत्रे", "132"], ["खुल्या सूचना", "7"]],
+    dash2_link: "अ‍ॅडमिन पोर्टल उघडा →",
     footer_note: "उत्तरे अधिकृत महाविद्यालयीन दस्तऐवजांमधून तयार केली जातात. महत्त्वाच्या मुदतींसाठी नेहमी उद्धृत स्रोत तपासा.",
   },
 };
