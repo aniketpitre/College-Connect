@@ -1,29 +1,55 @@
 # CollegeConnect — Implementation Plan
 
-> **Status:** Draft v1 · **Last updated:** 2026-10-04
+> **Status:** Draft v2 · **Last updated:** 2026-10-04
 >
-> How we build the product described in [01-product-spec.md](01-product-spec.md): the
-> architecture, the data model, authentication, the order of work, and how each piece is
-> tested and shipped. Every phase is delivered as small pull requests; each PR leaves `main`
-> deployable.
+> How we build the product described in [01-product-spec.md](01-product-spec.md).
+>
+> **Build order (decided):** the **core ERP first**, then the **other features** — including the
+> ones existing college ERPs lack — and **CollegeConnect AI last**. Every phase ships as small
+> pull requests; each PR leaves `main` deployable.
 
 ---
 
-## 1. Where we start
+## 1. Phase overview
 
-Already in `main`:
+| Phase | Name | What it delivers | Est. |
+|---|---|---|---|
+| **0** | Foundations | CI, code structure, routing, design system, test database | 1 wk |
+| **1** | Core ERP — people & money | Logins & roles, institution setup, student records, fees, **QR-verifiable receipts**, student portal, notices, audit log | 5 wk |
+| **2** | Core ERP — academics | Timetable, **10-second offline attendance**, internal marks with the **University Upload Guard**, results, **certificates with a promised date** | 5 wk |
+| **3** | Campus operations | Parent portal (with DPDP consent), online fee payment, SMS/WhatsApp/email, admissions, library, hostel, placement, grievance, staff & leave | 7 wk |
+| **4** | Control, compliance & openness | **NAAC-ready by default**, AISHE/NIRF/APAAR, dashboards, **rule-based early warning**, **scholarship eligibility checker**, **full export + open API** | 4 wk |
+| **5** | CollegeConnect AI | AI help desk inside the ERP, **Ask my record**, auto-translated and **self-publishing notices**, **deadline radar**, **knowledge-gap loop**, staff AI assistant | 4 wk |
 
-| Piece | Location |
-|---|---|
-| React + Vite + TypeScript help desk UI (EN/HI/MR) | `frontend/src/HelpDesk.tsx` |
-| Admin analytics portal (token login) | `frontend/src/Admin.tsx`, `backend/app/routers/admin.py` |
-| FastAPI backend | `backend/app/main.py` |
-| RAG pipeline (BM25 / Voyage vectors + Claude) | `backend/app/rag/` |
-| MongoDB Atlas connection + query logging | `backend/app/db.py`, `backend/app/analytics.py` |
-| Knowledge base + ingestion | `backend/knowledge/`, `backend/scripts/ingest.py` |
-| Vercel deployment (two services, one domain) | `vercel.json` |
+Estimates assume one developer working with Claude Code; they set the order, not a promise.
+**Total ≈ 26 weeks.**
 
-The ERP is built **inside this same repo and deployment**. The help desk becomes one module of it.
+### 1.1 Where the "what other ERPs lack" features land
+
+| Unique feature (spec §5) | Phase | Needs AI? |
+|---|---|---|
+| U2 QR-verifiable receipts & certificates + public Verify page | 1 (receipts), 2 (certificates) | No |
+| U9 10-second attendance that works offline | 2 | No |
+| U7 University Upload Guard | 2 | No |
+| U6 Certificates with a promised date + escalation | 2 | No |
+| U12 No lock-in: full export + open API | 1 (export basics), 4 (API) | No |
+| U8 NAAC-ready by default | 4 | No |
+| U10 Explainable early warning (rule-based) | 4 | No (ML upgrade optional in 5) |
+| U11 Scholarship eligibility checker (rule-based) | 4 | No |
+| U4 Self-publishing notices (auto-translate + auto-index) | 5 | Yes |
+| U1 Ask my record | 5 | Yes |
+| U3 Deadline radar | 5 | Yes |
+| U5 Knowledge-gap loop (inside the ERP) | 5 | Yes |
+
+### 1.2 The existing AI help desk until Phase 5
+The public CollegeConnect help desk that is live today **keeps running unchanged** (same URL,
+same `/api/query`). We do not extend it until Phase 5; in Phase 0 it moves under the new
+routing so it sits at `/` next to the **Sign in** button.
+
+### 1.3 Minimum for the BCA project submission
+If time is short, **Phases 0–2 plus the existing help desk** make a complete, demonstrable
+system: logins for every core role, student records, fees with verifiable receipts,
+attendance, marks, results and certificates, and a cited multilingual AI help desk.
 
 ---
 
@@ -31,319 +57,425 @@ The ERP is built **inside this same repo and deployment**. The help desk becomes
 
 ```
                        ┌──────────────────────────────────────────────┐
-  Browser / phone      │  React SPA (Vite)                            │
-  (student, parent,    │  /            → public help desk + login      │
-   staff, public)      │  /verify/:code→ public verification           │
-                       │  /app/...     → role-based portal             │
+  Browser / phone      │  React SPA (Vite + TypeScript)               │
+  (student, parent,    │  /              public help desk + Sign in   │
+   staff, public)      │  /verify/:code  public document verification │
+                       │  /app/...       role-based portals           │
                        └───────────────┬──────────────────────────────┘
                                        │ HTTPS, same origin, cookie session
                        ┌───────────────▼──────────────────────────────┐
   Vercel               │  FastAPI (Python serverless function)         │
-                       │  core/   auth, sessions, RBAC, audit, errors  │
+                       │  core/    auth, sessions, RBAC, audit, errors │
                        │  modules/ setup, students, fees, receipts,    │
-                       │          notices, attendance, exams, certs …  │
-                       │  rag/    CollegeConnect AI                     │
+                       │           notices, attendance, exams, …       │
+                       │  rag/     CollegeConnect AI (Phase 5)          │
                        └──────┬─────────────┬──────────────┬──────────┘
                               │             │              │
                   ┌───────────▼───┐  ┌──────▼──────┐  ┌────▼──────────────┐
-                  │ MongoDB Atlas │  │ Vercel Blob │  │ External APIs      │
-                  │ all records   │  │ PDFs, photos│  │ Claude, Voyage,    │
-                  │ + audit log   │  │ documents   │  │ email/SMS/WhatsApp,│
-                  └───────────────┘  └─────────────┘  │ payment gateway(P3)│
-                                                      └────────────────────┘
-  Vercel Cron → /api/cron/* (daily reminders, deadline radar, backups check)
+                  │ MongoDB Atlas │  │ Vercel Blob │  │ External services  │
+                  │ records +     │  │ PDFs, photos│  │ email (P1), SMS/   │
+                  │ audit log     │  │ documents   │  │ WhatsApp & payments│
+                  └───────────────┘  └─────────────┘  │ (P3), Claude/Voyage│
+                                                      │ (P5)               │
+  Vercel Cron → /api/cron/*  (reminders, escalations, backups check)      └────────────────────┘
 ```
 
 ### 2.1 Technology choices
 
 | Concern | Choice | Why |
 |---|---|---|
-| Backend | **FastAPI** (existing) | Typed, fast, auto API docs, already deployed |
-| Database | **MongoDB Atlas** (existing) | Already connected; flexible student records; multi-document **transactions** for money |
-| Frontend | **React + TypeScript + Vite** (existing) + **React Router** | Replace the hash routing with real routes for role portals |
-| Server state | **TanStack Query** | Caching, retries, loading states for every screen |
-| Forms | **React Hook Form + Zod** | Validation that matches the backend's Pydantic models |
-| Password hashing | **argon2-cffi** (Argon2id) | Current best practice |
-| Sessions | Opaque random token in an **HttpOnly, Secure, SameSite=Lax cookie**; only its SHA-256 hash stored in MongoDB | Revocable (sign out everywhere, disable account) — unlike stateless JWTs |
-| 2-step codes | **pyotp** (TOTP) + email OTP | Authenticator apps or email |
-| PDFs | **fpdf2** (pure Python, Unicode fonts) | Small enough for serverless; receipts/certificates |
-| QR codes | **segno** (pure Python) | No native dependencies |
-| File storage | **Vercel Blob** (private) | Serverless functions have no persistent disk |
-| Scheduled jobs | **Vercel Cron** → protected `/api/cron/*` endpoints | Reminders, digests. Hobby plan allows daily jobs only |
-| Email | Transactional provider (e.g. Resend / Amazon SES) | P1 |
-| SMS / WhatsApp | Indian provider with DLT registration (e.g. MSG91 / Gupshup) | P3 — needs DLT templates approved |
-| Payments | Razorpay or similar (UPI, cards, net banking) with webhooks | P3 |
-| AI | Claude (`claude-opus-5-5`) + Voyage embeddings (existing) | Already integrated |
-| Tests | **pytest** + real MongoDB in CI; **Playwright** end-to-end | Money and marks need real transaction tests |
-| CI | **GitHub Actions**: lint, type-check, tests, build on every PR | Nothing reaches `main` red |
+| Backend | **FastAPI** (existing) | Typed, fast, auto-generated API docs |
+| Database | **MongoDB Atlas** (existing) | Flexible records; multi-document **transactions** for money |
+| Frontend | **React + TypeScript + Vite** (existing), **React Router**, **TanStack Query**, **React Hook Form + Zod** | Real routes per role, cached server data, validated forms |
+| Passwords | **argon2-cffi** (Argon2id) | Current best practice |
+| Sessions | Random token in an **HttpOnly, Secure, SameSite=Lax cookie**; only its SHA-256 hash stored | Revocable: sign out everywhere, disable on TC |
+| 2-step codes | **pyotp** (TOTP) + email OTP | Authenticator app or email |
+| PDFs / QR | **fpdf2** + **segno** (pure Python) | Small, no native libraries — fits serverless |
+| Files | **Vercel Blob** (private) | Functions have no persistent disk |
+| Scheduled jobs | **Vercel Cron** → secret-protected `/api/cron/*` | Reminders and escalations (Hobby = daily) |
+| Offline attendance | Service worker + IndexedDB queue | Works with no signal in the classroom |
+| Email | Resend or Amazon SES | Phase 1 |
+| SMS / WhatsApp | Indian provider with DLT-approved templates (e.g. MSG91 / Gupshup) | Phase 3 |
+| Payments | Razorpay or similar, verified webhooks | Phase 3 |
+| AI | Claude (`claude-opus-5-5`) + Voyage embeddings (existing code) | Phase 5 |
+| Tests | **pytest** with a real MongoDB replica set in CI; **Playwright** end-to-end | Money and marks need real transaction tests |
+| CI | **GitHub Actions** on every PR | Nothing reaches `main` red |
 
 ### 2.2 Repository layout (target)
 
 ```
-backend/
-  app/
-    main.py                 # app factory, routers
-    core/
-      config.py             # settings from env
-      db.py                 # Mongo client, transactions helper, indexes
-      security.py           # hashing, tokens, TOTP
-      auth.py               # current_user dependency, sessions
-      rbac.py               # roles → permissions, scope checks
-      audit.py              # append-only audit writer
-      errors.py             # consistent error responses
-      i18n.py               # server-side translations for PDFs/messages
-    modules/
-      setup/                # academic years, programmes, subjects, categories
-      users/                # accounts, roles, login, password reset
-      students/             # SIS, import, promotion
-      fees/                 # structures, demands, ledger, collection
-      receipts/             # numbering, PDF, verify
-      notices/
-      attendance/           # P2
-      exams/                # P2
-      certificates/         # P2
-      ...                   # library, hostel, placement, grievance (P3)
-      each module: router.py, schemas.py (Pydantic), service.py (logic), repo.py (Mongo)
-    rag/                    # existing CollegeConnect AI
-  tests/                    # pytest, per module
-  scripts/                  # ingest, seed demo data, create first admin
-frontend/
-  src/
-    app/                    # router, layouts per role, auth context
-    features/               # one folder per module (pages + components + api hooks)
-    components/             # shared UI: Table, Form fields, Money, StatusBadge …
-    i18n/                   # en/hi/mr strings
-docs/erp/                   # this plan
+backend/app/
+  main.py
+  core/        config, db (client, transactions, indexes), security, auth, rbac, audit, errors, i18n, pdf
+  modules/     one package per module: router.py · schemas.py · service.py · repo.py
+               setup/ users/ students/ fees/ receipts/ notices/ audit/ export/        (P1)
+               timetable/ attendance/ exams/ results/ certificates/                    (P2)
+               parents/ payments/ messaging/ admissions/ library/ hostel/
+               placement/ grievance/ staff/                                            (P3)
+               accreditation/ analytics/ earlywarning/ scholarships/ api_keys/         (P4)
+  rag/         existing help desk; extended in P5
+backend/tests/ one folder per module
+backend/scripts/ create_admin.py, seed_demo.py, ingest.py
+frontend/src/
+  app/         router, auth context, role layouts
+  features/    one folder per module (pages, components, API hooks)
+  components/  DataTable, MoneyText, StatusBadge, ConfirmDialog, FileUpload, PdfLink …
+  i18n/        en / hi / mr
+docs/erp/      product spec and this plan
 ```
 
-### 2.3 Vercel constraints and how we handle them
+### 2.3 Vercel and Atlas constraints
 
 | Constraint | Handling |
 |---|---|
-| Functions are stateless, no local disk | Files → Vercel Blob; state → MongoDB |
-| Cold starts | Keep the backend bundle small (no pandas/numpy); one Mongo client per instance |
-| Request time limits | No long jobs in requests; bulk imports processed in chunks with progress saved in Mongo |
-| Hobby cron = once a day | Enough for reminders; Pro if hourly jobs are needed |
-| Hobby is non-commercial | Move to **Vercel Pro** before the college uses it in production |
-| Atlas free tier (M0) has no automated backups | Daily `mongodump` job to private storage until upgrading to a tier with backups |
+| Stateless functions, no disk | Files in Vercel Blob; state in MongoDB |
+| Request time limits | Bulk imports processed in chunks with progress saved; no long jobs in requests |
+| Hobby cron runs daily, Hobby is non-commercial | Fine for development; **Vercel Pro before the college goes live** |
+| Atlas M0 has no automated backups | Daily dump job until moving to a tier with backups (before go-live) |
 
 ---
 
-## 3. Data model (MongoDB collections)
+## 3. Cross-cutting rules (apply from Phase 1)
 
-Conventions: every document has `_id`, `created_at`, `created_by`, `updated_at`; money is
-**integer paise**; dates are UTC; soft status fields instead of deletes; every collection
-has an `academic_year` where relevant.
+### 3.1 Data conventions
+- Every document: `_id`, `created_at`, `created_by`, `updated_at`; times in UTC; `academic_year` where relevant.
+- Statuses instead of deletes. Corrections are new records that reference the old one, with a reason.
 
-| Collection | Key fields | Indexes |
+### 3.2 Money rules
+1. Amounts are **integer paise**. Formatting (₹1,25,000.00 and amount in words) happens only at display time.
+2. A student's balance is **the sum of their ledger entries**; never stored as an editable number.
+3. **Collecting a fee is one transaction:** increment the receipt counter → insert receipt → insert ledger entry → write audit entry.
+4. Receipt numbers come from an atomic counter: **sequential and gap-free per academic year**, even with several cashiers.
+5. Receipts are never edited or deleted; cancellation is an approved reversal entry and the receipt shows "Cancelled" on the Verify page.
+
+### 3.3 Security
+- Argon2id hashing; generic login errors; 5 failures → 15-minute lock; rate limits on login/OTP/reset.
+- 2-step verification required for System Admin, Principal, Accounts, Exam Cell.
+- CSRF protection: SameSite cookie + required custom header on state-changing requests. Security headers (HSTS, CSP, no framing).
+- **Permission + scope on every endpoint:** `Depends(require("fees.collect"))` plus service-layer scope checks (student → self; parent → linked children; faculty → assigned classes; HOD → department).
+- Separation of duties: requester ≠ approver for cancellations, refunds, concessions, marks unlock.
+- Append-only **audit log** for every change to money, marks, records and roles.
+
+### 3.4 Privacy (DPDP Act 2023 / Rules 2025)
+Privacy notice and consent at first login; parental consent for under-18s; Aadhaar stored masked;
+documents private with short-lived links; student "download my data"; retention schedule;
+breach runbook.
+
+### 3.5 Quality bar for every PR
+CI green (ruff, mypy, pytest; oxlint, tsc, build) · tests for new logic, including "cannot see
+another student's data" tests for every new endpoint · no secrets · screenshots for UI ·
+preview deployment checked · plan/spec updated if behaviour differs.
+
+---
+
+## 4. Phase 0 — Foundations (≈1 week)
+
+**Goal:** a safe base to build on; the app behaves exactly as today.
+
+| PR | Content | Done when |
 |---|---|---|
-| `users` | email or prn, phone, password_hash, roles[], scopes (dept ids, division ids), status, mfa, failed_logins, locked_until, must_change_password, linked_student_ids (parents) | unique email, unique prn, phone |
-| `sessions` | token_hash, user_id, created_at, last_seen, expires_at, ip, user_agent | token_hash unique, TTL on expires_at |
-| `audit_log` | at, actor_id, action, entity, entity_id, before, after, reason, ip | (entity, entity_id), at |
-| `academic_years` | code "2026-27", start, end, is_current | code unique |
-| `departments`, `programmes`, `subjects` | names, codes, credits, max marks | code unique |
-| `divisions` | programme, year, name, academic_year, class_teacher | compound unique |
-| `students` | prn, name parts, dob, gender, category, contacts, guardian, address, aadhaar_masked, apaar_id, programme/year/division/roll, status, photo_blob, documents[] | prn unique, (division, roll), text index on name |
-| `fee_heads` | code, name, ledger_account | code unique |
-| `fee_structures` | academic_year, programme, year, category, heads[{head, amount_paise}], installments[{due_date, heads}], late_fee_rule, version | compound unique |
-| `ledger_entries` | student_id, academic_year, type (demand / payment / concession / scholarship / reversal / late_fee / refund), heads[{head, amount_paise}], amount_paise (signed), receipt_id, reference, reason, approved_by | (student_id, academic_year), receipt_id |
-| `receipts` | number "R/2026-27/001234", student_id, amount_paise, heads[], mode, reference, collected_by, issued_at, status (valid / cancelled), verify_code, pdf_blob | number unique, verify_code unique |
-| `counters` | _id "receipt:2026-27", seq | — |
-| `approvals` | type (receipt_cancel, refund, concession, tc), payload, requested_by, status, decided_by | status, type |
-| `notices` | title/body per language, pdf_blob, audience, publish_at, expires_at, indexed | publish_at, audience |
-| `queries` | (existing help-desk log) | existing |
-| P2: `timetable_slots`, `attendance_sessions`, `attendance_marks`, `assessments`, `marks`, `results`, `certificate_requests`, `certificates` | | |
-| P3: `books`, `loans`, `rooms`, `allotments`, `outpasses`, `drives`, `applications`, `grievances`, `staff`, `leaves`, `payments_gateway` | | |
-
-### 3.1 Money rules (enforced in code and tests)
-1. A student's **balance = sum of their ledger entries** for the year. Never stored as an editable number.
-2. **Collecting a fee is one Mongo transaction:** increment the receipt counter → insert the receipt → insert the payment ledger entry → write the audit entry. Either all succeed or none.
-3. Receipt numbers come from `counters` with an atomic `$inc`, so they are **sequential and gap-free** even with two cashiers at once.
-4. Receipts are **never edited or deleted.** Cancellation = an approved `reversal` ledger entry + receipt `status: cancelled`; the Verify page then shows "Cancelled".
-5. Amounts are integers in paise; display formatting (₹1,25,000.00, amount in words in English/Hindi/Marathi) happens at the edge.
+| 0.1 | **CI:** GitHub Actions — backend ruff + mypy + pytest against a MongoDB replica-set service container; frontend oxlint + `tsc` + build | Runs on every PR; branch protection on `main` |
+| 0.2 | **Backend restructure:** `core/` (config, db with transaction helper and index bootstrap, errors) and `modules/`; `/api/v1` prefix; existing `/api/query`, `/api/health`, `/api/admin/stats` kept as aliases | Existing tests pass; help desk unchanged |
+| 0.3 | **Frontend shell:** React Router (`/`, `/login`, `/verify/:code`, `/app/*`), TanStack Query, role layout skeletons, shared components (`DataTable`, `MoneyText`, `StatusBadge`, `ConfirmDialog`, `EmptyState`), i18n folder | Help desk at `/`; `/#/admin` redirected to `/app/admin` |
+| 0.4 | **Dev tooling:** `scripts/seed_demo.py` skeleton, `.env.example` updated, separate preview database name | One command gives a local app with demo data |
 
 ---
 
-## 4. Authentication and authorisation design
+## 5. Phase 1 — Core ERP: people and money (≈5 weeks)
 
-### 4.1 Flows
-- **Staff sign-in:** email + password → (if MFA required) code → session cookie.
-- **Student sign-in:** PRN + password → if `must_change_password`, forced password change → privacy notice consent (first time) → portal.
-- **Parent sign-in:** mobile + OTP (or password) → child switcher.
-- **Password reset:** request → OTP/link (10-minute expiry, single use, hashed at rest) → new password → **all other sessions revoked**.
-- **Sign out:** deletes the session; "sign out everywhere" deletes all of the user's sessions.
+**Goal:** the college can run admissions-to-fee-receipt for real students, and students can sign in and see their fees.
 
-### 4.2 Protection
-- Argon2id hashes; constant-time comparisons; generic "wrong PRN or password" messages.
-- Rate limiting on sign-in, OTP and reset endpoints (per IP and per account, stored in Mongo).
-- CSRF: SameSite=Lax cookie + a required custom header (`X-Requested-With`) on every state-changing request.
-- Security headers: HSTS, CSP, X-Content-Type-Options, frame-ancestors none.
-- The existing `ADMIN_TOKEN` admin page is replaced by real accounts in Phase 1.
+### 5.1 Features
 
-### 4.3 Role-based access control
-- `rbac.py` maps each role to permissions like `fees.collect`, `receipts.cancel.request`, `receipts.cancel.approve`, `students.read`, `marks.write`.
-- Every endpoint declares its permission: `Depends(require("fees.collect"))`.
-- **Scope checks** in the service layer: a student can only load `student_id == self`; a parent only linked children; faculty only their assigned divisions/subjects; HOD only their department. Tests cover every "can't see someone else's data" case.
-- Separation of duties: requester ≠ approver for cancellations, refunds, concessions.
+**Identity & access**
+- Staff login (email + password), student login (PRN + temporary password → forced change), password reset (email OTP), 2-step verification for sensitive roles, sessions with "sign out everywhere", lockout, login history.
+- Roles R1–R9 and R13 from the spec, with the permission matrix and scope checks.
+- First-login flow for students: set password → confirm contact → accept privacy notice → choose language.
 
----
+**Institution setup**
+- Academic years (current-year switch), departments, programmes, years, divisions, semesters, subjects (credits, max internal/external), categories and quotas, numbering formats, holidays.
 
-## 5. API outline (Phase 1)
+**Student Information System**
+- Student master record (personal, guardian, contact, category, masked Aadhaar, APAAR ID field, previous education, photo, documents).
+- Academic placement (programme/year/division/roll/PRN/status).
+- **Excel/CSV import with a validation report** (nothing saved until clean), bulk account creation with printable temporary passwords, bulk promotion at year end.
+- Student change requests → office approval, with full history.
 
-All under `/api/v1`. JSON in/out; errors as `{ "error": { "code", "message", "field?" } }`.
+**Fees & accounts**
+- Fee heads; fee structures per year × programme × year-of-study × category, with installments, due dates and late-fee rules; versioned per academic year.
+- Fee demand generation per student; concessions with approval; scholarship tracking (expected → sanctioned → received).
+- **Counter collection** (cash, UPI, card, cheque/DD, bank transfer + reference).
+- **Receipts:** gap-free numbers (`R/2026-27/000123`), PDF on letterhead with head-wise breakup, amount in words, collector, **QR code → public Verify page**; reprints marked "Duplicate"; send by email.
+- Cancellation/refund requests → Principal approval → reversal entries.
+- Opening balances import (fees already paid this year before go-live).
+- Reports: day book, head-wise, mode-wise, outstanding by class, defaulters; Excel export.
 
-| Method & path | Who | Purpose |
-|---|---|---|
-| `POST /auth/login` | all | Sign in (staff email / student PRN) |
-| `POST /auth/logout`, `/auth/logout-all` | signed in | Sign out |
-| `POST /auth/password/change`, `/auth/password/reset/request`, `/auth/password/reset/confirm` | all | Passwords |
-| `POST /auth/mfa/setup`, `/auth/mfa/verify` | staff | Two-step verification |
-| `GET /me` | signed in | Current user, roles, permissions, linked students |
-| `GET/POST/PATCH /setup/academic-years`, `/programmes`, `/divisions`, `/subjects`, `/categories` | admin | Institution setup |
-| `GET/POST/PATCH /users`, `POST /users/{id}/reset-password` | admin, office | Accounts |
-| `GET /students?search=&division=`, `POST /students`, `PATCH /students/{id}` | office | SIS |
-| `POST /students/import` (CSV) → `GET /imports/{id}` | office | Bulk import with validation report |
-| `GET/POST /fees/heads`, `/fees/structures` | accounts | Fee setup |
-| `POST /fees/demands/generate` | accounts | Create demands for a class/year |
-| `GET /fees/students/{id}/ledger` | accounts, student (own), parent | Ledger and balance |
-| `POST /fees/collect` | accounts | Collect → receipt (transaction) |
-| `POST /receipts/{id}/cancel-request`, `POST /approvals/{id}/decide` | accounts / principal | Cancellation workflow |
-| `GET /receipts/{id}/pdf` | accounts, student (own), parent | Download receipt |
-| `GET /verify/{code}` | public | Verify receipt/certificate (masked) |
-| `GET /reports/day-book?date=`, `/reports/outstanding?division=` | accounts, principal | Reports (+ `?format=xlsx`) |
-| `GET/POST /notices`, `GET /notices/feed` | office / everyone | Notices |
-| `POST /assistant/ask` | public or signed in | CollegeConnect (adds "my record" context when signed in as student/parent) |
-| `GET /admin/stats` | principal, admin | Existing analytics, now behind real auth |
-| `GET /audit?entity=&id=` | admin, principal | Audit log |
+**Student portal (v1)**
+- Home with "needs your attention" cards (fee due, unpaid installment, new notice).
+- Profile (view + request correction, upload photo/documents).
+- Fees: structure, installments, paid, concessions, scholarships, **balance**, history, **download receipts**, fee statement PDF.
+- Notices for their class.
+- Help desk link (existing AI, unchanged).
 
----
+**Notices (v1)**
+- Create (text or PDF), audience (all / programme / year / division / staff), publish time, expiry, pin.
+- Optional Hindi/Marathi versions **typed by staff** (automatic translation comes in Phase 5).
+- Email notification to the audience.
 
-## 6. CollegeConnect AI inside the ERP
+**Audit & export (v1)**
+- Audit log viewer (admin, principal).
+- Student "download my data" (JSON/PDF); admin full export of students and fees (CSV).
 
-- **Public:** unchanged pipeline (`backend/app/rag/`).
-- **Ask my record (P1 fees):** when the caller is a signed-in student or parent, the backend builds a short, structured **"Your fee account" excerpt** from the ledger (structure, paid, concessions, balance, next due date) and passes it to Claude together with the retrieved document excerpts. Claude cites it like any other source ("Your fee account as of 4 Oct 2026").
-  - The personal excerpt is built server-side from the **caller's own** records only; the model never gets database access or other students' data.
-  - Personal excerpts are **not** written to the `queries` log; only the question, language and which documents answered.
-- **P2:** add attendance and marks excerpts. **P4:** deadline radar and the staff assistant (aggregate queries with the numbers shown).
-- **Notices → knowledge base:** publishing a notice chunks it, embeds it and adds it to the index stored in MongoDB (moving the index from `index.json` into a `kb_chunks` collection, with Atlas Vector Search when the corpus grows).
+### 5.2 Data (collections added)
+`users`, `sessions`, `login_events`, `audit_log`, `academic_years`, `departments`, `programmes`,
+`divisions`, `subjects`, `categories`, `students`, `student_change_requests`, `imports`,
+`fee_heads`, `fee_structures`, `ledger_entries`, `receipts`, `counters`, `approvals`, `notices`.
 
----
+### 5.3 API (under `/api/v1`)
+`/auth/*` (login, logout, logout-all, password change/reset, mfa) · `/me` · `/setup/*` ·
+`/users` · `/students` (+ `/import`, `/promote`, `/{id}/change-requests`) · `/fees/heads` ·
+`/fees/structures` · `/fees/demands/generate` · `/fees/concessions` ·
+`/fees/students/{id}/ledger` · `/fees/collect` · `/receipts/{id}/pdf` ·
+`/receipts/{id}/cancel-request` · `/approvals/{id}/decide` · `/verify/{code}` (public) ·
+`/reports/*` · `/notices` · `/audit` · `/export/*` · `/me/data-export`.
 
-## 7. Frontend plan
+### 5.4 Screens
+Login, first-login wizard, forgot password · Admin: users & roles, setup · Office: student list,
+student form, import wizard, change-request queue · Accounts: fee setup, collect fee,
+receipt view, cancellations, reports · Principal: approvals inbox · Student: home, profile,
+fees, receipts, notices · Public: Verify page.
 
-- **Routes:** `/` (help desk + sign-in button), `/login`, `/verify/:code`, `/app` → redirects to the role's home, `/app/student/*`, `/app/parent/*`, `/app/office/*`, `/app/accounts/*`, `/app/exam/*`, `/app/faculty/*`, `/app/principal/*`, `/app/admin/*`.
-- **Layouts:** student/parent = bottom tab bar on phones, sidebar on desktop; staff = sidebar + data tables.
-- **Shared components:** `DataTable` (search, filter, paginate, export), `MoneyText` (₹ formatting), `StatusBadge`, `ConfirmDialog` (with reason field for money/marks actions), `EmptyState`, `FileUpload`, `PdfLink`.
-- **Permissions in the UI** come from `GET /me`; hidden buttons are a convenience only — the API is the real gate.
-- **i18n:** all student/parent strings in `en/hi/mr`; staff screens English first.
-- **Offline attendance (P2):** service worker + IndexedDB queue, synced when back online.
-
----
-
-## 8. Quality: testing and CI
-
-| Layer | What | Where |
-|---|---|---|
-| Unit | Fee calculations, late fees, balance, receipt numbering, permissions matrix, amount-in-words | `backend/tests/` |
-| Integration | API + **real MongoDB** (GitHub Actions service container, replica set for transactions): collect fee concurrency (no duplicate receipt numbers), cancellation flow, scope leaks (student A can't read B) | `backend/tests/` |
-| End-to-end | Playwright: student first login → view fees → download receipt; cashier collects → receipt verifies publicly | `frontend/e2e/` |
-| Static | ruff + mypy (backend), oxlint + `tsc` (frontend) | CI |
-| Security | Dependency audit, OWASP checklist per phase, secrets scanning | CI + review |
-
-**Definition of done for every PR:** CI green; tests for new logic; no secrets; docs updated
-when behaviour changes; screenshots for UI changes; preview deployment checked.
-
----
-
-## 9. Phases and pull requests
-
-Estimates assume one developer working with Claude Code; they are for ordering, not promises.
-
-### Phase 0 — Foundations (≈1 week)
+### 5.5 Pull requests
 | PR | Content |
 |---|---|
-| 0.1 | `CLAUDE.md` + these plan docs |
-| 0.2 | GitHub Actions CI: backend lint/type/tests (Mongo service), frontend lint/type/build |
-| 0.3 | Backend restructure into `core/` + `modules/`; settings; error format; `/api/v1` prefix (old routes kept as aliases) |
-| 0.4 | Frontend: React Router, TanStack Query, layout shells, shared components skeleton |
+| 1.1 | Users, Argon2 passwords, sessions, login/logout, `/me`, lockout, rate limits, audit log, `create_admin` script |
+| 1.2 | RBAC permissions + scope checks + permission tests; replace `ADMIN_TOKEN` with real roles |
+| 1.3 | 2-step verification (TOTP + email OTP); password reset by email |
+| 1.4 | Institution setup module + admin screens |
+| 1.5 | Student records: CRUD, search, change requests, documents in Vercel Blob |
+| 1.6 | Excel/CSV import with validation report; bulk student accounts; bulk promotion |
+| 1.7 | Student first-login wizard + privacy consent |
+| 1.8 | Fee heads, structures, demand generation, concessions (with approval), scholarships tracking |
+| 1.9 | Fee collection transaction, receipt numbering, receipt PDF + QR, email receipt |
+| 1.10 | Public Verify page; cancellation/refund approval with reversals |
+| 1.11 | Opening balances import; accounts reports + Excel export |
+| 1.12 | Student portal v1 (home, profile, fees, receipts, notices) |
+| 1.13 | Notices v1 + email delivery |
+| 1.14 | Audit viewer, data exports; demo seed (BCA, 3 years, 60 students); Playwright e2e |
 
-**Exit:** CI runs on every PR; app behaves exactly as today.
+### 5.6 Acceptance criteria
+- Office imports 60 students from Excel; errors are reported row by row; each student gets a login.
+- A student signs in with PRN + temporary password, sets their own, accepts the privacy notice and sees the **correct balance**.
+- A cashier collects a fee and gets a receipt PDF with a sequential number in < 3 s; **two cashiers collecting at the same moment never get the same number** (automated test).
+- Scanning the receipt QR on a phone shows **Genuine** with masked details; after an approved cancellation it shows **Cancelled**.
+- A student cannot open another student's profile, ledger or receipt through any endpoint (automated tests).
+- Every money action appears in the audit log with who, when and why.
 
-### Phase 1 — Logins, students, fees, receipts, student portal (≈4–5 weeks)
+---
+
+## 6. Phase 2 — Core ERP: academics (≈5 weeks)
+
+**Goal:** the daily academic work — timetable, attendance, marks, results and certificates — runs in CollegeConnect.
+
+### 6.1 Features
+
+**Timetable**
+- Weekly timetable per division; clash checks (faculty, room, division); substitutions and cancellations shown to students.
+
+**Attendance — the 10-second flow (unique U9)**
+- Faculty open "Today", tap the lecture, the class list opens with **everyone present**, tap the absentees, save. Target: < 10 s for 60 students.
+- **Works offline:** saved to the phone and synced when back online, with conflict handling.
+- Edits for 48 hours, then only via HOD approval (audited).
+- Exemptions (medical, official duty) entered by the office.
+- Student view: subject-wise %, day calendar, and **"you can miss N more / must attend the next N"**.
+- Defaulter lists; automatic alerts to the student at 80% (warning) and 75% (critical), by email (SMS/WhatsApp in Phase 3).
+
+**Internal marks & exams**
+- Assessment scheme per subject (e.g. 2 unit tests + assignment + practical = 40).
+- Grid entry by faculty with max-mark checks → publish to students → HOD approval → **Exam Cell lock** at the deadline.
+- **University Upload Guard (unique U7):** before the university's deadline, a per-subject checklist of missing marks, marks above maximum, absent-but-marked and exam-form-ineligible students; export in the university's upload format; a dashboard of completion by department.
+- Exam forms: which students must fill them, exam-fee status (from the fees ledger).
+- Hall tickets: upload per student (from the university) or generate internal ones.
+
+**Results**
+- Import university results (CSV), publish, SGPA/CGPA, backlogs (ATKT) and revaluation tracking; result PDF in the student portal.
+
+**Certificates (unique U2 + U6)**
+- Student requests bonafide, character, fee-paid letter, TC, migration, NOC.
+- Workflow: Requested → Verified → Signed → Ready, with a **promised date per type** (e.g. bonafide 2 working days, TC 7) shown to the student; **automatic escalation** to the Principal when overdue (daily cron).
+- **No-dues check** before TC (fees in Phase 2; library/hostel added in Phase 3).
+- Issued as PDF with certificate number and **QR → Verify page**.
+- On TC: the student account becomes read-only.
+
+**Portals**
+- Student: attendance, timetable, marks, results, hall ticket, certificates.
+- Faculty home (today's lectures, take attendance, marks tasks), HOD dashboard, Exam Cell console.
+
+### 6.2 Data
+`timetable_slots`, `substitutions`, `attendance_sessions`, `attendance_marks`, `exemptions`,
+`assessment_schemes`, `marks`, `marks_locks`, `exam_forms`, `hall_tickets`, `results`,
+`certificate_types`, `certificate_requests`, `certificates`.
+
+### 6.3 Pull requests
 | PR | Content |
 |---|---|
-| 1.1 | Users, sessions, Argon2 passwords, login/logout, `GET /me`, rate limiting, audit log; script to create the first System Admin |
-| 1.2 | RBAC permissions + scope checks + tests; replace `ADMIN_TOKEN` with real roles |
-| 1.3 | Institution setup module + admin screens |
-| 1.4 | Student Information System: CRUD, search, CSV import with validation report, student account creation with temporary password |
-| 1.5 | First-login flow: forced password change, privacy-notice consent, language choice; password reset by email OTP |
-| 1.6 | Fee heads, fee structures, demand generation, concessions with approval |
-| 1.7 | Fee collection transaction, receipt numbering, receipt PDF with QR (fpdf2 + segno), Vercel Blob storage |
-| 1.8 | Public Verify page; receipt cancellation request/approval |
-| 1.9 | Accounts reports: day book, outstanding by class, Excel export |
-| 1.10 | Student portal: home ("needs attention"), profile, fees & ledger, receipts download, notices |
-| 1.11 | Notices module (create, audience, expiry) + email notifications + auto-index into the help desk |
-| 1.12 | "Ask my record" for fees in CollegeConnect |
-| 1.13 | Demo seed data (1 programme, 3 years, 60 students, fee structures) + Playwright e2e |
+| 2.1 | Timetable + clash detection + substitutions |
+| 2.2 | Attendance API + faculty "take attendance" screen |
+| 2.3 | Offline attendance (service worker + IndexedDB sync) |
+| 2.4 | Attendance analytics, student view with "can miss / must attend", defaulters, email alerts |
+| 2.5 | Assessment schemes + marks entry grid + publish + HOD approval + lock |
+| 2.6 | University Upload Guard + university-format export |
+| 2.7 | Exam forms + hall tickets |
+| 2.8 | Results import, SGPA/CGPA, backlogs, revaluation |
+| 2.9 | Certificate types, templates, request workflow, promised dates, escalation cron |
+| 2.10 | Certificate PDFs + QR on the Verify page; TC → read-only account |
+| 2.11 | Faculty home, HOD dashboard, Exam Cell console, student portal additions; e2e tests |
 
-**Exit criteria (acceptance):**
-- Office imports 60 students from a CSV; each gets a login.
-- A student signs in with PRN + temporary password, sets their own, and sees the correct fee balance.
-- A cashier collects a fee; a receipt PDF with a sequential number is produced in < 3 s; two cashiers at once never get the same number (tested).
-- Scanning the receipt QR on a phone shows "Genuine" with masked details; after an approved cancellation it shows "Cancelled".
-- A student asks "How much fee do I still owe?" in Marathi and gets the correct amount with citations.
-- A student can never open another student's data (tested for every endpoint).
-
-### Phase 2 — Academics (≈4 weeks)
-Timetable · attendance (10-second marking, offline queue) · subject-wise % and "can miss / must attend" · defaulter alerts · assessments and internal marks · HOD approval and Exam Cell lock · **University Upload Guard** · results import, SGPA/CGPA · certificate requests with promised dates, templates and QR · student portal additions · "Ask my record" for attendance and marks · notice auto-translation.
-
-### Phase 3 — Payments, parents and campus (≈4–6 weeks)
-Online fee payment with gateway webhooks and reconciliation · parent portal with consent controls · SMS/WhatsApp (DLT templates) · library · hostel · placement · grievance · staff records and leave · admissions module (online applications, merit lists).
-
-### Phase 4 — Compliance and intelligence (≈3–4 weeks)
-NAAC criterion tagging and AQAR tables · AISHE/NIRF exports · APAAR/ABC fields and export · DigiLocker readiness · early-warning scores with reasons · deadline radar · staff AI assistant · full data export and open API documentation.
+### 6.4 Acceptance criteria
+- A faculty member marks attendance for 60 students in under 10 seconds, including in airplane mode, and it syncs when back online.
+- A student sees exactly how many lectures they can miss in each subject.
+- Two days before a mock university deadline, the Upload Guard lists every missing mark; after fixing, the export file passes the university format check.
+- A bonafide certificate request shows its promised date, escalates automatically when late, and the issued PDF verifies by QR.
 
 ---
 
-## 10. Data migration and onboarding
+## 7. Phase 3 — Campus operations (≈7 weeks)
 
-1. **Templates:** downloadable Excel/CSV templates for students, fee structures, opening balances (fees already paid this year), staff.
-2. **Validation report** before anything is saved: missing PRN, duplicate PRN, unknown category, bad dates — fix and re-upload.
-3. **Opening balances:** imported as ledger entries of type `opening_balance` with the old receipt numbers kept as references.
-4. **Pilot:** one programme (BCA) for one term alongside the existing process, then the whole college.
-5. **Training:** 30-minute sessions per role; one-page guides; the AI help desk also answers "how do I…" questions about the ERP itself.
+**Goal:** everything else the office runs, plus parents and online payments.
+
+### 7.1 Features
+- **Parent portal:** OTP login, child switcher, read-only fees/receipts/attendance/results/notices, certificate requests for the child. **Consent controls:** for students 18+, the student chooses what parents see; for under-18s, parental consent recorded at admission.
+- **Online fee payment:** gateway checkout (UPI/cards/net banking), webhook verification, automatic receipt on success, daily reconciliation report, refund handling.
+- **Messaging:** SMS and WhatsApp (DLT-approved templates) alongside email for fee reminders, attendance alerts, results, certificate ready; per-user preferences; delivery log.
+- **Admissions:** enquiries, online application with documents and application fee, scrutiny, category-wise merit lists and rounds, confirmation → student record + login + first fee demand in one step, cancellation with refund rules.
+- **Library:** catalogue (ISBN lookup), barcode issue/return, due dates, fines into the student ledger, reservations, overdue reminders.
+- **Hostel:** blocks/rooms/beds, allotment, hostel fees into the ledger, out-pass requests with warden approval and parent notification, complaints.
+- **Placement:** drives, eligibility rules (CGPA, backlogs, programme), student registration and resume, rounds, offers, statistics.
+- **Grievance:** categories, optional anonymity, **SLA with escalation**, confidential handling for sensitive cases, closure feedback.
+- **Staff & leave:** staff records and qualifications, leave types and balances, apply/approve, workload view. (Payroll is a later, separate project.)
+- **No-dues** extended to library and hostel for TCs.
+
+### 7.2 Pull requests
+| PR | Content |
+|---|---|
+| 3.1 | Parent accounts, OTP login, linking, consent controls, parent portal |
+| 3.2 | Payment gateway checkout + webhooks + automatic receipts + reconciliation |
+| 3.3 | Messaging service (SMS/WhatsApp/email), templates, preferences, delivery log |
+| 3.4 | Admissions: enquiry, application, documents, application fee |
+| 3.5 | Admissions: merit lists, rounds, confirmation → student + login + fee demand |
+| 3.6 | Library |
+| 3.7 | Hostel + out-pass |
+| 3.8 | Placement |
+| 3.9 | Grievance with SLA |
+| 3.10 | Staff records and leave |
+| 3.11 | No-dues across modules; e2e tests |
+
+### 7.3 Acceptance criteria
+- A parent signs in with OTP and sees both of their children; an 18+ student turning off "marks" hides marks from the parent.
+- A student pays online by UPI; the receipt appears automatically and the day book reconciles to the gateway report.
+- Confirming an admission creates the student, their login and their fee demand with no re-typing.
+- An overdue library book appears in the student's no-dues check and blocks a TC until cleared.
 
 ---
+
+## 8. Phase 4 — Control, compliance and openness (≈4 weeks)
+
+**Goal:** management sees the whole college; accreditation and government reporting come out of the system; the college owns its data.
+
+### 8.1 Features
+- **NAAC-ready by default (unique U8):** every record type is mapped to the NAAC criterion/metric it evidences; AQAR/SSR tables generated for a chosen year; evidence file links; gaps report ("Metric 2.4.1: 3 faculty records missing qualification proof").
+- **Government reporting:** AISHE data sheet, NIRF data points, **APAAR/ABC ID** validation and credit export, DigiLocker/NAD-ready signed documents.
+- **Dashboards:** Principal (admissions vs target, collection vs demand, attendance health, marks completion, certificate turnaround, pending approvals), HOD (department), Accounts (collections, receivables).
+- **Early warning — rule-based and explainable (unique U10):** configurable rules (attendance trend, marks below threshold, fee overdue) produce a risk level **with the reasons listed**; visible only to the mentor, HOD and Principal; mentor counselling notes; never an automatic penalty.
+- **Scholarship eligibility checker (unique U11):** rules for common scholarships (e.g. MahaDBT/NSP schemes: category, income limit, course, attendance) tell each student which ones they may qualify for and which documents are missing.
+- **No lock-in (unique U12):** full data export (all collections, CSV/JSON, with a data dictionary), **open REST API** with API keys and scopes, published OpenAPI docs.
+- **Operations hardening:** load test for fee/result days, backup restore drill, security review (OWASP Top 10).
+
+### 8.2 Pull requests
+| PR | Content |
+|---|---|
+| 4.1 | NAAC criterion mapping + AQAR tables + gaps report |
+| 4.2 | AISHE / NIRF exports; APAAR/ABC validation and export |
+| 4.3 | Principal / HOD / Accounts dashboards |
+| 4.4 | Rule-based early warning + mentor workspace and notes |
+| 4.5 | Scholarship eligibility rules + student view |
+| 4.6 | Full export + data dictionary; API keys + OpenAPI docs |
+| 4.7 | Load test, restore drill, security review fixes |
+
+### 8.3 Acceptance criteria
+- The AQAR tables for a year are generated in minutes, with a list of missing evidence.
+- A mentor sees each at-risk mentee with the specific reasons, and the student never sees the risk label.
+- The college can export all of its data in one click and re-import it into a fresh database.
+- The system handles 2,000 students logging in within 15 minutes without errors.
+
+---
+
+## 9. Phase 5 — CollegeConnect AI (≈4 weeks)
+
+**Goal:** the AI layer on top of a complete ERP — answers that use official documents **and** the user's own records, with citations, in three languages.
+
+### 9.1 Features
+- **Help desk inside the ERP:** the existing public help desk (`backend/app/rag/`) becomes the assistant panel in every portal; public mode unchanged.
+- **Knowledge base in MongoDB:** move `index.json` into a `kb_chunks` collection (Atlas Vector Search when large); documents managed from the admin portal.
+- **Self-publishing notices (unique U4):** publishing a notice **auto-translates** it to Hindi and Marathi (staff can edit before publishing) and **auto-indexes** it into the help desk; expiry removes it.
+- **Ask my record (unique U1):** a signed-in student or parent asks "How much fee do I still owe?", "What is my attendance in DBMS?", "Is my bonafide ready?". The backend builds short, structured excerpts from **the caller's own records only** (fees, attendance, marks, certificates) and passes them with the document excerpts; the answer cites both ("Your fee account as of 4 Oct 2026"). The model never gets database access; personal excerpts are never logged.
+- **Deadline radar (unique U3):** dates extracted from new notices ("exam form closes 15 Oct for SY BCA") become personal reminders for the students they apply to, checked by staff before going out.
+- **Knowledge-gap loop (unique U5):** the existing analytics move into the Principal/Office dashboards; one click turns an unanswered question into a draft FAQ/notice.
+- **Staff assistant:** "How many SY BCA students owe more than ₹10,000?" answered by running **pre-defined, permission-checked queries** and showing the numbers and the list behind them — never free-form database access.
+- **Optional:** ML-based risk score alongside the Phase 4 rules (only if it measurably beats the rules, and with reasons shown); WhatsApp AI channel.
+
+### 9.2 Pull requests
+| PR | Content |
+|---|---|
+| 5.1 | Knowledge base in MongoDB + admin document management |
+| 5.2 | Notices → auto-translation + auto-indexing |
+| 5.3 | Assistant panel in all portals |
+| 5.4 | Ask my record — fees and certificates |
+| 5.5 | Ask my record — attendance and marks |
+| 5.6 | Deadline radar |
+| 5.7 | Knowledge-gap loop in dashboards |
+| 5.8 | Staff assistant with permission-checked query tools |
+| 5.9 | Evaluation set (cited-answer accuracy in EN/HI/MR) + privacy tests |
+
+### 9.3 Acceptance criteria
+- A student asks in Marathi "मला अजून किती फी भरायची आहे?" and gets the exact balance from their ledger, citing their fee account and the fee notice.
+- No question, however phrased, returns another student's data (automated red-team tests).
+- Publishing an English notice makes it answerable in Hindi and Marathi within a minute.
+- Synopsis targets: ≥ 90% correct answers and 100% citation coverage on the evaluation set; answers in < 5 s.
+
+---
+
+## 10. Data migration and rollout
+
+1. **Templates** for students, fee structures, opening balances and staff (Excel/CSV), each with a validation report before saving.
+2. **Opening balances** imported as ledger entries of type `opening_balance`, keeping old receipt numbers as references.
+3. **Pilot:** BCA for one term alongside the current process; then the whole college.
+4. **Training:** 30-minute session per role, one-page guides, a "champion" in each office.
 
 ## 11. Operations
 
 | Item | Plan |
 |---|---|
-| Environments | Production (`main`), Preview (every PR, separate database `collegeconnect_preview`), Local |
-| Secrets | Vercel environment variables only; never in git; rotated when a person leaves |
-| Required env vars | `MONGODB_URI`, `SESSION_SECRET`, `ANTHROPIC_API_KEY`, `VOYAGE_API_KEY`, `BLOB_READ_WRITE_TOKEN`, `EMAIL_API_KEY`, `CRON_SECRET` (+ SMS/payment keys in P3) |
-| Backups | Daily dump, 30-day retention, restore drill each term |
-| Monitoring | Vercel logs + error alerts; `/api/health` checks DB, AI and storage |
-| Incident / breach | Written runbook; DPDP breach notification to the Data Protection Board and affected users within the prescribed time |
-
----
+| Environments | Production (`main`), Preview (every PR, separate database), Local |
+| Secrets | Vercel environment variables only; rotated when someone leaves |
+| Env vars | `MONGODB_URI`, `SESSION_SECRET`, `BLOB_READ_WRITE_TOKEN`, `EMAIL_API_KEY`, `CRON_SECRET` (P1); SMS/WhatsApp and payment keys (P3); `ANTHROPIC_API_KEY`, `VOYAGE_API_KEY` (P5, already used by the help desk) |
+| Backups | Daily, 30-day retention, restore drill each term |
+| Monitoring | Vercel logs and alerts; `/api/health` checks database, storage and (P5) AI |
+| Incidents | Written runbook incl. DPDP breach notification |
 
 ## 12. Risks
 
 | Risk | Mitigation |
 |---|---|
-| Money bugs (wrong balances, duplicate receipt numbers) | Ledger-only balances, transactions, concurrency tests, reversals instead of edits |
-| Data leak between students | Scope checks in the service layer + tests for every endpoint |
-| Peak load on fee/result days | Indexed queries, cached reads, load test before go-live |
-| Staff don't adopt it | 10-second flows, pilot with one programme, train champions in each office |
-| Vendor/plan limits (Vercel Hobby, Atlas M0) | Upgrade plan before production; budget noted in D7 |
-| Scope creep | Phases ship independently; anything new goes to the next phase's list |
-| AI gives a wrong answer | Citations always shown; "no source → no answer"; knowledge-gap review weekly |
+| Money errors | Ledger-only balances, transactions, concurrency tests, reversals instead of edits |
+| One student seeing another's data | Scope checks in the service layer, tests on every endpoint |
+| Peak load on fee/result days | Indexes, caching, load test in Phase 4 |
+| Staff don't adopt it | 10-second flows, BCA pilot, champions per office |
+| Free-tier limits | Vercel Pro and an Atlas tier with backups before go-live |
+| Scope creep | Each phase ships on its own; new ideas go to the next phase's list |
+| AI mistakes (Phase 5) | Citations always shown, "no source → no answer", evaluation set, weekly gap review |
 
----
+## 13. Next steps
 
-## 13. Immediate next steps
-
-1. Confirm or change decisions **D1–D7** in the product spec.
-2. Start **Phase 0** (CI + restructure), then **PR 1.1** (logins).
-3. Add `ANTHROPIC_API_KEY` in Vercel so the help desk generates answers.
+1. Confirm decisions **D1–D7** in the product spec.
+2. Start **Phase 0** (PR 0.1 CI → 0.4), then **PR 1.1** (logins).
