@@ -1,6 +1,6 @@
 # CollegeConnect — Product Specification
 
-> **Status:** Draft v1 · **Owner:** Aniket Pitre · **Last updated:** 2026-10-04
+> **Status:** Draft v2 · **Owner:** Aniket Pitre · **Last updated:** 2026-10-04
 >
 > CollegeConnect is a college ERP (Enterprise Resource Planning) system for an Indian
 > undergraduate college, with an AI help desk built in. This document describes **what** we
@@ -149,7 +149,7 @@ accept the privacy notice (what data the college holds and why, per DPDP Act) �
 | **Hostel** | Room, roommates, hostel fee status, apply for out-pass. *(Phase 3)* |
 | **Placement** | Upcoming drives they are eligible for, register, upload resume. *(Phase 3)* |
 | **Grievance** | Raise a complaint (optionally anonymous to the department), track it. *(Phase 3)* |
-| **Ask CollegeConnect** | Ask anything about rules and notices **and about their own record** — "How much fee do I still owe?", "What is my attendance in DBMS?", "When is my exam form due?" — each answer cites the notice and/or "Your fee account as of 4 Oct". |
+| **Ask CollegeConnect** | Ask anything about rules and notices (available from day one: the existing help desk). **Phase 5:** also about their own record — "How much fee do I still owe?", "What is my attendance in DBMS?", "When is my exam form due?" — each answer cites the notice and/or "Your fee account as of 4 Oct". |
 | **My data** | Download a copy of all their personal data (DPDP Act right to access); manage parent access consent (§4.2). |
 
 **A student can never:** see another student's data, edit marks/attendance/fees, or see staff-only notes.
@@ -158,7 +158,7 @@ accept the privacy notice (what data the college holds and why, per DPDP Act) �
 
 - Same layout as the student, read-only, with a **child switcher** if they have more than one child at the college.
 - Sees: fees and receipts, attendance, published marks and results, notices, certificate status.
-- Can: download receipts, raise certificate requests on behalf of the child, ask CollegeConnect about the child's record.
+- Can: download receipts, raise certificate requests on behalf of the child, and (Phase 5) ask CollegeConnect about the child's record.
 - Receives: fee-due reminders, low-attendance alerts, result publication alerts (SMS/WhatsApp/email).
 - For a student **aged 18+**, the student controls what the parent sees (default: fees + attendance + results on; can be changed). For a student **under 18**, the parent account is required and parental consent is recorded at admission (DPDP Act §9).
 
@@ -173,7 +173,7 @@ accept the privacy notice (what data the college holds and why, per DPDP Act) �
 | **Internal marks** | Enter marks per assessment (unit test, assignment, practical) in a grid; the system validates max marks and flags missing students; publish to students; marks lock on the Exam Cell's deadline. |
 | **My classes** | Student list with photo, attendance %, marks; export to Excel. |
 | **Timetable** | Own weekly timetable; request a swap. |
-| **Notices** | Post a notice to their own class (auto-translated). |
+| **Notices** | Post a notice to their own class (auto-translated from Phase 5). |
 | **Leave** | Apply for leave; see balance. *(Phase 3)* |
 
 #### R9 — Mentor (a faculty member with mentees)
@@ -200,7 +200,7 @@ accept the privacy notice (what data the college holds and why, per DPDP Act) �
 | **Student accounts** | Create login, reset password, link parent. |
 | **Documents** | Verify uploaded documents (marksheets, caste certificate, Aadhaar-masked copy); mark verified/rejected with a reason. |
 | **Certificates** | Process requests: auto-filled from the student record → check → send for signature → issue (PDF with QR) or print. Fixed formats for bonafide, character, TC, migration, fee-paid letter, NOC. |
-| **Notices** | Publish notices (upload PDF or type), choose audience (all / programme / year / division / staff), set expiry. The system translates to Hindi and Marathi and adds it to the AI help desk automatically. |
+| **Notices** | Publish notices (upload PDF or type), choose audience (all / programme / year / division / staff), set expiry. Hindi/Marathi versions typed by staff; from Phase 5 the system translates them and adds the notice to the AI help desk automatically. |
 | **Reports** | Class lists, category-wise counts, gender/age statistics, AISHE data sheet. |
 
 #### R4 — Accounts
@@ -258,14 +258,15 @@ Their data feeds the student portal and the AI help desk ("Is my library book ov
 - **Ask CollegeConnect** about admissions, fees, rules, notices (already built).
 - **Notice board**: public notices only.
 - **Verify a document:** scan the QR on a receipt or certificate → see "Genuine: Receipt R/2026-27/001234, ₹25,000, 12 Aug 2026, issued to A•••• P•••• (PRN ••••5678)" or "Not found / cancelled". Shows only masked details.
-- **Apply for admission** (Phase 2).
+- **Apply for admission** (Phase 3).
 
 ---
 
 ## 3. Modules and features
 
 Each module lists its features, its rules, and the phase it ships in (see the implementation
-plan for phases). **P1** = Phase 1 … **P4** = Phase 4.
+plan). Build order: **core ERP first (P1–P2), then other features (P3–P4), CollegeConnect AI
+last (P5)**. **P1** = Phase 1 … **P5** = Phase 5.
 
 ### 3.1 Institution setup — P1
 - Academic years (e.g. 2026-27) with start/end and the "current year" switch.
@@ -275,7 +276,7 @@ plan for phases). **P1** = Phase 1 … **P4** = Phase 4.
 - Numbering formats (PRN, receipt number, certificate number).
 - Holidays calendar.
 
-### 3.2 Admissions — P2
+### 3.2 Admissions — P3
 - Enquiry capture (incl. from the AI help desk: "Leave your number and we'll call you").
 - Online application with document upload; application fee.
 - Scrutiny and document verification.
@@ -304,7 +305,7 @@ plan for phases). **P1** = Phase 1 … **P4** = Phase 4.
 - **Online payment** via a payment gateway (UPI/cards/net banking) with automatic reconciliation — P3.
 
 ### 3.5 Student portal — P1 (grows each phase)
-See §2.4 R13. P1 ships: profile, fees, receipts, notices, Ask CollegeConnect with "Ask my record" for fees. P2 adds attendance, timetable, marks, results, certificates.
+See §2.4 R13. P1 ships: profile, fees, receipts, notices, and a link to the existing help desk. P2 adds attendance, timetable, marks, results, certificates. P3 adds library, hostel, placement, grievance, online payment. P5 adds "Ask my record".
 
 ### 3.6 Parent portal — P3
 See §2.4 R14.
@@ -331,19 +332,19 @@ See §2.4 R14.
 - Issued as a PDF with QR verify code and certificate number; option to print on letterhead.
 - Public **Verify** page (masked details).
 
-### 3.10 Notices and communication — P1 (channels grow)
+### 3.10 Notices and communication — P1 (channels grow; AI in P5)
 - Create notice (text or PDF), audience targeting, schedule, expiry, pin.
-- **Auto-translation** to Hindi and Marathi (staff can edit the translation before publishing).
-- **Auto-indexed into the AI help desk** the moment it is published; removed when it expires.
+- **Auto-translation** to Hindi and Marathi (staff can edit the translation before publishing) — P5; until then staff type translations.
+- **Auto-indexed into the AI help desk** the moment it is published; removed when it expires — P5.
 - Channels: in-app (P1), email (P1), SMS and WhatsApp (P3).
 - Read receipts for important notices.
 
-### 3.11 CollegeConnect AI — exists today, extended every phase
+### 3.11 CollegeConnect AI — public help desk exists today; extended in P5
 - **Public help desk** (built): cited answers from official documents in 3 languages.
-- **Ask my record** (P1 fees, P2 attendance/marks): when signed in, answers use the student's own data plus the documents, and cite both.
-- **Deadline radar** (P4): extracts dates from notices and turns them into per-student reminders.
-- **Knowledge gaps** (built): unanswered questions shown to the office.
-- **Staff assistant** (P4): "How many SY BCA students have fees pending above ₹10,000?" answered from the ERP with the data behind it.
+- **Ask my record** (P5): when signed in, answers use the student's own data plus the documents, and cite both.
+- **Deadline radar** (P5): extracts dates from notices and turns them into per-student reminders.
+- **Knowledge gaps** (built as a separate admin page; moved into the ERP dashboards in P5): unanswered questions shown to the office.
+- **Staff assistant** (P5): "How many SY BCA students have fees pending above ₹10,000?" answered from the ERP with the data behind it.
 - **Guard-rails:** never reveals another person's data; never answers without a source; every question logged without personal data.
 
 ### 3.12 Library — P3
@@ -367,11 +368,12 @@ Staff records, qualifications, appointments, leave types and balances, leave app
 - APAAR/ABC ID capture and validation; credit data export.
 - DigiLocker/NAD readiness (digitally signed documents).
 
-### 3.18 Analytics and early warning — P4
+### 3.18 Analytics and early warning — P4 (optional ML in P5)
 - Principal and HOD dashboards.
-- Early-warning score per student from attendance trend, marks trend and fee dues, **with the reasons shown**, visible only to mentor/HOD/Principal. No automated decisions.
+- Early-warning level per student from **configurable rules** (attendance trend, marks trend, fee dues), **with the reasons shown**, visible only to mentor/HOD/Principal. No automated decisions. An ML score may be added in P5 only if it measurably beats the rules.
+- **Scholarship eligibility checker:** rules for common schemes (e.g. MahaDBT/NSP) show each student which scholarships they may qualify for and which documents are missing.
 
-### 3.19 Audit, privacy and data export — P1 onwards
+### 3.19 Audit, privacy and data export — P1 onwards (open API in P4)
 - Append-only audit log of every create/update/approve on money, marks, records and roles.
 - DPDP Act: privacy notice and consent records, parental consent for minors, right to access/correct, data retention schedule, breach response plan.
 - Full data export (CSV/JSON) for the college; personal data download for students.
@@ -405,20 +407,20 @@ Staff records, qualifications, appointments, leave types and balances, leave app
 
 ## 5. Unique features (what other college ERPs lack)
 
-| # | Feature | Why it matters |
-|---|---|---|
-| U1 | **Ask my record** — cited AI answers from the student's own data + official documents, in 3 languages | Replaces the most common office queue questions |
-| U2 | **QR-verifiable receipts and certificates** with a public Verify page | Stops forged receipts and certificates |
-| U3 | **Deadline radar** — personal deadlines extracted from notices | Students stop missing exam-form and fee deadlines |
-| U4 | **Self-publishing notices** — auto-translated and auto-indexed into the AI | One upload reaches everyone in their language |
-| U5 | **Knowledge-gap loop** — unanswered questions tell the office what to publish | The help desk improves itself |
-| U6 | **Certificates with a promised date** and automatic escalation | Visible accountability instead of "come tomorrow" |
-| U7 | **University Upload Guard** for internal marks | No student's result withheld because of a missing mark |
-| U8 | **NAAC-ready by default** | Accreditation becomes a report |
-| U9 | **10-second attendance** that works offline | Faculty actually use it |
-| U10 | **Explainable early warning**, privacy-safe | Mentors act early, students aren't profiled |
-| U11 | **Scholarship eligibility hints** | Fewer missed scholarships |
-| U12 | **No lock-in** — full export and open API | The college owns its data |
+| # | Feature | Why it matters | Phase |
+|---|---|---|---|
+| U2 | **QR-verifiable receipts and certificates** with a public Verify page | Stops forged receipts and certificates | P1 (receipts), P2 (certificates) |
+| U9 | **10-second attendance** that works offline | Faculty actually use it | P2 |
+| U7 | **University Upload Guard** for internal marks | No student's result withheld because of a missing mark | P2 |
+| U6 | **Certificates with a promised date** and automatic escalation | Visible accountability instead of "come tomorrow" | P2 |
+| U12 | **No lock-in** — full export and open API | The college owns its data | P1 (export), P4 (API) |
+| U8 | **NAAC-ready by default** | Accreditation becomes a report | P4 |
+| U10 | **Explainable early warning** (rule-based), privacy-safe | Mentors act early, students aren't profiled | P4 |
+| U11 | **Scholarship eligibility checker** | Fewer missed scholarships | P4 |
+| U4 | **Self-publishing notices** — auto-translated and auto-indexed into the AI | One upload reaches everyone in their language | P5 |
+| U1 | **Ask my record** — cited AI answers from the student's own data + official documents, in 3 languages | Replaces the most common office queue questions | P5 |
+| U3 | **Deadline radar** — personal deadlines extracted from notices | Students stop missing exam-form and fee deadlines | P5 |
+| U5 | **Knowledge-gap loop** — unanswered questions tell the office what to publish | The help desk improves itself | P5 (exists as a separate admin page today) |
 
 ---
 
