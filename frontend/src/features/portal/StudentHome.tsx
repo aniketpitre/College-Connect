@@ -31,7 +31,7 @@ export default function StudentHome() {
       case "correction_rejected":
         return { body: `${t.correctionRejected}${c.reason ? ` ${c.reason}` : ""}`, to: "/app/profile" };
       case "notice":
-        return { body: c.title ?? "", to: `/app/notices/${c.notice_id}` };
+        return { body: `${t.newNotice}: ${(language !== "en" && c[language]?.title) || c.title}`, to: `/app/notices/${c.notice_id}` };
     }
   };
 

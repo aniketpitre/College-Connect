@@ -16,6 +16,7 @@ from app.core.errors import AppError
 from app.modules.fees import ledger
 from app.modules.fees import receipts as receipts_mod
 from app.modules.fees import service as fees
+from app.modules.notices import service as notices
 from app.modules.students import service as students
 
 DUE_SOON_DAYS = 15
@@ -150,6 +151,17 @@ def home(ctx: AuthContext) -> dict[str, Any]:
                     "reason": r.get("decision_reason"),
                 }
             )
+    for n in notices.recent_for_student(ctx):
+        cards.append(
+            {
+                "kind": "notice",
+                "severity": "info",
+                "notice_id": n["id"],
+                "title": n["title"],
+                "hi": n["hi"],
+                "mr": n["mr"],
+            }
+        )
     summary = students.summary(student)
     return {
         "name": student["name"],

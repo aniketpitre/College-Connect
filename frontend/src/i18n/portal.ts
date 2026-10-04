@@ -19,6 +19,7 @@ export interface PortalStrings {
   correctionRejected: string;
   payAtOffice: string;
   view: string;
+  newNotice: string;
   // My fees
   feesTitle: string;
   year: string;
@@ -63,6 +64,7 @@ const EN: PortalStrings = {
   correctionRejected: "The office did not change your details.",
   payAtOffice: "Pay at the college accounts counter.",
   view: "View",
+  newNotice: "New notice",
   feesTitle: "My fees",
   year: "Year",
   totalFee: "Total fee",
@@ -116,6 +118,7 @@ const HI: PortalStrings = {
   correctionRejected: "कार्यालय ने आपकी जानकारी नहीं बदली।",
   payAtOffice: "कॉलेज के लेखा काउंटर पर भुगतान करें।",
   view: "देखें",
+  newNotice: "नई सूचना",
   feesTitle: "मेरी फ़ीस",
   year: "वर्ष",
   totalFee: "कुल फ़ीस",
@@ -169,6 +172,7 @@ const MR: PortalStrings = {
   correctionRejected: "कार्यालयाने तुमची माहिती बदलली नाही.",
   payAtOffice: "महाविद्यालयाच्या लेखा खिडकीवर भरणा करा.",
   view: "पहा",
+  newNotice: "नवीन सूचना",
   feesTitle: "माझे शुल्क",
   year: "वर्ष",
   totalFee: "एकूण शुल्क",

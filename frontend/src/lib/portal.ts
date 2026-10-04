@@ -14,6 +14,8 @@ export interface HomeCard {
   fields?: string[];
   notice_id?: string;
   title?: string;
+  hi?: { title: string } | null;
+  mr?: { title: string } | null;
 }
 export interface StudentHome {
   name: string;
