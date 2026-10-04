@@ -8,13 +8,6 @@ export type Category =
   | "hostel"
   | "notices";
 
-export interface CategoryInfo {
-  id: Category;
-  label_en: string;
-  label_hi: string;
-  label_mr: string;
-}
-
 export interface SourceRef {
   title: string;
   document: string;

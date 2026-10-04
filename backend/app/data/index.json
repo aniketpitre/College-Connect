@@ -1,0 +1,77 @@
+{
+ "embedding_model": null,
+ "chunks": [
+  {
+   "id": "Admissions_Circular_2026::Section 1: Key Dates::0",
+   "category": "admissions",
+   "title": "UG Admission Notice 2026-27",
+   "document": "Admissions_Circular_2026.pdf",
+   "section": "Section 1: Key Dates",
+   "text": "The last date to submit the admission application for the 2026-27 academic year is 15th July 2026. Merit lists will be published on the college website in three rounds."
+  },
+  {
+   "id": "Admissions_Circular_2026::Section 3: Required Documents::0",
+   "category": "admissions",
+   "title": "UG Admission Notice 2026-27",
+   "document": "Admissions_Circular_2026.pdf",
+   "section": "Section 3: Required Documents",
+   "text": "For undergraduate admission, applicants must submit the following documents:\n\n- 10th and 12th mark sheets\n- Transfer certificate\n- Migration certificate\n- Category / caste certificate (if applicable)\n- Aadhaar card\n- Passport-size photographs\n- Online application fee receipt"
+  },
+  {
+   "id": "Exam_Controller_Notice_Sept2026::Section 1: Theory Exam Timetable::0",
+   "category": "examinations",
+   "title": "Examination Schedule & Rules - Semester Odd 2026",
+   "document": "Exam_Controller_Notice_Sept2026.pdf",
+   "section": "Section 1: Theory Exam Timetable",
+   "text": "The odd semester theory examinations are scheduled from 25th November to 12th December 2026. The detailed subject-wise timetable will be released on the college notice board and student portal by 1st November 2026."
+  },
+  {
+   "id": "Exam_Controller_Notice_Sept2026::Section 4: Revaluation & Backlog::0",
+   "category": "examinations",
+   "title": "Examination Schedule & Rules - Semester Odd 2026",
+   "document": "Exam_Controller_Notice_Sept2026.pdf",
+   "section": "Section 4: Revaluation & Backlog",
+   "text": "Students may apply for revaluation within 10 days of result declaration through the exam portal, with a fee of Rs. 300 per subject. Backlog exams for failed subjects are conducted along with the next regular semester exam."
+  },
+  {
+   "id": "Fees_Accounts_Notice_2026::Section 2: Payment Deadlines::0",
+   "category": "fees",
+   "title": "Fee Structure & Payment Schedule 2026",
+   "document": "Fees_Accounts_Notice_2026.pdf",
+   "section": "Section 2: Payment Deadlines",
+   "text": "Tuition fees for the odd semester must be paid by 10th August 2026 and for the even semester by 10th January 2027. A late fee of Rs. 500 per week applies after the deadline. Payments can be made online via the student portal."
+  },
+  {
+   "id": "Fees_Accounts_Notice_2026::Section 5: Scholarships::0",
+   "category": "fees",
+   "title": "Fee Structure & Payment Schedule 2026",
+   "document": "Fees_Accounts_Notice_2026.pdf",
+   "section": "Section 5: Scholarships",
+   "text": "The college offers merit-based scholarships, state government scholarships (for SC/ST/OBC/EWS categories), and a need-based fee waiver. Applications open on the National/State Scholarship Portal after admission confirmation; the college scholarship cell assists with document verification."
+  },
+  {
+   "id": "Hostel_Facilities_Notice_2026::Section 2: Hostel Fees::0",
+   "category": "hostel",
+   "title": "Hostel Admission & Fee Notice 2026-27",
+   "document": "Hostel_Facilities_Notice_2026.pdf",
+   "section": "Section 2: Hostel Fees",
+   "text": "Hostel accommodation fee is Rs. 45,000 per year (double-sharing) or Rs. 60,000 per year (single room), inclusive of mess charges. Fees are payable in two installments at the start of each semester."
+  },
+  {
+   "id": "College_Notices_Sept2026::Latest Announcements::0",
+   "category": "notices",
+   "title": "General Notice Board",
+   "document": "College_Notices_Sept2026.pdf",
+   "section": "Latest Announcements",
+   "text": "The college will remain closed on 2nd October 2026 for Gandhi Jayanti. Regular classes resume from 3rd October 2026. Check the notice board or student portal for further updates."
+  },
+  {
+   "id": "Placement_Cell_Bulletin_Sept2026::Section 1: Upcoming Drives::0",
+   "category": "placements",
+   "title": "Placement Cell Update - September 2026",
+   "document": "Placement_Cell_Bulletin_Sept2026.pdf",
+   "section": "Section 1: Upcoming Drives",
+   "text": "The next campus placement drive is scheduled for 20th October 2026 with participation from IT and core engineering companies. Eligible final-year students must register through the placement cell portal by 10th October 2026."
+  }
+ ]
+}

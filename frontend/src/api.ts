@@ -1,6 +1,8 @@
-import type { Category, CategoryInfo, Language, QueryResponse } from "./types";
+import type { Category, Language, QueryResponse } from "./types";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+// Dev: the FastAPI server on :8000. Production (Vercel): same origin, so relative "/api/..." URLs.
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? "http://localhost:8000" : "");
 
 export async function askQuestion(
   question: string,
@@ -14,14 +16,6 @@ export async function askQuestion(
   });
   if (!res.ok) {
     throw new Error(`Query failed: ${res.status}`);
-  }
-  return res.json();
-}
-
-export async function fetchCategories(): Promise<CategoryInfo[]> {
-  const res = await fetch(`${API_BASE}/api/categories`);
-  if (!res.ok) {
-    throw new Error(`Categories fetch failed: ${res.status}`);
   }
   return res.json();
 }

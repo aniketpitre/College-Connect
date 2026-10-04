@@ -1,190 +1,204 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import "./App.css";
-import { askQuestion, fetchCategories } from "./api";
+import Chat from "./Chat";
 import { UI_STRINGS } from "./i18n";
-import type { Category, CategoryInfo, ChatMessage, Language } from "./types";
+import type { Category, Language } from "./types";
 
 const LANGUAGES: { code: Language; label: string }[] = [
   { code: "en", label: "EN" },
-  { code: "hi", label: "हिं" },
+  { code: "hi", label: "हि" },
   { code: "mr", label: "मर" },
 ];
 
-function uid() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
 function App() {
   const [language, setLanguage] = useState<Language>("en");
-  const [categories, setCategories] = useState<CategoryInfo[]>([]);
-  const [activeCategory, setActiveCategory] = useState<Category | undefined>(undefined);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [backendOnline, setBackendOnline] = useState(true);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
+  const [category, setCategory] = useState<Category | undefined>(undefined);
   const t = UI_STRINGS[language];
 
-  useEffect(() => {
-    fetchCategories()
-      .then(setCategories)
-      .catch(() => setBackendOnline(false));
-  }, []);
-
-  useEffect(() => {
-    setMessages((prev) => {
-      if (prev.length > 0) return prev;
-      return [{ id: uid(), role: "assistant", text: t.welcome }];
-    });
-  }, [t.welcome]);
-
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, loading]);
-
-  function categoryLabel(cat: CategoryInfo) {
-    if (language === "hi") return cat.label_hi;
-    if (language === "mr") return cat.label_mr;
-    return cat.label_en;
-  }
-
-  async function handleSend(question?: string) {
-    const q = (question ?? input).trim();
-    if (!q || loading) return;
-
-    setMessages((prev) => [...prev, { id: uid(), role: "user", text: q }]);
-    setInput("");
-    setLoading(true);
-
-    try {
-      const res = await askQuestion(q, language, activeCategory);
-      setBackendOnline(true);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: uid(),
-          role: "assistant",
-          text: res.answer,
-          sources: res.sources,
-          grounded: res.grounded,
-          confidence: res.confidence,
-        },
-      ]);
-    } catch {
-      setBackendOnline(false);
-      setMessages((prev) => [
-        ...prev,
-        { id: uid(), role: "assistant", text: t.backendOffline, isError: true },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+  function askOffice(cat: Category) {
+    setCategory(cat);
+    document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" });
   }
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <div className="brand">
-          <span className="brand-mark">CC</span>
-          <div>
-            <h1>{t.appName}</h1>
-            <p className="tagline">{t.tagline}</p>
-          </div>
-        </div>
-        <div className="lang-switcher" role="group" aria-label="Language">
-          {LANGUAGES.map((lng) => (
-            <button
-              key={lng.code}
-              className={lng.code === language ? "lang-btn active" : "lang-btn"}
-              onClick={() => setLanguage(lng.code)}
-            >
-              {lng.label}
-            </button>
-          ))}
-        </div>
-      </header>
-
-      {!backendOnline && <div className="banner banner-error">{t.backendOffline}</div>}
-      <div className="banner banner-info">{t.demoNotice}</div>
-
-      {categories.length > 0 && (
-        <div className="categories">
-          <span className="categories-label">{t.categoriesLabel}</span>
-          <div className="chip-row">
-            <button
-              className={!activeCategory ? "chip active" : "chip"}
-              onClick={() => setActiveCategory(undefined)}
-            >
-              All
-            </button>
-            {categories.map((cat) => (
+    <div lang={language}>
+      <header className="nav">
+        <div className="nav-inner">
+          <a className="brand" href="#top">
+            <span className="seal">CC</span> CollegeConnect AI
+          </a>
+          <nav className="links">
+            <a href="#departments">{t.nav_features}</a>
+            <a href="#how">{t.nav_how}</a>
+            <a href="#demo">{t.nav_demo}</a>
+            <a href="#dashboards">{t.nav_dash}</a>
+          </nav>
+          <div className="lang-toggle" role="group" aria-label="Language">
+            {LANGUAGES.map((l) => (
               <button
-                key={cat.id}
-                className={activeCategory === cat.id ? "chip active" : "chip"}
-                onClick={() => setActiveCategory(cat.id)}
+                key={l.code}
+                type="button"
+                className={l.code === language ? "active" : ""}
+                aria-pressed={l.code === language}
+                onClick={() => setLanguage(l.code)}
               >
-                {categoryLabel(cat)}
+                {l.label}
               </button>
             ))}
           </div>
         </div>
-      )}
+      </header>
 
-      <main className="chat" ref={scrollRef}>
-        {messages.map((m) => (
-          <div key={m.id} className={`msg-row ${m.role}`}>
-            <div className={`msg-bubble ${m.role} ${m.isError ? "error" : ""}`}>
-              <p>{m.text}</p>
-              {m.role === "assistant" && m.sources && m.sources.length > 0 && (
-                <div className="sources">
-                  {m.sources.map((s, i) => (
-                    <div className="source-card" key={i}>
-                      <div className="source-title">{s.title}</div>
-                      <div className="source-meta">
-                        {s.document} · {s.section}
-                      </div>
-                    </div>
-                  ))}
-                  <div className="meta-row">
-                    <span className={m.grounded ? "badge grounded" : "badge ungrounded"}>
-                      {m.grounded ? t.grounded : t.notGrounded}
-                    </span>
-                    {typeof m.confidence === "number" && (
-                      <span className="badge confidence">
-                        {t.confidence}: {Math.round(m.confidence * 100)}%
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
+      <section className="hero" id="top">
+        <div className="wrap hero-grid">
+          <div>
+            <div className="eyebrow">{t.hero_eyebrow}</div>
+            <h1>
+              {t.hero_h1_plain}
+              <em>{t.hero_h1_em}</em>
+            </h1>
+            <p className="lede">{t.hero_lede}</p>
+            <div className="hero-ctas">
+              <a href="#demo" className="btn btn-primary">
+                {t.hero_cta1}
+              </a>
+              <a href="#how" className="btn btn-ghost">
+                {t.hero_cta2}
+              </a>
+            </div>
+            <div className="hero-stats">
+              <div>
+                <div className="num">24×7</div>
+                <div className="label">{t.stat1}</div>
+              </div>
+              <div>
+                <div className="num">3</div>
+                <div className="label">{t.stat2}</div>
+              </div>
+              <div>
+                <div className="num">100%</div>
+                <div className="label">{t.stat3}</div>
+              </div>
             </div>
           </div>
-        ))}
-        {loading && (
-          <div className="msg-row assistant">
-            <div className="msg-bubble assistant thinking">{t.thinking}</div>
+          <div>
+            <div className="id-card" aria-hidden="true">
+              <div className="id-card-top">
+                <span className="tag">{t.card_tag}</span>
+                <span className="stamp">{t.card_stamp}</span>
+              </div>
+              <div className="chat-preview">
+                <div className="bubble user">{t.heroPreview.user}</div>
+                <div className="bubble bot">
+                  {t.heroPreview.bot}
+                  <span className="cite">{t.heroPreview.cite}</span>
+                </div>
+              </div>
+            </div>
           </div>
-        )}
-      </main>
+        </div>
+      </section>
 
-      <form
-        className="composer"
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSend();
-        }}
-      >
-        <input
-          type="text"
-          value={input}
-          placeholder={t.inputPlaceholder}
-          onChange={(e) => setInput(e.target.value)}
-        />
-        <button type="submit" disabled={loading || !input.trim()}>
-          {t.send}
-        </button>
-      </form>
+      <div className="ledger">
+        <div className="wrap">
+          {t.ledger.map((item, i) => (
+            <div key={i}>
+              <span className="ledger-n">0{i + 1}</span>
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <section id="departments">
+        <div className="wrap">
+          <div className="section-head">
+            <div className="eyebrow">{t.dept_eyebrow}</div>
+            <h2>{t.dept_h2}</h2>
+            <p>{t.dept_p}</p>
+          </div>
+          <div className="dept-grid">
+            {t.depts.map((d) => (
+              <button key={d.category} type="button" className="dept-card" onClick={() => askOffice(d.category)}>
+                <span className="mark">{d.mark}</span>
+                <h3>{d.title}</h3>
+                <p>{d.desc}</p>
+                <span className="dept-ask">{t.dept_ask}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="how" className="alt">
+        <div className="wrap">
+          <div className="section-head">
+            <div className="eyebrow">{t.how_eyebrow}</div>
+            <h2>{t.how_h2}</h2>
+            <p>{t.how_p}</p>
+          </div>
+          <div className="flow">
+            {t.flow.map((f, i) => (
+              <div className="flow-step" key={i}>
+                <div className="n">{i + 1}</div>
+                <h4>{f.title}</h4>
+                <p>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="demo">
+        <div className="wrap">
+          <div className="section-head">
+            <div className="eyebrow">{t.demo_eyebrow}</div>
+            <h2>{t.demo_h2}</h2>
+            <p>{t.demo_p}</p>
+          </div>
+          <Chat t={t} language={language} category={category} onClearCategory={() => setCategory(undefined)} />
+        </div>
+      </section>
+
+      <section id="dashboards" className="alt">
+        <div className="wrap">
+          <div className="section-head">
+            <div className="eyebrow">{t.dash_eyebrow}</div>
+            <h2>{t.dash_h2}</h2>
+            <p>{t.dash_p}</p>
+          </div>
+          <div className="dash-grid">
+            {[
+              { eyebrow: t.dash1_eyebrow, h: t.dash1_h, p: t.dash1_p, rows: t.dash1_rows },
+              { eyebrow: t.dash2_eyebrow, h: t.dash2_h, p: t.dash2_p, rows: t.dash2_rows },
+            ].map((card) => (
+              <div className="dash-card" key={card.h}>
+                <div className="dash-top">
+                  <div className="eyebrow">{card.eyebrow}</div>
+                  <span className="preview-stamp">{t.dash_preview}</span>
+                </div>
+                <h3>{card.h}</h3>
+                <p>{card.p}</p>
+                {card.rows.map(([label, value]) => (
+                  <div className="row-mock" key={label}>
+                    <span>{label}</span>
+                    <b>{value}</b>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div className="wrap">
+          <div className="brand">
+            <span className="seal">CC</span> CollegeConnect AI
+          </div>
+          <div>{t.footer_note}</div>
+        </div>
+      </footer>
     </div>
   );
 }

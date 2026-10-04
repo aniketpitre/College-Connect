@@ -1,14 +1,14 @@
 from fastapi import APIRouter
 
 from app.models import QueryRequest, QueryResponse
-from app.services.retrieval import retrieve_answer
+from app.rag.pipeline import answer_question
 
 router = APIRouter(prefix="/api", tags=["query"])
 
 
 @router.post("/query", response_model=QueryResponse)
 def ask_question(request: QueryRequest) -> QueryResponse:
-    result = retrieve_answer(request.question, request.language, request.category)
+    result = answer_question(request.question, request.language, request.category)
     return QueryResponse(
         answer=result["answer"],
         language=request.language,
