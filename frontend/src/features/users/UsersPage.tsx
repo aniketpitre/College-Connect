@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { DataTable, type Column } from "../../components/DataTable";
 import { Modal } from "../../components/Modal";
@@ -115,7 +116,7 @@ export default function UsersPage() {
           <div className="eyebrow">Administration</div>
           <h1>Users</h1>
         </div>
-        {(canCreateStaff || canCreateStudent) && (
+        {canCreateStaff && (
           <button type="button" className="btn btn-primary" onClick={() => setAdding(true)}>
             Add user
           </button>
@@ -147,7 +148,7 @@ export default function UsersPage() {
         open={adding}
         onClose={() => setAdding(false)}
         roles={roles.data ?? []}
-        allowedKinds={[...(canCreateStaff ? (["staff"] as const) : []), ...(canCreateStudent ? (["student"] as const) : [])]}
+        allowedKinds={canCreateStaff ? ["staff"] : []}
         onCreated={(user, password) => {
           setAdding(false);
           setTempPassword({ name: user.name, identifier: user.kind === "student" ? `PRN ${user.prn}` : user.email ?? "", password });
@@ -354,8 +355,8 @@ function EditUserModal({
             {
               id: user.id,
               changes: {
-                name: name.trim(),
-                phone: phone.trim(),
+                // A student's name and contact details live in their student record.
+                ...(user.kind === "staff" ? { name: name.trim(), phone: phone.trim() } : {}),
                 ...(user.kind === "staff" && email.trim() ? { email: email.trim() } : {}),
                 ...(user.kind === "staff" && canManageRoles ? { roles: selected } : {}),
                 status,
@@ -367,10 +368,17 @@ function EditUserModal({
         }}
       >
         {generalError && <div className="form-error">{generalError}</div>}
-        <div className="field">
-          <label htmlFor="e-name">Full name</label>
-          <input id="e-name" value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
+        {user.kind === "student" && (
+          <p className="muted">
+            Name and contact details are edited in the <Link to="/app/students">student's record</Link>. Here you can only turn the login on or off.
+          </p>
+        )}
+        {user.kind === "staff" && (
+          <div className="field">
+            <label htmlFor="e-name">Full name</label>
+            <input id="e-name" value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
+        )}
         {user.kind === "staff" && (
           <div className="field">
             <label htmlFor="e-email">Email</label>
@@ -378,10 +386,12 @@ function EditUserModal({
             <FieldError error={update.error} field="email" />
           </div>
         )}
-        <div className="field">
-          <label htmlFor="e-phone">Mobile</label>
-          <input id="e-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </div>
+        {user.kind === "staff" && (
+          <div className="field">
+            <label htmlFor="e-phone">Mobile</label>
+            <input id="e-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+        )}
         {user.kind === "staff" && canManageRoles && (
           <>
             <RoleChecklist roles={roles} value={selected} onChange={setSelected} />

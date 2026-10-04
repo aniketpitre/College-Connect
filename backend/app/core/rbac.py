@@ -61,26 +61,56 @@ class P(StrEnum):
     USERS_MANAGE_ROLES = "users.roles.manage"
     USERS_RESET_STAFF = "users.reset_password.staff"
     USERS_RESET_STUDENT = "users.reset_password.student"
+    SETUP_READ = "setup.read"
+    SETUP_MANAGE = "setup.manage"
+    STUDENTS_READ = "students.read"
+    STUDENTS_MANAGE = "students.manage"
+    STUDENTS_IMPORT = "students.import"
 
+
+# Every staff member can read the college structure (programmes, divisions, subjects…).
+_STAFF_BASE = frozenset({P.SETUP_READ})
 
 ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
-    Role.SYSTEM_ADMIN: frozenset(
-        {
-            P.ANALYTICS_VIEW,
-            P.AUDIT_READ,
-            P.USERS_READ,
-            P.USERS_CREATE_STAFF,
-            P.USERS_CREATE_STUDENT,
-            P.USERS_UPDATE,
-            P.USERS_MANAGE_ROLES,
-            P.USERS_RESET_STAFF,
-            P.USERS_RESET_STUDENT,
-        }
-    ),
-    Role.PRINCIPAL: frozenset({P.ANALYTICS_VIEW, P.AUDIT_READ, P.USERS_READ}),
-    Role.OFFICE: frozenset(
-        {P.ANALYTICS_VIEW, P.USERS_READ, P.USERS_CREATE_STUDENT, P.USERS_UPDATE, P.USERS_RESET_STUDENT}
-    ),
+    Role.SYSTEM_ADMIN: _STAFF_BASE
+    | {
+        P.ANALYTICS_VIEW,
+        P.AUDIT_READ,
+        P.USERS_READ,
+        P.USERS_CREATE_STAFF,
+        P.USERS_CREATE_STUDENT,
+        P.USERS_UPDATE,
+        P.USERS_MANAGE_ROLES,
+        P.USERS_RESET_STAFF,
+        P.USERS_RESET_STUDENT,
+        P.SETUP_MANAGE,
+    },
+    Role.PRINCIPAL: _STAFF_BASE | {P.ANALYTICS_VIEW, P.AUDIT_READ, P.USERS_READ, P.STUDENTS_READ},
+    Role.OFFICE: _STAFF_BASE
+    | {
+        P.ANALYTICS_VIEW,
+        P.USERS_READ,
+        P.USERS_CREATE_STUDENT,
+        P.USERS_UPDATE,
+        P.USERS_RESET_STUDENT,
+        P.STUDENTS_READ,
+        P.STUDENTS_MANAGE,
+        P.STUDENTS_IMPORT,
+    },
+    # Read the student master (spec §2.3). HOD/faculty/mentor get scoped access with class
+    # assignments in Phase 2.
+    **{role: _STAFF_BASE | {P.STUDENTS_READ} for role in (Role.ACCOUNTS, Role.ADMISSION, Role.EXAM_CELL)},
+    **{
+        role: _STAFF_BASE
+        for role in (
+            Role.HOD,
+            Role.FACULTY,
+            Role.MENTOR,
+            Role.LIBRARIAN,
+            Role.WARDEN,
+            Role.PLACEMENT,
+        )
+    },
 }
 
 

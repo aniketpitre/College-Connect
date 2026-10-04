@@ -70,7 +70,7 @@ def test_me_never_returns_secrets(client, make_user):
     login(client, "staff@college.test")
     me = client.get("/api/v1/auth/me").json()
     assert "password_hash" not in me and "mfa" not in me
-    assert me["permissions"] == []  # faculty has no permissions yet in Phase 1A
+    assert me["permissions"] == ["setup.read"]  # faculty can read the college structure
 
 
 def test_logout_ends_the_session(client, make_user, db):

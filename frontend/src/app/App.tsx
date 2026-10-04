@@ -1,7 +1,13 @@
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import AccountPage from "../features/account/AccountPage";
 import AnalyticsPage from "../features/analytics/AnalyticsPage";
+import ProfilePage from "../features/profile/ProfilePage";
 import HelpDesk from "../features/helpdesk/HelpDesk";
+import InstitutionSetupPage from "../features/setup/InstitutionSetupPage";
+import ImportPage from "../features/students/ImportPage";
+import PromotePage from "../features/students/PromotePage";
+import StudentDetailPage from "../features/students/StudentDetailPage";
+import StudentsPage from "../features/students/StudentsPage";
 import UsersPage from "../features/users/UsersPage";
 import AppLayout from "./AppLayout";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
@@ -13,6 +19,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import SetupPage from "./pages/SetupPage";
 import TwoStepPage from "./pages/TwoStepPage";
 import VerifyPage from "./pages/VerifyPage";
+import WelcomePage from "./pages/WelcomePage";
 import RequireAuth from "./RequireAuth";
 
 /** Old links used "/#/admin"; send them to the new address. */
@@ -40,6 +47,14 @@ export default function App() {
           </RequireAuth>
         }
       />
+      <Route
+        path="/app/welcome"
+        element={
+          <RequireAuth>
+            <WelcomePage />
+          </RequireAuth>
+        }
+      />
       <Route path="/app/admin" element={<Navigate to="/app/analytics" replace />} />
       <Route
         path="/app"
@@ -51,7 +66,13 @@ export default function App() {
       >
         <Route index element={<PortalHome />} />
         <Route path="account" element={<AccountPage />} />
+        <Route path="profile" element={<ProfilePage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="setup" element={<InstitutionSetupPage />} />
+        <Route path="students" element={<StudentsPage />} />
+        <Route path="students/import" element={<ImportPage />} />
+        <Route path="students/promote" element={<PromotePage />} />
+        <Route path="students/:id" element={<StudentDetailPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

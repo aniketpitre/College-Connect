@@ -9,6 +9,9 @@ from app.core.errors import install_error_handlers
 from app.modules.auth import router as auth
 from app.modules.helpdesk import admin as helpdesk_admin
 from app.modules.helpdesk import router as helpdesk
+from app.modules.onboarding import router as onboarding
+from app.modules.setup import router as setup
+from app.modules.students import router as students
 from app.modules.system import router as system
 from app.modules.users import router as users
 
@@ -18,7 +21,18 @@ API_V1 = "/api/v1"
 # Paths used before versioning (the live help desk calls these); kept as aliases, hidden from the docs.
 LEGACY_PREFIX = "/api"
 
-ROUTERS: list[APIRouter] = [system.router, auth.router, users.router, helpdesk.router, helpdesk_admin.router]
+ROUTERS: list[APIRouter] = [
+    system.router,
+    auth.router,
+    users.router,
+    setup.router,
+    students.router,
+    onboarding.router,
+    helpdesk.router,
+    helpdesk_admin.router,
+]
+# Only these existed before versioning; ERP routes live under /api/v1 alone.
+LEGACY_ROUTERS = [system.router, helpdesk.router, helpdesk_admin.router]
 
 
 async def security_headers(request: Request, call_next):
@@ -56,7 +70,8 @@ def create_app() -> FastAPI:
 
     for router in ROUTERS:
         app.include_router(router, prefix=API_V1)
-        app.include_router(router, prefix=LEGACY_PREFIX, include_in_schema=False)
+        if any(router is legacy for legacy in LEGACY_ROUTERS):
+            app.include_router(router, prefix=LEGACY_PREFIX, include_in_schema=False)
     return app
 
 

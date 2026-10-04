@@ -274,6 +274,24 @@ a strong second factor when the same mailbox can reset the password. Students wi
 address on record reset through the office (temporary password). Reset emails need
 `EMAIL_API_KEY`; without it the link is only written to the server log.
 
+**Delivered in the "Phase 1B" PR (1.4–1.7):**
+- Student photos and documents are stored in MongoDB (`files` collection, 2 MB per file, type
+  checked from the file's bytes) behind `app/core/files.py`, instead of Vercel Blob. Files are
+  served only through `/api/v1/files/{id}` to staff with `students.read` or the student
+  themselves. **Before go-live:** move to Vercel Blob (private) or a bigger Atlas tier, since
+  Atlas M0 has 512 MB in total.
+- A student login is always created with the student record (Students screen or import); the
+  Users API refuses `kind: student`, and student name/contact are edited only in the record.
+- `students.read`: Principal, Office, Accounts, Admission Cell, Exam Cell. HOD / Faculty / Mentor
+  get scoped access with class assignments in Phase 2; Admission Cell creates students through
+  the Admissions module (Phase 3). The System Admin has no access to student records (spec §2.3).
+- Import validates and creates in chunks of 50 (one transaction each); temporary passwords are
+  returned once per chunk and never stored. Promotion moves a student at most once per academic
+  year.
+- The first-login steps (contact → privacy notice → language) are enforced by the frontend;
+  consent is stored in `consents` with the notice version. Portal menu and home are translated.
+- Collections added: `files`, `consents`, `imports` (expires after a day).
+
 ### 5.6 Acceptance criteria
 - Office imports 60 students from Excel; errors are reported row by row; each student gets a login.
 - A student signs in with PRN + temporary password, sets their own, accepts the privacy notice and sees the **correct balance**.

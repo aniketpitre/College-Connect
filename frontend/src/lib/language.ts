@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
 import type { Language } from "./types";
 
 const KEY = "cc-lang";
@@ -22,14 +22,33 @@ export function saveLanguage(language: Language) {
   }
 }
 
-/** The page language, remembered across visits. */
+const listeners = new Set<() => void>();
+let current: Language | null = null;
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function snapshot(): Language {
+  current ??= savedLanguage();
+  return current;
+}
+
+/** Switch the language everywhere (and remember it on this device). */
+export function chooseLanguage(l: Language) {
+  current = l;
+  saveLanguage(l);
+  listeners.forEach((fn) => fn());
+}
+
+/** The page language, remembered across visits and shared by every screen (changing it anywhere updates all). */
 export function useLanguage(): [Language, (l: Language) => void] {
-  const [language, setLanguage] = useState<Language>(savedLanguage);
-  return [
-    language,
-    (l: Language) => {
-      setLanguage(l);
-      saveLanguage(l);
-    },
-  ];
+  const language = useSyncExternalStore(subscribe, snapshot, snapshot);
+  return [language, chooseLanguage];
+}
+
+/** Tests start each case from the saved setting. */
+export function resetLanguageForTests() {
+  current = null;
 }

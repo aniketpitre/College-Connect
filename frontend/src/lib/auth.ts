@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, apiFetch } from "./api";
+import { chooseLanguage } from "./language";
+import type { Language } from "./types";
 
 export type SessionState = "active" | "mfa_pending" | "mfa_setup";
 
@@ -16,6 +18,8 @@ export interface Me {
   mfa_enabled: boolean;
   mfa_required: boolean;
   session_state: SessionState;
+  language?: Language | null;
+  onboarding_required?: boolean;
 }
 
 export const ME_KEY = ["auth", "me"] as const;
@@ -46,7 +50,10 @@ export function useLogin() {
   return useMutation({
     mutationFn: (body: { identifier: string; password: string }) =>
       apiFetch<Me>("/auth/login", { method: "POST", body: JSON.stringify(body) }),
-    onSuccess: (me) => qc.setQueryData(ME_KEY, me),
+    onSuccess: (me) => {
+      if (me.language) chooseLanguage(me.language); // the language saved on the account follows the user
+      qc.setQueryData(ME_KEY, me);
+    },
   });
 }
 
@@ -74,6 +81,7 @@ export function useChangePassword() {
 export function pendingStep(me: Me): string | null {
   if (me.session_state === "mfa_pending" || me.session_state === "mfa_setup") return "/login/2-step";
   if (me.must_change_password) return "/app/change-password";
+  if (me.onboarding_required) return "/app/welcome";
   return null;
 }
 

@@ -59,6 +59,9 @@ def create(ctx: AuthContext, body: UserCreate, ip: str) -> dict[str, Any]:
         raise AppError(403, "Only a System Admin can create staff accounts.", "forbidden")
     if body.kind == "student" and P.USERS_CREATE_STUDENT not in ctx.permissions:
         raise AppError(403, "You can't create student accounts.", "forbidden")
+    if body.kind == "student":
+        # A student login always comes with a student record, so it is created there.
+        raise AppError(409, "Add students from the Students page; it creates their login too.", "use_students_page")
     temp = temporary_password()
     user = repo.create_user(
         kind=body.kind,
@@ -91,6 +94,8 @@ def _active_admins_other_than(user_id: ObjectId) -> int:
 def update(ctx: AuthContext, user_id: ObjectId, body: UserUpdate, ip: str) -> dict[str, Any]:
     target = repo.get_user(user_id)
     _require_manage(ctx, target["kind"])
+    if target["kind"] == "student" and any(v is not None for v in (body.name, body.email, body.phone)):
+        raise AppError(409, "Change a student's details in their student record.", "use_students_page")
     changes: dict[str, Any] = {}
     if body.name is not None:
         changes["name"] = body.name.strip()

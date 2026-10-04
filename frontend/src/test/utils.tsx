@@ -15,7 +15,7 @@ export function mockApi(handler: Handler) {
     vi.fn(async (url: string, init: RequestInit = {}) => {
       const method = init.method ?? "GET";
       const path = url.replace(/^.*\/api\/v1/, "");
-      const body = init.body ? JSON.parse(init.body as string) : undefined;
+      const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
       const headers = new Headers(init.headers);
       calls.push({ method, path, body, headers });
       const res = handler(method, path, body, headers);
@@ -55,6 +55,8 @@ export function makeMe(overrides: Partial<Me> = {}): Me {
     mfa_enabled: false,
     mfa_required: false,
     session_state: "active",
+    language: null,
+    onboarding_required: false,
     ...overrides,
   };
 }

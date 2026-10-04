@@ -12,4 +12,4 @@ ignore = [
 
 [lint.flake8-bugbear]
 # FastAPI's dependency markers are meant to be used as argument defaults.
-extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header", "fastapi.Body", "app.core.auth.require"]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Form", "fastapi.Query", "fastapi.Header", "fastapi.Body", "app.core.auth.require"]
