@@ -1,25 +1,4 @@
 /* Users screen */
-.filter-seg {
-  display: inline-flex;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 14px;
-}
-.filter-seg button {
-  border: none;
-  background: transparent;
-  padding: 7px 14px;
-  font-family: var(--mono);
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.filter-seg button.active {
-  background: var(--ink);
-  color: var(--paper);
-}
-
 .user-cell {
   display: flex;
   flex-direction: column;
@@ -34,37 +13,6 @@
   color: var(--text-muted);
   white-space: nowrap;
 }
-.badge-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.row-actions {
-  display: flex;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-}
-.link-btn {
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--teal-ink);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.link-btn:hover {
-  text-decoration: underline;
-}
-.nowrap {
-  white-space: nowrap;
-}
-.muted {
-  color: var(--text-muted);
-}
-
 .temp-password {
   font-family: var(--mono);
   font-size: 1.4rem;
@@ -106,12 +54,3 @@
   color: var(--text-muted);
 }
 
-.field select {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 1rem;
-  background: var(--paper);
-  color: var(--ink);
-  width: 100%;
-}

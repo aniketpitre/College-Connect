@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router";
 import AccountPage from "../features/account/AccountPage";
 import AnalyticsPage from "../features/analytics/AnalyticsPage";
 import HelpDesk from "../features/helpdesk/HelpDesk";
+import InstitutionSetupPage from "../features/setup/InstitutionSetupPage";
 import UsersPage from "../features/users/UsersPage";
 import AppLayout from "./AppLayout";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
@@ -52,6 +53,7 @@ export default function App() {
         <Route index element={<PortalHome />} />
         <Route path="account" element={<AccountPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="setup" element={<InstitutionSetupPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

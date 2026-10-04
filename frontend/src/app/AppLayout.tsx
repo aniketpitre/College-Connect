@@ -1,6 +1,8 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import { hasPermission, useLogout, useMe } from "../lib/auth";
 import "./layout.css";
+import "./portal.css";
+import "./auth.css";
 
 interface NavItem {
   to: string;
@@ -21,6 +23,7 @@ const NAV: NavItem[] = [
   { to: "/app/certificates", label: "Certificates", phase: 2 },
   { to: "/app/account", label: "My account" },
   { to: "/app/users", label: "Users", permission: "users.read" },
+  { to: "/app/setup", label: "College setup", permission: "setup.read" },
   { to: "/app/analytics", label: "Help desk analytics", permission: "analytics.view" },
 ];
 

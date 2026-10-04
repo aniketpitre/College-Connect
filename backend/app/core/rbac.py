@@ -61,26 +61,44 @@ class P(StrEnum):
     USERS_MANAGE_ROLES = "users.roles.manage"
     USERS_RESET_STAFF = "users.reset_password.staff"
     USERS_RESET_STUDENT = "users.reset_password.student"
+    SETUP_READ = "setup.read"
+    SETUP_MANAGE = "setup.manage"
 
+
+# Every staff member can read the college structure (programmes, divisions, subjects…).
+_STAFF_BASE = frozenset({P.SETUP_READ})
 
 ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
-    Role.SYSTEM_ADMIN: frozenset(
-        {
-            P.ANALYTICS_VIEW,
-            P.AUDIT_READ,
-            P.USERS_READ,
-            P.USERS_CREATE_STAFF,
-            P.USERS_CREATE_STUDENT,
-            P.USERS_UPDATE,
-            P.USERS_MANAGE_ROLES,
-            P.USERS_RESET_STAFF,
-            P.USERS_RESET_STUDENT,
-        }
-    ),
-    Role.PRINCIPAL: frozenset({P.ANALYTICS_VIEW, P.AUDIT_READ, P.USERS_READ}),
-    Role.OFFICE: frozenset(
-        {P.ANALYTICS_VIEW, P.USERS_READ, P.USERS_CREATE_STUDENT, P.USERS_UPDATE, P.USERS_RESET_STUDENT}
-    ),
+    Role.SYSTEM_ADMIN: _STAFF_BASE
+    | {
+        P.ANALYTICS_VIEW,
+        P.AUDIT_READ,
+        P.USERS_READ,
+        P.USERS_CREATE_STAFF,
+        P.USERS_CREATE_STUDENT,
+        P.USERS_UPDATE,
+        P.USERS_MANAGE_ROLES,
+        P.USERS_RESET_STAFF,
+        P.USERS_RESET_STUDENT,
+        P.SETUP_MANAGE,
+    },
+    Role.PRINCIPAL: _STAFF_BASE | {P.ANALYTICS_VIEW, P.AUDIT_READ, P.USERS_READ},
+    Role.OFFICE: _STAFF_BASE
+    | {P.ANALYTICS_VIEW, P.USERS_READ, P.USERS_CREATE_STUDENT, P.USERS_UPDATE, P.USERS_RESET_STUDENT},
+    **{
+        role: _STAFF_BASE
+        for role in (
+            Role.ACCOUNTS,
+            Role.ADMISSION,
+            Role.EXAM_CELL,
+            Role.HOD,
+            Role.FACULTY,
+            Role.MENTOR,
+            Role.LIBRARIAN,
+            Role.WARDEN,
+            Role.PLACEMENT,
+        )
+    },
 }
 
 

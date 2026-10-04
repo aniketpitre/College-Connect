@@ -38,6 +38,15 @@ class AppError(Exception):
         self.field = field
 
 
+def _split_message(msg: str) -> tuple[str, str | None]:
+    """Model-level checks raise ValueError("field: message"); split that into its parts."""
+    msg = msg.removeprefix("Value error, ")
+    field, sep, rest = msg.partition(": ")
+    if sep and field.isidentifier():
+        return rest, field
+    return msg, None
+
+
 def error_body(code: str, message: str, field: str | None = None) -> dict:
     error: dict[str, str] = {"code": code, "message": message}
     if field:
@@ -59,8 +68,9 @@ def install_error_handlers(app: FastAPI) -> None:
     async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
         first = exc.errors()[0] if exc.errors() else {}
         loc = [str(p) for p in first.get("loc", []) if p not in ("body", "query", "path")]
+        message, field = _split_message(first.get("msg", "Invalid request"))
         return JSONResponse(
-            error_body("validation_error", first.get("msg", "Invalid request"), ".".join(loc) or None),
+            error_body("validation_error", message, field or ".".join(loc) or None),
             status_code=422,
         )
 

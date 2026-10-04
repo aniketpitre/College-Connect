@@ -3,11 +3,18 @@ from app.core.rbac import MFA_REQUIRED_ROLES, ROLE_PERMISSIONS, P, Role, mfa_req
 
 def test_permission_matrix():
     assert permissions_for(["system_admin"]) == frozenset(P)
-    assert permissions_for(["principal"]) == {P.ANALYTICS_VIEW, P.AUDIT_READ, P.USERS_READ}
+    assert permissions_for(["principal"]) == {P.ANALYTICS_VIEW, P.AUDIT_READ, P.USERS_READ, P.SETUP_READ}
     assert P.USERS_CREATE_STAFF not in permissions_for(["office"])
     assert P.USERS_CREATE_STUDENT in permissions_for(["office"])
-    for role in (Role.STUDENT, Role.PARENT, Role.FACULTY, Role.ACCOUNTS):
+    for role in (Role.FACULTY, Role.ACCOUNTS):
+        assert permissions_for([role.value]) == {P.SETUP_READ}, role
+    for role in (Role.STUDENT, Role.PARENT):
         assert permissions_for([role.value]) == frozenset(), role
+
+
+def test_only_system_admin_changes_setup():
+    holders = {role for role, perms in ROLE_PERMISSIONS.items() if P.SETUP_MANAGE in perms}
+    assert holders == {Role.SYSTEM_ADMIN}
 
 
 def test_roles_combine_and_unknown_roles_grant_nothing():
