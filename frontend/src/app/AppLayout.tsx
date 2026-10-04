@@ -1,37 +1,47 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
+import { NAV_LABELS } from "../i18n/nav";
 import { hasPermission, useLogout, useMe } from "../lib/auth";
+import { useLanguage } from "../lib/language";
 import "./layout.css";
 import "./portal.css";
 import "./auth.css";
 
 interface NavItem {
   to: string;
+  /** Key in NAV_LABELS. */
   label: string;
   /** Shown only to users with this permission. */
   permission?: string;
+  /** Shown only to this kind of account. */
+  kind?: "student";
   /** The plan phase that builds this screen; shown disabled until then. */
   phase?: number;
 }
 
 const NAV: NavItem[] = [
-  { to: "/app", label: "Home" },
-  { to: "/app/students", label: "Students", phase: 1 },
-  { to: "/app/fees", label: "Fees & receipts", phase: 1 },
-  { to: "/app/notices", label: "Notices", phase: 1 },
-  { to: "/app/attendance", label: "Attendance", phase: 2 },
-  { to: "/app/exams", label: "Exams & results", phase: 2 },
-  { to: "/app/certificates", label: "Certificates", phase: 2 },
-  { to: "/app/account", label: "My account" },
-  { to: "/app/users", label: "Users", permission: "users.read" },
-  { to: "/app/setup", label: "College setup", permission: "setup.read" },
-  { to: "/app/analytics", label: "Help desk analytics", permission: "analytics.view" },
+  { to: "/app", label: "home" },
+  { to: "/app/profile", label: "profile", kind: "student" },
+  { to: "/app/students", label: "students", permission: "students.read" },
+  { to: "/app/fees", label: "fees", phase: 1 },
+  { to: "/app/notices", label: "notices", phase: 1 },
+  { to: "/app/attendance", label: "attendance", phase: 2 },
+  { to: "/app/exams", label: "exams", phase: 2 },
+  { to: "/app/certificates", label: "certificates", phase: 2 },
+  { to: "/app/account", label: "account" },
+  { to: "/app/users", label: "users", permission: "users.read" },
+  { to: "/app/setup", label: "setup", permission: "setup.read" },
+  { to: "/app/analytics", label: "analytics", permission: "analytics.view" },
 ];
 
 export default function AppLayout() {
   const { data: me } = useMe();
   const logout = useLogout();
   const navigate = useNavigate();
-  const items = NAV.filter((item) => !item.permission || hasPermission(me, item.permission));
+  const [language] = useLanguage();
+  const t = NAV_LABELS[language];
+  const items = NAV.filter(
+    (item) => (!item.permission || hasPermission(me, item.permission)) && (!item.kind || item.kind === me?.kind),
+  );
 
   return (
     <div className="portal">
@@ -50,7 +60,7 @@ export default function AppLayout() {
             disabled={logout.isPending}
             onClick={() => logout.mutate(undefined, { onSettled: () => navigate("/login", { replace: true }) })}
           >
-            Sign out
+            {t.signOut}
           </button>
         </div>
       </header>
@@ -58,13 +68,13 @@ export default function AppLayout() {
         <nav className="portal-nav" aria-label="Portal">
           {items.map((item) =>
             item.phase ? (
-              <span key={item.to} className="portal-link disabled" aria-disabled="true" title={`Arrives in Phase ${item.phase}`}>
-                {item.label}
+              <span key={item.to} className="portal-link disabled" aria-disabled="true" title={`${t.soon} ${item.phase}`}>
+                {t[item.label]}
                 <span className="portal-soon">P{item.phase}</span>
               </span>
             ) : (
-              <NavLink key={item.to} to={item.to} end className="portal-link">
-                {item.label}
+              <NavLink key={item.to} to={item.to} end={item.to === "/app"} className="portal-link">
+                {t[item.label]}
               </NavLink>
             ),
           )}

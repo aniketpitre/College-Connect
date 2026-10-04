@@ -56,66 +56,71 @@ describe("users page", () => {
     expect(screen.getByRole("button", { name: "Unlock" })).toBeTruthy();
   });
 
-  it("office staff can add a student and see the temporary password once", async () => {
-    const calls = mockApi((method, path) => {
+  it("office staff add students from the Students page, not here", async () => {
+    mockApi((_m, path) => {
       if (path === "/auth/me") return { status: 200, body: office };
       if (path === "/users/roles") return { status: 200, body: ROLES };
-      if (method === "POST" && path === "/users")
-        return { status: 201, body: { user: makeUser({ name: "Neha Joshi", prn: "2026BCA002" }), temporary_password: "abcd-efgh-jkmn" } };
-      if (path.startsWith("/users")) return { status: 200, body: { items: [], total: 0 } };
+      if (path.startsWith("/users")) return { status: 200, body: { items: [makeUser()], total: 1 } };
       return { status: 404 };
     });
     renderApp("/app/users");
-    fireEvent.click(await screen.findByRole("button", { name: "Add user" }));
-    // Office cannot create staff, so there is no staff/student switch and no role list.
-    expect(screen.queryByRole("tab", { name: "Staff" })).toBeNull();
-    expect(screen.queryByText("Roles")).toBeNull();
-    fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Neha Joshi" } });
-    fireEvent.change(screen.getByLabelText("PRN (used to sign in)"), { target: { value: "2026bca002" } });
-    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
-    expect(await screen.findByText("abcd-efgh-jkmn")).toBeTruthy();
-    expect(screen.getByRole("dialog", { name: "Temporary password" })).toBeTruthy();
-    const post = calls.find((c) => c.method === "POST" && c.path === "/users");
-    expect(post?.body).toEqual({ kind: "student", name: "Neha Joshi", prn: "2026BCA002", roles: [] });
+    await screen.findByText("Rohan Patil");
+    expect(screen.queryByRole("button", { name: "Add user" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.getByText(/edited in the/)).toBeTruthy();
+    expect(screen.queryByLabelText("Full name")).toBeNull();
   });
 
-  it("shows field errors from the server next to the field", async () => {
-    mockApi((method, path) => {
-      if (path === "/auth/me") return { status: 200, body: office };
-      if (path === "/users/roles") return { status: 200, body: ROLES };
-      if (method === "POST" && path === "/users")
-        return { status: 409, body: { error: { code: "conflict", message: "An account with this PRN already exists.", field: "prn" } } };
-      if (path.startsWith("/users")) return { status: 200, body: { items: [], total: 0 } };
-      return { status: 404 };
-    });
-    renderApp("/app/users");
-    fireEvent.click(await screen.findByRole("button", { name: "Add user" }));
-    fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Neha Joshi" } });
-    fireEvent.change(screen.getByLabelText("PRN (used to sign in)"), { target: { value: "2026BCA001" } });
-    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
-    expect(await screen.findByText("An account with this PRN already exists.")).toBeTruthy();
-  });
-
-  it("system admins pick roles for new staff", async () => {
+  it("system admins add staff, pick roles and see the temporary password once", async () => {
     const admin = makeMe({
       roles: ["system_admin"],
       permissions: ["users.read", "users.create.staff", "users.create.student", "users.update", "users.roles.manage"],
     });
-    mockApi((_m, path) => {
+    const calls = mockApi((method, path) => {
       if (path === "/auth/me") return { status: 200, body: admin };
       if (path === "/users/roles") return { status: 200, body: ROLES };
+      if (method === "POST" && path === "/users")
+        return { status: 201, body: { user: makeUser({ kind: "staff", name: "Meera Rao", prn: null, email: "meera@college.edu.in" }), temporary_password: "abcd-efgh-jkmn" } };
       if (path.startsWith("/users")) return { status: 200, body: { items: [], total: 0 } };
       return { status: 404 };
     });
     renderApp("/app/users");
     fireEvent.click(await screen.findByRole("button", { name: "Add user" }));
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByRole("tab", { name: "Staff" })).toBeTruthy();
+    expect(within(dialog).queryByRole("tab", { name: "Student" })).toBeNull();
     expect(within(dialog).getByText("2-step required")).toBeTruthy();
     const submit = within(dialog).getByRole("button", { name: "Create account" }) as HTMLButtonElement;
     fireEvent.change(within(dialog).getByLabelText("Full name"), { target: { value: "Meera Rao" } });
+    fireEvent.change(within(dialog).getByLabelText("Email (used to sign in)"), { target: { value: "meera@college.edu.in" } });
     expect(submit.disabled).toBe(true); // a staff account needs at least one role
     fireEvent.click(within(dialog).getByLabelText("Faculty"));
     await waitFor(() => expect(submit.disabled).toBe(false));
+    fireEvent.click(submit);
+    expect(await screen.findByText("abcd-efgh-jkmn")).toBeTruthy();
+    expect(calls.find((c) => c.method === "POST" && c.path === "/users")?.body).toEqual({
+      kind: "staff",
+      name: "Meera Rao",
+      email: "meera@college.edu.in",
+      roles: ["faculty"],
+    });
+  });
+
+  it("shows field errors from the server next to the field", async () => {
+    const admin = makeMe({ roles: ["system_admin"], permissions: ["users.read", "users.create.staff", "users.roles.manage"] });
+    mockApi((method, path) => {
+      if (path === "/auth/me") return { status: 200, body: admin };
+      if (path === "/users/roles") return { status: 200, body: ROLES };
+      if (method === "POST" && path === "/users")
+        return { status: 409, body: { error: { code: "conflict", message: "Another account already uses this email.", field: "email" } } };
+      if (path.startsWith("/users")) return { status: 200, body: { items: [], total: 0 } };
+      return { status: 404 };
+    });
+    renderApp("/app/users");
+    fireEvent.click(await screen.findByRole("button", { name: "Add user" }));
+    fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Meera Rao" } });
+    fireEvent.change(screen.getByLabelText("Email (used to sign in)"), { target: { value: "meera@college.edu.in" } });
+    fireEvent.click(screen.getByLabelText("Faculty"));
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    expect(await screen.findByText("Another account already uses this email.")).toBeTruthy();
   });
 });

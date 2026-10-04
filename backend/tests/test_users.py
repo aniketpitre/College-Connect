@@ -9,6 +9,13 @@ def new_client(client):
 
 STAFF = {"kind": "staff", "name": "Kavita Deshmukh", "email": "kavita@college.edu.in", "roles": ["accounts"]}
 STUDENT = {"kind": "student", "name": "Ravi Patil", "prn": "2026bca012"}
+TEMP = "abcd-efgh-jkmn"
+
+
+def _student(make_user) -> dict:
+    """A student login as the Students module creates it (temporary password, must change)."""
+    user = make_user(kind="student", prn="2026BCA012", name="Ravi Patil", password=TEMP, must_change_password=True)
+    return {"user": {"id": str(user["_id"])}, "temporary_password": TEMP}
 
 
 def test_admin_creates_staff_with_a_temporary_password(client, sign_in, db):
@@ -27,18 +34,11 @@ def test_admin_creates_staff_with_a_temporary_password(client, sign_in, db):
     assert entry["actor_id"] == admin["_id"] and entry["details"]["roles"] == ["accounts"]
 
 
-def test_office_creates_students_but_not_staff(client, sign_in):
+def test_student_logins_are_created_from_student_records(client, sign_in):
     sign_in(client, ["office"])
     r = client.post("/api/v1/users", json=STUDENT)
-    assert r.status_code == 201 and r.json()["user"]["prn"] == "2026BCA012"
-    assert r.json()["user"]["roles"] == ["student"]
+    assert r.status_code == 409 and r.json()["error"]["code"] == "use_students_page"
     assert client.post("/api/v1/users", json=STAFF).status_code == 403
-
-
-def test_students_cannot_be_given_staff_roles_at_creation(client, sign_in):
-    sign_in(client, ["system_admin"])
-    r = client.post("/api/v1/users", json={**STUDENT, "roles": ["system_admin"]})
-    assert r.status_code == 201 and r.json()["user"]["roles"] == ["student"]
 
 
 def test_validation(client, sign_in):
@@ -56,14 +56,11 @@ def test_validation(client, sign_in):
         assert r.status_code == 422 and message in r.json()["error"]["message"], body
 
 
-def test_duplicate_email_and_prn(client, sign_in):
+def test_duplicate_email(client, sign_in):
     sign_in(client, ["system_admin"])
     client.post("/api/v1/users", json=STAFF)
-    client.post("/api/v1/users", json=STUDENT)
     r = client.post("/api/v1/users", json={**STAFF, "email": "KAVITA@college.edu.in", "name": "Someone"})
     assert r.status_code == 409 and r.json()["error"]["field"] == "email"
-    r = client.post("/api/v1/users", json={**STUDENT, "name": "Other"})
-    assert r.status_code == 409 and r.json()["error"]["field"] == "prn"
 
 
 def test_people_without_user_permissions_get_403(client, sign_in):
@@ -78,10 +75,10 @@ def test_principal_reads_but_cannot_change(client, sign_in):
     assert client.post("/api/v1/users", json=STUDENT).status_code == 403
 
 
-def test_list_and_search(client, sign_in):
+def test_list_and_search(client, sign_in, make_user):
     sign_in(client, ["system_admin"], name="Admin One")
     client.post("/api/v1/users", json=STAFF)
-    client.post("/api/v1/users", json=STUDENT)
+    _student(make_user)
     assert client.get("/api/v1/users").json()["total"] == 3
     assert [u["name"] for u in client.get("/api/v1/users?search=ravi").json()["items"]] == ["Ravi Patil"]
     assert client.get("/api/v1/users?kind=student").json()["total"] == 1
@@ -110,9 +107,9 @@ def test_role_change_signs_the_user_out(client, sign_in):
     assert staff.get("/api/v1/auth/me").status_code == 401
 
 
-def test_disable_and_enable(client, sign_in, db):
+def test_disable_and_enable(client, sign_in, make_user, db):
     sign_in(client, ["office"])
-    body = client.post("/api/v1/users", json=STUDENT).json()
+    body = _student(make_user)
     student = new_client(client)
     login(student, "2026BCA012", body["temporary_password"])
     r = client.patch(f"/api/v1/users/{body['user']['id']}", json={"status": "disabled", "reason": "Left college"})
@@ -133,9 +130,9 @@ def test_cannot_disable_yourself_or_remove_the_last_admin(client, sign_in):
     assert r.status_code == 409 and r.json()["error"]["code"] == "last_admin"
 
 
-def test_reset_password(client, sign_in):
+def test_reset_password(client, sign_in, make_user):
     sign_in(client, ["office"])
-    body = client.post("/api/v1/users", json=STUDENT).json()
+    body = _student(make_user)
     student = new_client(client)
     login(student, "2026BCA012", body["temporary_password"])
     r = client.post(f"/api/v1/users/{body['user']['id']}/reset-password", json={"reason": "Forgot password at desk"})
@@ -153,9 +150,9 @@ def test_office_cannot_reset_staff_passwords(client, sign_in):
     assert client.post(f"/api/v1/users/{staff_id}/reset-password", json={}).status_code == 403
 
 
-def test_unlock(client, sign_in):
+def test_unlock(client, sign_in, make_user):
     sign_in(client, ["office"])
-    body = client.post("/api/v1/users", json=STUDENT).json()
+    body = _student(make_user)
     student = new_client(client)
     for _ in range(5):
         login(student, "2026BCA012", "wrong-password-x")

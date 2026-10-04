@@ -13,3 +13,6 @@ pyotp>=2.9
 segno>=1.6
 cryptography>=43
 email-validator>=2.1
+# Phase 1: student records and imports
+python-multipart>=0.0.18
+openpyxl>=3.1

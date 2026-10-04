@@ -6,6 +6,7 @@ from typing import Any
 from bson import ObjectId
 from bson.errors import InvalidId
 from pymongo import ASCENDING, IndexModel
+from pymongo.client_session import ClientSession
 from pymongo.errors import DuplicateKeyError
 
 from app.core.db import get_db, register_indexes
@@ -69,6 +70,7 @@ def create_user(
     email: str | None = None,
     prn: str | None = None,
     phone: str | None = None,
+    session: ClientSession | None = None,
 ) -> dict[str, Any]:
     now = datetime.now(UTC)
     doc: dict[str, Any] = {
@@ -93,7 +95,7 @@ def create_user(
     if phone:
         doc["phone"] = phone.strip()
     try:
-        result = get_db().users.insert_one(doc)
+        result = get_db().users.insert_one(doc, session=session)
     except DuplicateKeyError as e:
         field = "email" if "email" in str(e) else "prn"
         label = "email" if field == "email" else "PRN"

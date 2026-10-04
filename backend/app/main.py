@@ -10,6 +10,7 @@ from app.modules.auth import router as auth
 from app.modules.helpdesk import admin as helpdesk_admin
 from app.modules.helpdesk import router as helpdesk
 from app.modules.setup import router as setup
+from app.modules.students import router as students
 from app.modules.system import router as system
 from app.modules.users import router as users
 
@@ -24,6 +25,7 @@ ROUTERS: list[APIRouter] = [
     auth.router,
     users.router,
     setup.router,
+    students.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

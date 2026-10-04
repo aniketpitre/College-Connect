@@ -20,7 +20,8 @@ export class ApiError extends Error {
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  if (init.body !== undefined && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  // FormData (file uploads) sets its own multipart Content-Type with the boundary.
+  if (init.body !== undefined && !(init.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   // Required by the backend on every cookie-authenticated change (blocks cross-site request forgery).
   headers.set("X-Requested-With", "XMLHttpRequest");
   let res: Response;
