@@ -1,4 +1,4 @@
-import type { AdminStats, Category, Language, QueryResponse } from "./types";
+import type { Category, Language, QueryResponse } from "./types";
 
 // Same origin in production (Vercel) and in development (Vite proxies /api to :8000).
 const API_BASE: string = import.meta.env.VITE_API_BASE_URL ?? "";
@@ -39,15 +39,4 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 
 export function askQuestion(question: string, language: Language, category?: Category): Promise<QueryResponse> {
   return apiFetch<QueryResponse>("/query", { method: "POST", body: JSON.stringify({ question, language, category }) });
-}
-
-export class AdminAuthError extends Error {}
-
-export async function fetchAdminStats(token: string, days: number): Promise<AdminStats> {
-  try {
-    return await apiFetch<AdminStats>(`/admin/stats?days=${days}`, { headers: { Authorization: `Bearer ${token}` } });
-  } catch (e) {
-    if (e instanceof ApiError && e.status === 401) throw new AdminAuthError(e.message);
-    throw e;
-  }
 }

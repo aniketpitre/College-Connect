@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from "react-router";
-import Admin from "../features/admin/Admin";
+import AnalyticsPage from "../features/analytics/AnalyticsPage";
 import HelpDesk from "../features/helpdesk/HelpDesk";
+import UsersPage from "../features/users/UsersPage";
 import AppLayout from "./AppLayout";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import LoginPage from "./pages/LoginPage";
@@ -14,7 +15,7 @@ import RequireAuth from "./RequireAuth";
 /** Old links used "/#/admin"; send them to the new address. */
 function HomeOrLegacyRedirect() {
   const { hash } = useLocation();
-  if (hash.startsWith("#/admin")) return <Navigate to="/app/admin" replace />;
+  if (hash.startsWith("#/admin")) return <Navigate to="/app/analytics" replace />;
   return <HelpDesk />;
 }
 
@@ -34,7 +35,7 @@ export default function App() {
           </RequireAuth>
         }
       />
-      <Route path="/app/admin" element={<Admin />} />
+      <Route path="/app/admin" element={<Navigate to="/app/analytics" replace />} />
       <Route
         path="/app"
         element={
@@ -44,6 +45,8 @@ export default function App() {
         }
       >
         <Route index element={<PortalHome />} />
+        <Route path="users" element={<UsersPage />} />
+        <Route path="analytics" element={<AnalyticsPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

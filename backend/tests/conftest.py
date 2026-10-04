@@ -19,7 +19,6 @@ os.environ["MONGODB_URI"] = TEST_MONGODB_URI
 os.environ["MONGODB_DB"] = TEST_DB
 os.environ["ANTHROPIC_API_KEY"] = ""
 os.environ["VOYAGE_API_KEY"] = ""
-os.environ["ADMIN_TOKEN"] = "test-admin-token"
 os.environ["APP_SECRET_KEY"] = "test-secret-key-not-for-production"
 os.environ["EMAIL_API_KEY"] = ""
 
@@ -104,3 +103,36 @@ def make_user(db):
 
 def login(client, identifier: str, password: str = PASSWORD):
     return client.post("/api/v1/auth/login", json={"identifier": identifier, "password": password})
+
+
+@pytest.fixture
+def sign_in(make_user, db):
+    """Create a user with these roles and give `client` an active session for them (skips 2-step)."""
+    from datetime import UTC, datetime, timedelta
+
+    from app.core.security import new_token, token_hash
+
+    counter = {"n": 0}
+
+    def _sign_in(client, roles: list[str], *, kind: str = "staff", **kwargs) -> dict:
+        counter["n"] += 1
+        if kind == "staff":
+            kwargs.setdefault("email", f"{roles[0]}{counter['n']}@college.test")
+        user = make_user(kind=kind, roles=roles, **kwargs)
+        token = new_token()
+        now = datetime.now(UTC)
+        db.sessions.insert_one(
+            {
+                "_id": token_hash(token),
+                "sid": f"test{counter['n']}",
+                "user_id": user["_id"],
+                "state": "active",
+                "created_at": now,
+                "last_seen_at": now,
+                "expires_at": now + timedelta(hours=1),
+            }
+        )
+        client.cookies.set("cc_session", token)
+        return user
+
+    return _sign_in

@@ -1,0 +1,117 @@
+/* Users screen */
+.filter-seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.filter-seg button {
+  border: none;
+  background: transparent;
+  padding: 7px 14px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.filter-seg button.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.user-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.user-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.user-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--teal-ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.link-btn:hover {
+  text-decoration: underline;
+}
+.nowrap {
+  white-space: nowrap;
+}
+.muted {
+  color: var(--text-muted);
+}
+
+.temp-password {
+  font-family: var(--mono);
+  font-size: 1.4rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 14px;
+  margin: 12px 0 16px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  user-select: all;
+}
+
+.role-list {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px 6px;
+  margin: 0 0 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 2px 14px;
+}
+.role-list legend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0 4px;
+}
+.role-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 0.9rem;
+  flex-wrap: wrap;
+}
+.role-mfa {
+  font-size: 0.7rem;
+  font-family: var(--mono);
+  color: var(--text-muted);
+}
+
+.field select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  background: var(--paper);
+  color: var(--ink);
+  width: 100%;
+}

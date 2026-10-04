@@ -14,10 +14,10 @@ describe("public routes", () => {
     expect(screen.getByRole("heading", { name: "How can I help you today?" })).toBeTruthy();
   });
 
-  it("redirects the old /#/admin link to the admin portal", () => {
+  it("redirects the old /#/admin link to analytics, which needs a sign-in", async () => {
     mockApi(() => signedOut);
     renderApp("/#/admin");
-    expect(screen.getByRole("heading", { name: "Admin portal" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Sign in to CollegeConnect" })).toBeTruthy();
   });
 
   it("shows the verification code on the verify page", () => {
@@ -44,6 +44,16 @@ describe("portal access", () => {
     expect(await screen.findByRole("heading", { name: "Welcome, Asha" })).toBeTruthy();
     expect(screen.getByText("Faculty")).toBeTruthy();
     expect(screen.getByText("Students").closest("[aria-disabled]")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Users" })).toBeNull();
+  });
+
+  it("shows admin links only to users with the permission", async () => {
+    mockApi((_m, path) =>
+      path === "/auth/me" ? { status: 200, body: makeMe({ permissions: ["users.read", "analytics.view"] }) } : { status: 404 },
+    );
+    renderApp("/app");
+    expect(await screen.findByRole("link", { name: "Users" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Help desk analytics" })).toBeTruthy();
   });
 
   it("forces a password change before anything else", async () => {
