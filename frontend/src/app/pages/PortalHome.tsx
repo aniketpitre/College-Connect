@@ -1,13 +1,14 @@
-import { Link } from "react-router";
 import { EmptyState } from "../../components/EmptyState";
+import { useMe } from "../../lib/auth";
 
 export default function PortalHome() {
+  const { data: me } = useMe();
   return (
     <>
-      <div className="eyebrow">CollegeConnect portal</div>
-      <h1>Welcome</h1>
-      <EmptyState title="Sign-in and role dashboards arrive in Phase 1">
-        Until then, staff can open <Link to="/app/admin">help desk analytics</Link> with the admin token.
+      <div className="eyebrow">CollegeConnect</div>
+      <h1>Welcome, {me?.name.split(" ")[0]}</h1>
+      <EmptyState title="Your dashboard is on its way">
+        Student records, fees and receipts arrive in the next part of Phase 1.
       </EmptyState>
     </>
   );

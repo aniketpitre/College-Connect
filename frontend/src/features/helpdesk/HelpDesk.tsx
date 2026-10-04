@@ -112,7 +112,7 @@ export default function HelpDesk() {
           </nav>
           <div className="sidebar-foot">
             <p>{t.disclaimer}</p>
-            <Link to="/app/admin">{t.admin} →</Link>
+            <Link to="/app/analytics">{t.admin} →</Link>
           </div>
         </aside>
 

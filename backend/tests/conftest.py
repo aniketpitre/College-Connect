@@ -19,7 +19,8 @@ os.environ["MONGODB_URI"] = TEST_MONGODB_URI
 os.environ["MONGODB_DB"] = TEST_DB
 os.environ["ANTHROPIC_API_KEY"] = ""
 os.environ["VOYAGE_API_KEY"] = ""
-os.environ["ADMIN_TOKEN"] = "test-admin-token"
+os.environ["APP_SECRET_KEY"] = "test-secret-key-not-for-production"
+os.environ["EMAIL_API_KEY"] = ""
 
 from fastapi.testclient import TestClient  # noqa: E402
 from pymongo import MongoClient  # noqa: E402
@@ -42,9 +43,10 @@ requires_mongo = pytest.mark.skipif(
 
 @pytest.fixture
 def client() -> TestClient:
+    """Browser-like client: HTTPS (so Secure cookies are kept) and the anti-CSRF header the frontend sends."""
     from app.main import app
 
-    return TestClient(app)
+    return TestClient(app, base_url="https://testserver", headers={"X-Requested-With": "XMLHttpRequest"})
 
 
 @pytest.fixture
@@ -60,3 +62,77 @@ def db():
     yield mongo[TEST_DB]
     mongo.drop_database(TEST_DB)
     core_db._indexes_ready = False
+
+
+PASSWORD = "correct-horse-battery"
+
+
+@pytest.fixture
+def make_user(db):
+    """Create an account directly in the database (bypassing the API)."""
+    from app.core.security import hash_password
+    from app.modules.users import repo
+
+    def _make(
+        *,
+        kind: str = "staff",
+        roles: list[str] | None = None,
+        email: str | None = None,
+        prn: str | None = None,
+        name: str = "Test User",
+        password: str = PASSWORD,
+        must_change_password: bool = False,
+    ) -> dict:
+        if kind == "student" and prn is None:
+            prn = "2026BCA001"
+        if kind == "staff" and email is None:
+            email = "staff@college.test"
+        return repo.create_user(
+            kind=kind,
+            name=name,
+            email=email,
+            prn=prn,
+            roles=roles if roles is not None else (["student"] if kind == "student" else ["faculty"]),
+            password_hash=hash_password(password),
+            must_change_password=must_change_password,
+            created_by=None,
+        )
+
+    return _make
+
+
+def login(client, identifier: str, password: str = PASSWORD):
+    return client.post("/api/v1/auth/login", json={"identifier": identifier, "password": password})
+
+
+@pytest.fixture
+def sign_in(make_user, db):
+    """Create a user with these roles and give `client` an active session for them (skips 2-step)."""
+    from datetime import UTC, datetime, timedelta
+
+    from app.core.security import new_token, token_hash
+
+    counter = {"n": 0}
+
+    def _sign_in(client, roles: list[str], *, kind: str = "staff", **kwargs) -> dict:
+        counter["n"] += 1
+        if kind == "staff":
+            kwargs.setdefault("email", f"{roles[0]}{counter['n']}@college.test")
+        user = make_user(kind=kind, roles=roles, **kwargs)
+        token = new_token()
+        now = datetime.now(UTC)
+        db.sessions.insert_one(
+            {
+                "_id": token_hash(token),
+                "sid": f"test{counter['n']}",
+                "user_id": user["_id"],
+                "state": "active",
+                "created_at": now,
+                "last_seen_at": now,
+                "expires_at": now + timedelta(hours=1),
+            }
+        )
+        client.cookies.set("cc_session", token)
+        return user
+
+    return _sign_in

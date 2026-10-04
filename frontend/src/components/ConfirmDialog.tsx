@@ -19,14 +19,18 @@ export function ConfirmDialog({ open, title, message, confirmLabel = "Confirm", 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal?.();
+    if (open && !dialog.open) {
+      // showModal() gives the backdrop, focus trap and top layer; the attribute is a fallback for test DOMs.
+      if (typeof dialog.showModal === "function") dialog.showModal();
+      else dialog.setAttribute("open", "");
+    }
     if (!open && dialog.open) dialog.close?.();
   }, [open]);
 
   const canConfirm = !requireReason || reason.trim().length >= 5;
 
   return (
-    <dialog ref={ref} className="confirm-dialog" aria-labelledby="confirm-title" onCancel={onCancel} open={open || undefined}>
+    <dialog ref={ref} className="confirm-dialog" aria-labelledby="confirm-title" onCancel={onCancel}>
       <h2 id="confirm-title">{title}</h2>
       <div className="confirm-message">{message}</div>
       {requireReason && (

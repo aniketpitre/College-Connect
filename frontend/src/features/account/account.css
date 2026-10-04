@@ -1,0 +1,85 @@
+.account {
+  max-width: 720px;
+}
+.account-card {
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.account-card h2 {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  margin: 0 0 6px;
+}
+.account-card .muted {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0 0 12px;
+}
+.account-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.account-card-head h2 {
+  margin: 0;
+}
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.device-list,
+.activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+.device-list li,
+.activity-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+}
+.device-list li:last-child,
+.activity-list li:last-child {
+  border-bottom: none;
+}
+.device-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-weight: 600;
+}
+.account-card .device-meta {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+}
+.activity-list li {
+  flex-wrap: wrap;
+}
+.activity-list li.warn > span:first-child {
+  color: var(--danger);
+}
+.activity-list .nowrap {
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.account .link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--teal-ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}

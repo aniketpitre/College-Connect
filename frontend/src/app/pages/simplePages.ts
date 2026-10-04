@@ -3,12 +3,6 @@ import type { Language } from "../../lib/types";
 type Strings = Record<Language, { title: string; body: string; back: string }>;
 
 // Temporary public pages; Phase 1 replaces them with sign-in and real verification.
-export const LOGIN: Strings = {
-  en: { title: "Sign in", body: "Student, parent and staff sign-in is coming soon.", back: "Back to the help desk" },
-  hi: { title: "साइन इन", body: "छात्र, अभिभावक और स्टाफ साइन-इन जल्द आ रहा है।", back: "हेल्प डेस्क पर वापस जाएं" },
-  mr: { title: "साइन इन", body: "विद्यार्थी, पालक आणि कर्मचारी साइन-इन लवकरच येत आहे.", back: "हेल्प डेस्कवर परत जा" },
-};
-
 export const VERIFY: Strings = {
   en: { title: "Verify a document", body: "Receipt and certificate verification is coming soon.", back: "Back to the help desk" },
   hi: { title: "दस्तावेज़ सत्यापित करें", body: "रसीद और प्रमाणपत्र सत्यापन जल्द आ रहा है।", back: "हेल्प डेस्क पर वापस जाएं" },

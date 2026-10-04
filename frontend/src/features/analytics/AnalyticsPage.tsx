@@ -1,158 +1,58 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router";
-import { AdminAuthError, fetchAdminStats } from "../../lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { UI_STRINGS } from "../../i18n";
+import { apiFetch } from "../../lib/api";
 import type { AdminStats, Category, LoggedQuery } from "../../lib/types";
-import "./Admin.css";
+import "./analytics.css";
 
-const TOKEN_KEY = "cc-admin-token";
 const LANG_NAMES = { en: "English", hi: "Hindi", mr: "Marathi" } as const;
 const OFFICE_NAMES = Object.fromEntries(UI_STRINGS.en.officesList.map((o) => [o.category, o.title])) as Record<Category, string>;
-
-function readToken(): string {
-  try {
-    return sessionStorage.getItem(TOKEN_KEY) ?? "";
-  } catch {
-    return "";
-  }
-}
-
-function saveToken(token: string) {
-  try {
-    if (token) sessionStorage.setItem(TOKEN_KEY, token);
-    else sessionStorage.removeItem(TOKEN_KEY);
-  } catch {
-    // Storage unavailable (private mode): the token just won't survive a reload.
-  }
-}
 
 const fmtLatency = (ms: number) => (ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(1)} s`);
 
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
-export default function Admin() {
-  const [token, setToken] = useState(readToken);
-  const [draft, setDraft] = useState("");
+/** Help-desk analytics (permission: analytics.view). */
+export default function AnalyticsPage() {
   const [days, setDays] = useState(7);
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [error, setError] = useState("");
-  const [reloadKey, setReloadKey] = useState(0);
-  const [loadedKey, setLoadedKey] = useState(-1);
-  const loading = Boolean(token) && loadedKey !== reloadKey;
-
-  useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
-    fetchAdminStats(token, days)
-      .then((s) => {
-        if (cancelled) return;
-        setStats(s);
-        setError("");
-      })
-      .catch((e: unknown) => {
-        if (cancelled) return;
-        if (e instanceof AdminAuthError) {
-          saveToken("");
-          setToken("");
-        }
-        setError(e instanceof Error ? e.message : "Something went wrong.");
-      })
-      .finally(() => !cancelled && setLoadedKey(reloadKey));
-    return () => {
-      cancelled = true;
-    };
-  }, [token, days, reloadKey]);
-
-  const refresh = () => setReloadKey((k) => k + 1);
-
-  if (!token) {
-    return (
-      <div className="admin admin-login-wrap">
-        <form
-          className="admin-login"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const tok = draft.trim();
-            if (!tok) return;
-            saveToken(tok);
-            setToken(tok);
-            setDraft("");
-            setError("");
-            refresh();
-          }}
-        >
-          <Link className="brand" to="/">
-            <span className="seal">CC</span> CollegeConnect AI
-          </Link>
-          <h1>Admin portal</h1>
-          <p>Enter the admin token configured on the server (ADMIN_TOKEN).</p>
-          <input
-            type="password"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Admin token"
-            aria-label="Admin token"
-            autoComplete="current-password"
-          />
-          {error && <p className="admin-error">{error}</p>}
-          <button type="submit" className="btn btn-primary" disabled={!draft.trim()}>
-            Sign in
-          </button>
-        </form>
-      </div>
-    );
-  }
-
+  const query = useQuery({
+    queryKey: ["admin", "stats", days],
+    queryFn: () => apiFetch<AdminStats>(`/admin/stats?days=${days}`),
+  });
+  const stats = query.data;
   const byCategory = Object.entries(stats?.by_category ?? {}).sort((a, b) => b[1] - a[1]) as [Category, number][];
   const maxCat = Math.max(1, ...byCategory.map(([, n]) => n));
 
   return (
-    <div className="admin">
-      <header className="admin-bar">
-        <Link className="brand" to="/">
-          <span className="seal">CC</span> CollegeConnect AI <span className="admin-tag">Admin</span>
-        </Link>
+    <div className="analytics">
+      <div className="page-head">
+        <div>
+          <div className="eyebrow">Campus overview</div>
+          <h1>Help desk analytics</h1>
+        </div>
         <div className="admin-actions">
           <div className="seg" role="group" aria-label="Time range">
             {[7, 30, 90].map((d) => (
-              <button key={d} type="button" className={d === days ? "active" : ""} aria-pressed={d === days} onClick={() => {
-                  setDays(d);
-                  refresh();
-                }}>
+              <button key={d} type="button" className={d === days ? "active" : ""} aria-pressed={d === days} onClick={() => setDays(d)}>
                 {d}d
               </button>
             ))}
           </div>
-          <button type="button" className="btn btn-ghost" onClick={refresh} disabled={loading}>
-            {loading ? "Refreshing…" : "Refresh"}
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => {
-              saveToken("");
-              setToken("");
-              setStats(null);
-            }}
-          >
-            Sign out
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => query.refetch()} disabled={query.isFetching}>
+            {query.isFetching ? "Refreshing…" : "Refresh"}
           </button>
         </div>
-      </header>
+      </div>
+      {query.error && <p className="admin-error">{query.error.message}</p>}
+      {query.isLoading && <p className="muted">Loading…</p>}
 
-      <main className="admin-main">
-        <div className="eyebrow">Campus overview</div>
-        <h1>Help desk analytics</h1>
-        {error && <p className="admin-error">{error}</p>}
-        {!stats && !error && <p className="muted">Loading…</p>}
-
-        {stats && (
-          <>
-            <p className="muted pipeline-line">
-              Retrieval: <b>{stats.pipeline.retrieval === "vector" ? `vector (${stats.pipeline.embedding_model})` : "keyword (BM25)"}</b>
-              {" · "}Answers: <b>{stats.pipeline.generation === "extractive" ? "document excerpts (no LLM key)" : stats.pipeline.generation}</b>
-            </p>
+      {stats && (
+        <>
+          <p className="muted pipeline-line">
+            Retrieval: <b>{stats.pipeline.retrieval === "vector" ? `vector (${stats.pipeline.embedding_model})` : "keyword (BM25)"}</b>
+            {" · "}Answers: <b>{stats.pipeline.generation === "extractive" ? "document excerpts (no LLM key)" : stats.pipeline.generation}</b>
+          </p>
 
             {!stats.analytics_enabled ? (
               <div className="admin-card">
@@ -245,9 +145,8 @@ export default function Admin() {
                 </section>
               </>
             )}
-          </>
-        )}
-      </main>
+        </>
+      )}
     </div>
   );
 }

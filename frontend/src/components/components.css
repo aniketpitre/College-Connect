@@ -157,3 +157,49 @@
   background: var(--danger);
   color: #fff;
 }
+
+.modal {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px;
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  color: var(--ink);
+  background: var(--paper-card);
+}
+.modal-wide {
+  width: min(640px, calc(100vw - 32px));
+}
+.modal::backdrop {
+  background: rgba(20, 33, 61, 0.45);
+}
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.modal-head h2 {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  margin: 0;
+}
+.modal-close {
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+.modal-actions .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -18,10 +18,8 @@ def test_docs_only_list_v1_paths(client):
     assert not any(p.startswith("/api/query") for p in paths)
 
 
-def test_errors_use_one_format(client):
-    assert client.get("/api/v1/admin/stats").json() == {
-        "error": {"code": "unauthorized", "message": "Invalid admin token."}
-    }
+def test_errors_use_one_format(client, db):
+    assert client.get("/api/v1/auth/me").json() == {"error": {"code": "not_signed_in", "message": "Please sign in."}}
     assert client.get("/api/v1/does-not-exist").json()["error"]["code"] == "not_found"
 
     body = client.post("/api/v1/query", json={"question": "", "language": "en"}).json()

@@ -20,12 +20,25 @@ except ImportError:
     pass
 
 
+def _flag(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    return default if value is None else value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 @dataclass(frozen=True)
 class Settings:
     app_name: str
     mongodb_uri: str | None
     mongodb_db: str
     allowed_origins: tuple[str, ...]
+    # Secure cookies need HTTPS; browsers treat http://localhost as secure, so this stays on in dev too.
+    cookie_secure: bool
+    # Encrypts stored 2-step (TOTP) secrets. Required in production; any long random string.
+    app_secret_key: str | None
+    # Public base URL used in emailed links; when unset it is taken from the request.
+    app_base_url: str | None
+    email_api_key: str | None
+    email_from: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -34,6 +47,11 @@ class Settings:
             mongodb_uri=os.getenv("MONGODB_URI") or None,
             mongodb_db=os.getenv("MONGODB_DB", "collegeconnect"),
             allowed_origins=tuple(o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()),
+            cookie_secure=_flag("COOKIE_SECURE", True),
+            app_secret_key=os.getenv("APP_SECRET_KEY") or None,
+            app_base_url=(os.getenv("APP_BASE_URL") or "").rstrip("/") or None,
+            email_api_key=os.getenv("EMAIL_API_KEY") or None,
+            email_from=os.getenv("EMAIL_FROM", "CollegeConnect <onboarding@resend.dev>"),
         )
 
 
