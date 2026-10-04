@@ -66,6 +66,10 @@ class P(StrEnum):
     STUDENTS_READ = "students.read"
     STUDENTS_MANAGE = "students.manage"
     STUDENTS_IMPORT = "students.import"
+    FEES_READ = "fees.read"
+    FEES_MANAGE = "fees.manage"  # heads, structures, demands, scholarships, charges, opening balances
+    FEES_COLLECT = "fees.collect"  # counter collection; also requests concessions, cancellations, refunds
+    APPROVALS_DECIDE = "approvals.decide"
 
 
 # Every staff member can read the college structure (programmes, divisions, subjects…).
@@ -85,7 +89,8 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.USERS_RESET_STUDENT,
         P.SETUP_MANAGE,
     },
-    Role.PRINCIPAL: _STAFF_BASE | {P.ANALYTICS_VIEW, P.AUDIT_READ, P.USERS_READ, P.STUDENTS_READ},
+    Role.PRINCIPAL: _STAFF_BASE
+    | {P.ANALYTICS_VIEW, P.AUDIT_READ, P.USERS_READ, P.STUDENTS_READ, P.FEES_READ, P.APPROVALS_DECIDE},
     Role.OFFICE: _STAFF_BASE
     | {
         P.ANALYTICS_VIEW,
@@ -96,10 +101,12 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.STUDENTS_READ,
         P.STUDENTS_MANAGE,
         P.STUDENTS_IMPORT,
+        P.FEES_READ,
     },
+    Role.ACCOUNTS: _STAFF_BASE | {P.STUDENTS_READ, P.FEES_READ, P.FEES_MANAGE, P.FEES_COLLECT},
     # Read the student master (spec §2.3). HOD/faculty/mentor get scoped access with class
     # assignments in Phase 2.
-    **{role: _STAFF_BASE | {P.STUDENTS_READ} for role in (Role.ACCOUNTS, Role.ADMISSION, Role.EXAM_CELL)},
+    **{role: _STAFF_BASE | {P.STUDENTS_READ} for role in (Role.ADMISSION, Role.EXAM_CELL)},
     **{
         role: _STAFF_BASE
         for role in (

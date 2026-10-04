@@ -292,6 +292,25 @@ address on record reset through the office (temporary password). Reset emails ne
   consent is stored in `consents` with the notice version. Portal menu and home are translated.
 - Collections added: `files`, `consents`, `imports` (expires after a day).
 
+**Delivered in the "Phase 1C" PR (1.8–1.11):**
+- Ledger types: demand, charge, opening_due, refund (owe more) and payment, concession,
+  scholarship, opening_paid (owe less), plus reversal. Each entry has per-head lines; a
+  student's balance and head-wise outstanding are always computed from entries.
+- Fee structures are per (academic year, programme, year, category) with a default for "all
+  other categories"; they lock once fees are charged from them. Late fee: one flat amount per
+  overdue installment, applied by Accounts from the student's account (no automatic job yet —
+  Vercel Cron reminders come with notices).
+- All concessions, receipt cancellations and refunds go to the Principal (no "above a limit"
+  threshold yet); the requester can never approve. A scholarship sanctioned after full payment
+  leaves the student in credit, refunded through an approved refund.
+- Receipt numbers come from `counters` (`receipt:<year>`) inside the collection transaction;
+  tested with 12 concurrent cashiers. PDF uses fpdf2's built-in font, so it prints "Rs." rather
+  than the rupee sign; first print ORIGINAL, later prints DUPLICATE, cancelled ones CANCELLED.
+- Emailing a receipt sends a summary with the verify link (no PDF attachment yet).
+- Verify page shows first name + initials and a partly hidden PRN, never the full record.
+- Collections added: `fee_heads`, `fee_structures`, `ledger_entries`, `receipts`, `counters`,
+  `approvals`, `scholarships`.
+
 ### 5.6 Acceptance criteria
 - Office imports 60 students from Excel; errors are reported row by row; each student gets a login.
 - A student signs in with PRN + temporary password, sets their own, accepts the privacy notice and sees the **correct balance**.

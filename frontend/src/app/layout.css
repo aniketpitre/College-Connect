@@ -150,3 +150,37 @@
     padding-right: 16px;
   }
 }
+
+.verify-card {
+  max-width: 460px;
+}
+.verify-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.verify-result {
+  margin: 4px 0 14px;
+}
+.verify-result .status-badge {
+  font-size: 0.95rem;
+  padding: 6px 12px;
+}
+.verify-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  margin: 0 0 14px;
+  font-size: 0.92rem;
+}
+.verify-list dt {
+  color: var(--text-muted);
+}
+.verify-list dd {
+  margin: 0;
+  font-weight: 600;
+}
+.verify-list .mono {
+  font-family: var(--mono);
+}
