@@ -16,12 +16,14 @@ Build order: **core ERP first (Phases 0–2), then other features incl. the uniq
 
 ## Stack and layout
 - `frontend/`: React + TypeScript + Vite. Help desk UI in `src/HelpDesk.tsx`, admin analytics in `src/Admin.tsx`, strings in `src/i18n.ts` (en/hi/mr).
-- `backend/`: FastAPI. RAG pipeline in `app/rag/`, MongoDB in `app/db.py`, query analytics in `app/analytics.py`, routes in `app/routers/`.
+- `backend/`: FastAPI, Python 3.12. `app/core/` (settings, MongoDB client + `run_in_transaction` + index registry, error format), `app/modules/<module>/` (router, schemas, services), `app/rag/` (help desk AI). All routes are mounted under `/api/v1`; the old `/api/...` paths stay as hidden aliases for the live help desk.
+- API errors always look like `{"error": {"code", "message", "field?"}}`: raise `AppError` from services.
 - `backend/knowledge/<category>/`: help-desk source documents; rebuild the index with `python -m scripts.ingest` (or `--no-embed`).
 - `vercel.json`: frontend and backend deployed as two services on one domain (`/api/*` → backend).
 
 ## Commands
-- Backend: `cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload --port 8000`
+- Backend: `cd backend && pip install -r requirements-dev.txt && uvicorn app.main:app --reload --port 8000`
+- Backend checks (same as CI): `ruff check . && ruff format --check . && mypy app scripts && python -m pytest -q`. Database tests need a MongoDB replica set: `docker run -d -p 27017:27017 mongo:7 --replSet rs0` then `docker exec <id> mongosh --eval "rs.initiate()"`; without one they are skipped.
 - Frontend: `cd frontend && npm install && npm run dev` · checks: `npm run build && npm run lint`
 
 ## Conventions

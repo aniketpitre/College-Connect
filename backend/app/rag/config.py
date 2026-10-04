@@ -1,14 +1,7 @@
 import os
-from pathlib import Path
 
-BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+from app.core.config import BACKEND_DIR  # also loads backend/.env for local dev
 
-try:  # local dev: read backend/.env (on Vercel, set these in Project Settings -> Environment Variables)
-    from dotenv import load_dotenv
-
-    load_dotenv(BACKEND_DIR / ".env")
-except ImportError:
-    pass
 KNOWLEDGE_DIR = BACKEND_DIR / "knowledge"
 INDEX_PATH = BACKEND_DIR / "app" / "data" / "index.json"
 

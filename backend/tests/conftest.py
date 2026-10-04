@@ -49,10 +49,14 @@ def client() -> TestClient:
 
 @pytest.fixture
 def db():
-    """A clean test database for each test that asks for it."""
+    """A clean test database for each test that asks for it, on the app's own client."""
     if not MONGO_OK:
         pytest.skip("MongoDB not reachable")
-    mongo = MongoClient(TEST_MONGODB_URI, tz_aware=True)
+    from app.core import db as core_db
+
+    mongo = core_db.get_client()
     mongo.drop_database(TEST_DB)
+    core_db._indexes_ready = False
     yield mongo[TEST_DB]
     mongo.drop_database(TEST_DB)
+    core_db._indexes_ready = False

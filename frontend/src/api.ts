@@ -29,7 +29,7 @@ export async function fetchAdminStats(token: string, days: number): Promise<Admi
   if (res.status === 401) throw new AdminAuthError("Invalid admin token.");
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.detail ?? `Request failed: ${res.status}`);
+    throw new Error(body?.error?.message ?? `Request failed: ${res.status}`);
   }
   return res.json();
 }

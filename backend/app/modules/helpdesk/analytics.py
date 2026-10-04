@@ -1,25 +1,23 @@
-"""Query logging and the aggregates behind the admin dashboard."""
+"""Help-desk query logging and the aggregates behind the admin analytics page."""
 
 import logging
 from datetime import UTC, datetime, timedelta
 
+from pymongo import ASCENDING, DESCENDING, IndexModel
 from pymongo.errors import PyMongoError
 
-from app.db import db_available, get_db
+from app.core.db import db_available, get_db, register_indexes
 
 log = logging.getLogger(__name__)
 
-_indexes_ready = False
+register_indexes(
+    "queries",
+    [IndexModel([("created_at", ASCENDING)]), IndexModel([("grounded", ASCENDING), ("created_at", DESCENDING)])],
+)
 
 
 def _queries():
-    global _indexes_ready
-    coll = get_db()["queries"]
-    if not _indexes_ready:
-        coll.create_index("created_at")
-        coll.create_index([("grounded", 1), ("created_at", -1)])
-        _indexes_ready = True
-    return coll
+    return get_db()["queries"]
 
 
 def log_query(
