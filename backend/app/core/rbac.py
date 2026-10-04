@@ -72,6 +72,7 @@ class P(StrEnum):
     APPROVALS_DECIDE = "approvals.decide"
     NOTICES_READ = "notices.read"
     NOTICES_PUBLISH = "notices.publish"
+    EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
 
 
 # Every staff member can read the college structure (programmes, divisions, subjects…).
@@ -93,6 +94,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.USERS_RESET_STAFF,
         P.USERS_RESET_STUDENT,
         P.SETUP_MANAGE,
+        P.EXPORT_REQUEST,
     }
     | _PUBLISH,
     Role.PRINCIPAL: _STAFF_BASE

@@ -34,6 +34,8 @@ const NAV: NavItem[] = [
   { to: "/app/account", label: "account" },
   { to: "/app/users", label: "users", permission: "users.read" },
   { to: "/app/setup", label: "setup", permission: "setup.read" },
+  { to: "/app/audit", label: "audit", permission: "audit.read" },
+  { to: "/app/exports", label: "exports", permission: "export.request" },
   { to: "/app/analytics", label: "analytics", permission: "analytics.view" },
 ];
 

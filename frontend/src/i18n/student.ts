@@ -10,6 +10,7 @@ export interface StudentStrings {
   genders: Record<string, string>;
   sections: { personal: string; contact: string; guardian: string; address: string; academic: string; education: string; documents: string };
   profileTitle: string;
+  myData: { title: string; text: string; button: string };
   requestCorrection: string;
   requestIntro: string;
   whatToCorrect: string;
@@ -92,6 +93,11 @@ const EN: StudentStrings = {
     documents: "Documents",
   },
   profileTitle: "My profile",
+  myData: {
+    title: "Your data",
+    text: "Download everything the college holds about you: your record, documents list, fees, receipts and sign-ins (a JSON file).",
+    button: "Download my data",
+  },
   requestCorrection: "Request a correction",
   requestIntro: "Something wrong? Tell the office what it should be. They check it and update your record.",
   whatToCorrect: "What should be corrected?",
@@ -174,6 +180,11 @@ const HI: StudentStrings = {
     documents: "दस्तावेज़",
   },
   profileTitle: "मेरी प्रोफ़ाइल",
+  myData: {
+    title: "आपका डेटा",
+    text: "कॉलेज के पास आपके बारे में जो कुछ है, वह सब डाउनलोड करें: आपका रिकॉर्ड, दस्तावेज़ों की सूची, फ़ीस, रसीदें और साइन-इन (एक JSON फ़ाइल)।",
+    button: "मेरा डेटा डाउनलोड करें",
+  },
   requestCorrection: "सुधार का अनुरोध करें",
   requestIntro: "कुछ गलत है? कार्यालय को बताएं कि सही क्या है। वे जांच करके आपका रिकॉर्ड अपडेट करेंगे।",
   whatToCorrect: "क्या सुधारना है?",
@@ -256,6 +267,11 @@ const MR: StudentStrings = {
     documents: "कागदपत्रे",
   },
   profileTitle: "माझी प्रोफाइल",
+  myData: {
+    title: "तुमचा डेटा",
+    text: "कॉलेजकडे तुमच्याबद्दल असलेली सर्व माहिती डाउनलोड करा: तुमचा रेकॉर्ड, कागदपत्रांची यादी, फी, पावत्या आणि साइन-इन (एक JSON फाइल).",
+    button: "माझा डेटा डाउनलोड करा",
+  },
   requestCorrection: "दुरुस्तीची विनंती करा",
   requestIntro: "काही चुकीचे आहे? कार्यालयाला बरोबर काय आहे ते सांगा. ते तपासून तुमची नोंद अद्ययावत करतील.",
   whatToCorrect: "काय दुरुस्त करायचे?",

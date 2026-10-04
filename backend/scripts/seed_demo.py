@@ -4,6 +4,7 @@ Load demo data into a development or preview database.
     cd backend
     python -m scripts.seed_demo            # add demo data
     python -m scripts.seed_demo --reset    # remove previously seeded demo data first
+    python -m scripts.seed_demo --erp      # ERP demo: BCA, 60 students, fees, notices, staff logins
 
 Refuses to touch the production database name ("collegeconnect") unless --force is given.
 Each phase adds its own seeder to SEEDERS (Phase 1: academic year, BCA programme, students,
@@ -14,7 +15,7 @@ import argparse
 import random
 import sys
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from pymongo.database import Database
@@ -73,6 +74,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--reset", action="store_true", help="delete previously seeded demo data first")
     parser.add_argument("--force", action="store_true", help=f"allow seeding the '{PRODUCTION_DB}' database")
+    parser.add_argument("--erp", action="store_true", help="also load ERP demo data (needs an empty database)")
     parser.add_argument("--seed", type=int, default=2026, help="random seed (same seed = same data)")
     args = parser.parse_args(argv)
 
@@ -93,6 +95,19 @@ def main(argv: list[str] | None = None) -> int:
     rng = random.Random(args.seed)  # noqa: S311 - demo data, not security
     for name, seeder in SEEDERS.items():
         print(f"Seeded {seeder(db, rng)} {name}")
+    if args.erp:
+        from scripts import seed_erp
+
+        for name, count in seed_erp.seed(db, rng).items():
+            print(f"Seeded {count} {name}")
+        print("Demo sign-ins (password " + seed_erp.DEMO_PASSWORD + "):")
+        for role, _name, email in seed_erp.STAFF:
+            print(f"  {role:<13} {email}")
+        print(
+            "  students      PRN, e.g. "
+            + str(date.today().year if date.today().month >= 6 else date.today().year - 1)
+            + "BCA001"
+        )
     print(f"Database: {settings.mongodb_db}")
     return 0
 

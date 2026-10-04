@@ -6,7 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.auth import csrf_guard
 from app.core.config import settings
 from app.core.errors import install_error_handlers
+from app.modules.auditlog import router as auditlog
 from app.modules.auth import router as auth
+from app.modules.exports import router as exports
 from app.modules.fees import router as fees
 from app.modules.helpdesk import admin as helpdesk_admin
 from app.modules.helpdesk import router as helpdesk
@@ -34,6 +36,8 @@ ROUTERS: list[APIRouter] = [
     fees.router,
     portal.router,
     notices.router,
+    auditlog.router,
+    exports.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]
