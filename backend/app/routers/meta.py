@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.models import CategoryInfo
 from app.db import db_available
+from app.models import CategoryInfo
 from app.rag.pipeline import pipeline_status
 
 router = APIRouter(prefix="/api", tags=["meta"])

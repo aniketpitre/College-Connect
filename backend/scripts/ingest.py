@@ -5,6 +5,7 @@ Build app/data/index.json from the documents in knowledge/.
     python -m scripts.ingest              # chunk + embed (requires VOYAGE_API_KEY)
     python -m scripts.ingest --no-embed   # chunk only; the API then uses keyword (BM25) retrieval
 """
+
 import argparse
 import json
 import sys
@@ -31,7 +32,7 @@ def main() -> int:
             print("VOYAGE_API_KEY is not set. Set it, or pass --no-embed for a keyword-only index.", file=sys.stderr)
             return 1
         texts = [f"{c['title']} - {c['section']}\n{c['text']}" for c in chunks]
-        for chunk, vector in zip(chunks, embed(texts, input_type="document")):
+        for chunk, vector in zip(chunks, embed(texts, input_type="document"), strict=True):
             chunk["embedding"] = [round(x, 6) for x in vector]
         embedding_model = EMBEDDING_MODEL
         print(f"Embedded {len(chunks)} chunks with {EMBEDDING_MODEL}")

@@ -1,6 +1,7 @@
 """Query logging and the aggregates behind the admin dashboard."""
+
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from pymongo.errors import PyMongoError
 
@@ -32,18 +33,20 @@ def log_query(
     if not db_available():
         return
     try:
-        _queries().insert_one({
-            "created_at": datetime.now(timezone.utc),
-            "question": question,
-            "language": language,
-            "category_filter": category_filter,
-            # Unanswered questions have no real office; don't count them under the default one.
-            "category": result["category"] if result["grounded"] else category_filter,
-            "grounded": result["grounded"],
-            "confidence": result["confidence"],
-            "sources": [f'{s["document"]} · {s["section"]}' for s in result["sources"]],
-            "latency_ms": latency_ms,
-        })
+        _queries().insert_one(
+            {
+                "created_at": datetime.now(UTC),
+                "question": question,
+                "language": language,
+                "category_filter": category_filter,
+                # Unanswered questions have no real office; don't count them under the default one.
+                "category": result["category"] if result["grounded"] else category_filter,
+                "grounded": result["grounded"],
+                "confidence": result["confidence"],
+                "sources": [f"{s['document']} · {s['section']}" for s in result["sources"]],
+                "latency_ms": latency_ms,
+            }
+        )
     except PyMongoError:
         log.exception("Could not log query to MongoDB")
 
@@ -55,15 +58,19 @@ def _count_by(coll, match: dict, field: str) -> dict[str, int]:
 
 def admin_stats(days: int = 7) -> dict:
     coll = _queries()
-    since = datetime.now(timezone.utc) - timedelta(days=days)
+    since = datetime.now(UTC) - timedelta(days=days)
     match = {"created_at": {"$gte": since}}
 
     total = coll.count_documents(match)
     grounded = coll.count_documents({**match, "grounded": True})
-    latency = list(coll.aggregate([
-        {"$match": match},
-        {"$group": {"_id": None, "avg_latency": {"$avg": "$latency_ms"}, "avg_conf": {"$avg": "$confidence"}}},
-    ]))
+    latency = list(
+        coll.aggregate(
+            [
+                {"$match": match},
+                {"$group": {"_id": None, "avg_latency": {"$avg": "$latency_ms"}, "avg_conf": {"$avg": "$confidence"}}},
+            ]
+        )
+    )
 
     def _rows(query: dict, limit: int) -> list[dict]:
         cursor = coll.find(query, {"_id": 0}).sort("created_at", -1).limit(limit)

@@ -4,6 +4,7 @@ MongoDB Atlas connection, used for query logs (admin analytics).
 The database is optional: without MONGODB_URI the help desk still answers questions,
 it just doesn't record them and the admin stats endpoint reports that analytics are off.
 """
+
 import logging
 import os
 from functools import lru_cache

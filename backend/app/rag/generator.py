@@ -1,13 +1,18 @@
 """Answer generation with Claude, constrained to the retrieved excerpts."""
+
 import logging
 from functools import lru_cache
+from typing import Literal, cast
 
 import anthropic
+from anthropic.types import Message, MessageParam, OutputConfigParam, ParsedMessage
 from pydantic import BaseModel, Field
 
 from app.rag.config import ANTHROPIC_API_KEY, CLAUDE_EFFORT, CLAUDE_MODEL
 
 log = logging.getLogger(__name__)
+
+Effort = Literal["low", "medium", "high", "xhigh", "max"]
 
 LANGUAGE_NAMES = {"en": "English", "hi": "Hindi (Devanagari script)", "mr": "Marathi (Devanagari script)"}
 
@@ -41,25 +46,47 @@ def _client() -> anthropic.Anthropic:
     return anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=60, max_retries=2)
 
 
-def _call(system: str, user: str, max_tokens: int, output_format=None):
-    kwargs = dict(
+# On a safety decline, the API re-runs the request on Anthropic's recommended fallback model.
+_FALLBACK_HEADERS = {"anthropic-beta": "server-side-fallback-2026-07-01"}
+_FALLBACK_BODY = {"fallbacks": "default"}
+
+
+def _output_config() -> OutputConfigParam:
+    return {"effort": cast(Effort, CLAUDE_EFFORT)}
+
+
+def _messages(user: str) -> list[MessageParam]:
+    return [{"role": "user", "content": user}]
+
+
+def _ask_text(system: str, user: str, max_tokens: int) -> Message:
+    return _client().messages.create(
         model=CLAUDE_MODEL,
         max_tokens=max_tokens,
         system=system,
-        messages=[{"role": "user", "content": user}],
-        output_config={"effort": CLAUDE_EFFORT},
-        # On a safety decline, re-run the request on Anthropic's recommended fallback model.
-        extra_headers={"anthropic-beta": "server-side-fallback-2026-07-01"},
-        extra_body={"fallbacks": "default"},
+        messages=_messages(user),
+        output_config=_output_config(),
+        extra_headers=_FALLBACK_HEADERS,
+        extra_body=_FALLBACK_BODY,
     )
-    if output_format is not None:
-        return _client().messages.parse(output_format=output_format, **kwargs)
-    return _client().messages.create(**kwargs)
+
+
+def _ask_structured(system: str, user: str, max_tokens: int) -> ParsedMessage[GeneratedAnswer]:
+    return _client().messages.parse(
+        model=CLAUDE_MODEL,
+        max_tokens=max_tokens,
+        system=system,
+        messages=_messages(user),
+        output_config=_output_config(),
+        output_format=GeneratedAnswer,
+        extra_headers=_FALLBACK_HEADERS,
+        extra_body=_FALLBACK_BODY,
+    )
 
 
 def translate_query_to_english(question: str) -> str:
     """Used only for keyword (BM25) retrieval, since the documents are in English."""
-    response = _call(
+    response = _ask_text(
         system="Translate the student's question into English for a keyword search over college "
         "documents. Reply with the English question only.",
         user=question,
@@ -75,7 +102,7 @@ def generate_answer(question: str, language: str, chunks: list[dict]) -> Generat
     """Returns None if Claude declined the request."""
     excerpts = "\n\n".join(
         f'<excerpt id="{c["id"]}" title="{c["title"]}" document="{c["document"]}" section="{c["section"]}">\n'
-        f'{c["text"]}\n</excerpt>'
+        f"{c['text']}\n</excerpt>"
         for c in chunks
     )
     user = (
@@ -83,7 +110,7 @@ def generate_answer(question: str, language: str, chunks: list[dict]) -> Generat
         f"<question>{question}</question>\n\n"
         f"Answer in {LANGUAGE_NAMES[language]}."
     )
-    response = _call(SYSTEM_PROMPT, user, max_tokens=16000, output_format=GeneratedAnswer)
+    response = _ask_structured(SYSTEM_PROMPT, user, max_tokens=16000)
     if response.stop_reason == "refusal":
         log.warning("Claude declined the request: %s", getattr(response, "stop_details", None))
         return None
