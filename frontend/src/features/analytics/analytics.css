@@ -51,34 +51,6 @@
 }
 
 /* Stat tiles */
-.tiles {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
-}
-.tile {
-  background: var(--paper-card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 18px 20px;
-}
-.tile-label {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-}
-.tile-value {
-  font-family: var(--serif);
-  font-size: 2rem;
-  font-weight: 600;
-  line-height: 1.2;
-  margin: 6px 0 4px;
-  font-variant-numeric: tabular-nums;
-}
-.tile-note {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
 
 .admin-grid {
   display: grid;

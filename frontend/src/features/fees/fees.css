@@ -1,0 +1,135 @@
+.year-select,
+.filters select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--paper-card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+}
+.structure-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+.structure-card {
+  margin: 0;
+}
+.structure-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+.mini-table td {
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.mini-table .num,
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.total-row td {
+  font-weight: 700;
+  border-bottom: none;
+}
+.small {
+  font-size: 0.8rem;
+}
+.inline-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.inline-form .field {
+  margin-bottom: 0;
+}
+.line-row {
+  display: grid;
+  grid-template-columns: 1fr 150px auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.line-row:has(input[type="date"]) {
+  grid-template-columns: 1fr 150px 140px auto;
+}
+.line-row select,
+.line-row > input {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  min-width: 0;
+}
+.line-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+.narrow-field {
+  max-width: 260px;
+}
+@media (max-width: 560px) {
+  .line-row,
+  .line-row:has(input[type="date"]) {
+    grid-template-columns: 1fr 1fr auto;
+  }
+  .line-row:has(input[type="date"]) > input:first-child {
+    grid-column: 1 / -1;
+  }
+}
+.fee-tiles {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+.tile-warn {
+  border-color: var(--danger);
+}
+.action-bar {
+  justify-content: flex-start;
+  margin-bottom: 16px;
+}
+.statement {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  background: var(--paper-card);
+}
+.statement th,
+.statement td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.statement th {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.statement th.num,
+.statement td.num {
+  text-align: right;
+}
+.statement tr.reversed td {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+.student-search {
+  max-width: 480px;
+}

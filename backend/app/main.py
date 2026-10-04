@@ -7,6 +7,7 @@ from app.core.auth import csrf_guard
 from app.core.config import settings
 from app.core.errors import install_error_handlers
 from app.modules.auth import router as auth
+from app.modules.fees import router as fees
 from app.modules.helpdesk import admin as helpdesk_admin
 from app.modules.helpdesk import router as helpdesk
 from app.modules.onboarding import router as onboarding
@@ -28,6 +29,7 @@ ROUTERS: list[APIRouter] = [
     setup.router,
     students.router,
     onboarding.router,
+    fees.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

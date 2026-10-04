@@ -203,3 +203,26 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.amount-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  padding-left: 10px;
+}
+.amount-input > span {
+  color: var(--text-muted);
+}
+.amount-input input {
+  border: none !important;
+  background: transparent !important;
+  padding: 10px 10px 10px 6px !important;
+  width: 100%;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.amount-input input[aria-invalid] {
+  color: var(--danger);
+}
