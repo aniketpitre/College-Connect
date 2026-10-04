@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router";
 import AccountPage from "../features/account/AccountPage";
 import AnalyticsPage from "../features/analytics/AnalyticsPage";
 import ApprovalsPage from "../features/approvals/ApprovalsPage";
+import CollectPage from "../features/fees/CollectPage";
 import FeeSetupPage from "../features/fees/FeeSetupPage";
 import FeesHome from "../features/fees/FeesHome";
 import StudentFeesPage from "../features/fees/StudentFeesPage";
@@ -75,6 +76,7 @@ export default function App() {
         <Route path="setup" element={<InstitutionSetupPage />} />
         <Route path="fees" element={<FeesHome />} />
         <Route path="fees/setup" element={<FeeSetupPage />} />
+        <Route path="fees/collect/:id" element={<CollectPage />} />
         <Route path="fees/students/:id" element={<StudentFeesPage />} />
         <Route path="approvals" element={<ApprovalsPage />} />
         <Route path="students" element={<StudentsPage />} />

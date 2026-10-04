@@ -158,3 +158,57 @@ export const useScholarshipAction = () =>
   useFeesMutation(({ id, body }: { id: string; body: Record<string, unknown> }) => post<Scholarship>(`/fees/scholarships/${id}/actions`, body));
 export const useDecide = () =>
   useFeesMutation(({ id, approve, reason }: { id: string; approve: boolean; reason?: string }) => post<Approval>(`/approvals/${id}/decide`, { approve, reason }));
+
+export interface Receipt {
+  id: string;
+  number: string;
+  academic_year: string;
+  academic_year_id: string;
+  student_id: string;
+  student: { name: string; prn: string; class: string };
+  amount: number;
+  lines: { code: string; name: string; amount: number }[];
+  mode: string;
+  mode_label: string;
+  reference: string;
+  bank: string;
+  instrument_date: string | null;
+  note: string;
+  collected_by: string;
+  collected_at: string;
+  status: "valid" | "cancelled";
+  cancelled_at: string | null;
+  cancel_reason: string | null;
+  prints: number;
+  verify_code: string;
+}
+export interface Today {
+  date: string;
+  total: number;
+  count: number;
+  cancelled: number;
+  by_mode: { mode: string; label: string; amount: number }[];
+  pending_approvals: number;
+}
+
+export const MODES: [string, string][] = [
+  ["cash", "Cash"],
+  ["upi", "UPI"],
+  ["card", "Card"],
+  ["cheque", "Cheque"],
+  ["dd", "Demand draft"],
+  ["bank_transfer", "Bank transfer"],
+];
+
+/** Opens in a new tab; the API marks every print after the first as DUPLICATE. */
+export const receiptPdfUrl = (id: string) => `/api/v1/fees/receipts/${id}/pdf`;
+
+export const useToday = () => useQuery({ queryKey: [...FEES_KEY, "today"], queryFn: () => apiFetch<Today>("/fees/today"), refetchInterval: 60_000 });
+
+export function useReceipts(params: Record<string, string | undefined>) {
+  const qs = new URLSearchParams(Object.entries(params).filter((e): e is [string, string] => Boolean(e[1])));
+  return useQuery({ queryKey: [...FEES_KEY, "receipts", params], queryFn: () => apiFetch<Receipt[]>(`/fees/receipts?${qs}`) });
+}
+
+export const useCollect = () => useFeesMutation((b: Record<string, unknown>) => post<Receipt>("/fees/collect", b));
+export const useEmailReceipt = () => useFeesMutation((id: string) => post<{ sent_to: string }>(`/fees/receipts/${id}/email`));

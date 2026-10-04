@@ -16,6 +16,7 @@ import {
   useRequestConcession,
   useScholarshipAction,
   useScholarships,
+  receiptPdfUrl,
   type FeeAccount,
   type Scholarship,
 } from "../../lib/fees";
@@ -194,7 +195,14 @@ export function Statement({ account }: { account: FeeAccount }) {
                 <td className="nowrap">{fmtDate(e.at)}</td>
                 <td>
                   {e.label}
-                  {e.receipt_number ? ` · ${e.receipt_number}` : ""}
+                  {e.receipt_number && e.receipt_id ? (
+                    <>
+                      {" · "}
+                      <a href={receiptPdfUrl(e.receipt_id)} target="_blank" rel="noreferrer" className="mono-link">
+                        {e.receipt_number}
+                      </a>
+                    </>
+                  ) : null}
                   {e.reversed ? " (cancelled)" : ""}
                   <div className="muted small">{e.reason ?? e.lines.map((l) => `${l.head} ${formatPaise(Math.abs(l.amount))}`).join(", ")}</div>
                 </td>

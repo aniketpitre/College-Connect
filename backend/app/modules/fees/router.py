@@ -1,15 +1,16 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.core.auth import AuthContext, require
 from app.core.db import get_db
 from app.core.errors import AppError
 from app.core.rbac import P
-from app.core.requestinfo import client_ip
-from app.modules.fees import approvals, scholarships, service
+from app.core.requestinfo import base_url, client_ip
+from app.modules.fees import approvals, receipt_pdf, receipts, scholarships, service
 from app.modules.fees.schemas import (
     ChargeIn,
+    CollectIn,
     ConcessionIn,
     Decision,
     FeeHeadIn,
@@ -20,6 +21,7 @@ from app.modules.fees.schemas import (
     StructureIn,
     StructureUpdate,
 )
+from app.modules.setup import service as setup
 from app.modules.students import service as students
 
 router = APIRouter(tags=["fees"])
@@ -146,3 +148,55 @@ def list_approvals(
 @router.post("/approvals/{approval_id}/decide")
 def decide(approval_id: str, body: Decision, request: Request, ctx: AuthContext = DECIDE) -> dict[str, Any]:
     return approvals.decide(ctx, approval_id, body.approve, body.reason, client_ip(request))
+
+
+# --- collection and receipts ----------------------------------------------------------------
+
+
+@router.post("/fees/collect", status_code=201)
+def collect(body: CollectIn, request: Request, ctx: AuthContext = COLLECT) -> dict[str, Any]:
+    return receipts.collect(ctx, body, client_ip(request))
+
+
+@router.get("/fees/today")
+def today(day: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"), ctx: AuthContext = READ) -> dict[str, Any]:
+    return receipts.today(day)
+
+
+@router.get("/fees/receipts")
+def list_receipts(
+    date_from: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    date_to: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    student_id: str | None = None,
+    number: str | None = Query(None, max_length=40),
+    ctx: AuthContext = READ,
+) -> list[dict[str, Any]]:
+    return receipts.list_receipts(date_from=date_from, date_to=date_to, student_id=student_id, number=number)
+
+
+@router.get("/fees/receipts/{receipt_id}")
+def get_receipt(receipt_id: str, ctx: AuthContext = READ) -> dict[str, Any]:
+    return receipts.view(receipts.get_receipt(receipt_id))
+
+
+def receipt_pdf_response(receipt: dict[str, Any], original: bool, request: Request) -> Response:
+    copy = "CANCELLED" if receipt["status"] == "cancelled" else ("ORIGINAL" if original else "DUPLICATE")
+    link = receipts.verify_url(base_url(request), receipt["verify_code"])
+    data = receipt_pdf.build(receipt, setup.institution(), link, copy)
+    filename = "receipt-" + receipt["number"].replace("/", "-") + ".pdf"
+    return Response(
+        content=data,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"', "Cache-Control": "private, no-store"},
+    )
+
+
+@router.get("/fees/receipts/{receipt_id}/pdf")
+def receipt_pdf_download(receipt_id: str, request: Request, ctx: AuthContext = READ) -> Response:
+    receipt, first = receipts.take_print(receipt_id)
+    return receipt_pdf_response(receipt, first, request)
+
+
+@router.post("/fees/receipts/{receipt_id}/email")
+def email_receipt(receipt_id: str, request: Request, ctx: AuthContext = COLLECT) -> dict[str, Any]:
+    return receipts.email_receipt(ctx, receipt_id, base_url(request), client_ip(request))
