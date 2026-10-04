@@ -2,11 +2,72 @@ import type { Language } from "../../lib/types";
 
 type Strings = Record<Language, { title: string; body: string; back: string }>;
 
-// Temporary public pages; Phase 1 replaces them with sign-in and real verification.
-export const VERIFY: Strings = {
-  en: { title: "Verify a document", body: "Receipt and certificate verification is coming soon.", back: "Back to the help desk" },
-  hi: { title: "दस्तावेज़ सत्यापित करें", body: "रसीद और प्रमाणपत्र सत्यापन जल्द आ रहा है।", back: "हेल्प डेस्क पर वापस जाएं" },
-  mr: { title: "दस्तऐवज पडताळा", body: "पावती आणि प्रमाणपत्र पडताळणी लवकरच येत आहे.", back: "हेल्प डेस्कवर परत जा" },
+type VerifyStrings = Record<
+  Language,
+  {
+    title: string;
+    checking: string;
+    genuine: string;
+    cancelled: string;
+    notFound: string;
+    receipt: string;
+    date: string;
+    amount: string;
+    student: string;
+    year: string;
+    issuedBy: string;
+    cancelledOn: string;
+    back: string;
+  }
+>;
+
+/** Public Verify page (scanned from a receipt's QR code). */
+export const VERIFY: VerifyStrings = {
+  en: {
+    title: "Verify a receipt",
+    checking: "Checking…",
+    genuine: "Genuine receipt",
+    cancelled: "This receipt was cancelled",
+    notFound: "No receipt matches this code. Check the code, or ask the college office.",
+    receipt: "Receipt no.",
+    date: "Date",
+    amount: "Amount",
+    student: "Student",
+    year: "Academic year",
+    issuedBy: "Issued by",
+    cancelledOn: "Cancelled on",
+    back: "Back to the help desk",
+  },
+  hi: {
+    title: "रसीद सत्यापित करें",
+    checking: "जांच हो रही है…",
+    genuine: "असली रसीद",
+    cancelled: "यह रसीद रद्द कर दी गई है",
+    notFound: "इस कोड से कोई रसीद नहीं मिली। कोड जांचें या कॉलेज कार्यालय से पूछें।",
+    receipt: "रसीद क्रमांक",
+    date: "दिनांक",
+    amount: "राशि",
+    student: "छात्र",
+    year: "शैक्षणिक वर्ष",
+    issuedBy: "जारीकर्ता",
+    cancelledOn: "रद्द करने की तिथि",
+    back: "हेल्प डेस्क पर वापस जाएं",
+  },
+  mr: {
+    title: "पावती पडताळा",
+    checking: "तपासत आहे…",
+    genuine: "खरी पावती",
+    cancelled: "ही पावती रद्द केली आहे",
+    notFound: "या कोडशी जुळणारी पावती सापडली नाही. कोड तपासा किंवा महाविद्यालय कार्यालयात विचारा.",
+    receipt: "पावती क्रमांक",
+    date: "दिनांक",
+    amount: "रक्कम",
+    student: "विद्यार्थी",
+    year: "शैक्षणिक वर्ष",
+    issuedBy: "देणारे",
+    cancelledOn: "रद्द केल्याचा दिनांक",
+    back: "हेल्प डेस्कवर परत जा",
+  },
 };
 
 export const NOT_FOUND: Strings = {

@@ -5,10 +5,12 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 from app.core.auth import AuthContext, require
 from app.core.db import get_db
 from app.core.errors import AppError
+from app.core.ratelimit import hit
 from app.core.rbac import P
 from app.core.requestinfo import base_url, client_ip
-from app.modules.fees import approvals, receipt_pdf, receipts, scholarships, service
+from app.modules.fees import approvals, cancellations, receipt_pdf, receipts, scholarships, service
 from app.modules.fees.schemas import (
+    CancelRequest,
     ChargeIn,
     CollectIn,
     ConcessionIn,
@@ -16,6 +18,7 @@ from app.modules.fees.schemas import (
     FeeHeadIn,
     FeeHeadUpdate,
     GenerateDemands,
+    RefundRequest,
     ScholarshipAction,
     ScholarshipIn,
     StructureIn,
@@ -200,3 +203,23 @@ def receipt_pdf_download(receipt_id: str, request: Request, ctx: AuthContext = R
 @router.post("/fees/receipts/{receipt_id}/email")
 def email_receipt(receipt_id: str, request: Request, ctx: AuthContext = COLLECT) -> dict[str, Any]:
     return receipts.email_receipt(ctx, receipt_id, base_url(request), client_ip(request))
+
+
+# --- cancellations, refunds and the public Verify page --------------------------------------
+
+
+@router.post("/fees/receipts/{receipt_id}/cancel-request", status_code=201)
+def cancel_request(receipt_id: str, body: CancelRequest, request: Request, ctx: AuthContext = COLLECT) -> dict:
+    return cancellations.request_cancel(ctx, receipt_id, body.reason, client_ip(request))
+
+
+@router.post("/fees/refunds", status_code=201)
+def refund_request(body: RefundRequest, request: Request, ctx: AuthContext = COLLECT) -> dict[str, Any]:
+    return cancellations.request_refund(ctx, body, client_ip(request))
+
+
+@router.get("/verify/{code}")
+def verify(code: str, request: Request) -> dict[str, Any]:
+    """Public: anyone holding a receipt (a bank, a scholarship office) can check it."""
+    hit(f"verify:{client_ip(request)}", limit=60, window_seconds=3600)
+    return cancellations.verify(code)

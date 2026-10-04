@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { AmountInput } from "../../components/AmountInput";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { MoneyText } from "../../components/MoneyText";
 import { Modal } from "../../components/Modal";
 import { StatusBadge } from "../../components/StatusBadge";
 import { ApiError } from "../../lib/api";
 import { hasPermission, useMe } from "../../lib/auth";
 import {
+  MODES,
   useAddCharge,
   useApplyLateFees,
+  useCancelRequest,
+  useRefundRequest,
   useApprovals,
   useCreateScholarship,
   useFeeAccount,
@@ -34,7 +38,9 @@ export default function StudentFeesPage() {
   const [yearId, setYearId] = useState("");
   const year = yearId || setup.data?.current_year?.id || "";
   const account = useFeeAccount(id, year || undefined);
-  const [dialog, setDialog] = useState<"concession" | "charge" | "scholarship" | null>(null);
+  const [dialog, setDialog] = useState<"concession" | "charge" | "scholarship" | "refund" | null>(null);
+  const [cancelling, setCancelling] = useState<{ receiptId: string; number: string } | null>(null);
+  const cancel = useCancelRequest();
   const late = useApplyLateFees();
   const canManage = hasPermission(me, "fees.manage");
   const canCollect = hasPermission(me, "fees.collect");
@@ -89,6 +95,11 @@ export default function StudentFeesPage() {
             Request concession
           </button>
         )}
+        {canCollect && a.balance < 0 && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDialog("refund")}>
+            Request refund of {formatPaise(-a.balance)}
+          </button>
+        )}
         {canManage && (
           <>
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDialog("scholarship")}>
@@ -106,6 +117,8 @@ export default function StudentFeesPage() {
         )}
       </div>
       {late.error && <p className="form-error">{late.error.message}</p>}
+      {cancel.error && <p className="form-error">{cancel.error.message}</p>}
+      {cancel.isSuccess && <p className="auth-success">Cancellation sent to the Principal for approval.</p>}
 
       <div className="record-grid">
         <section className="card">
@@ -147,7 +160,7 @@ export default function StudentFeesPage() {
       </div>
 
       <h2 className="subhead">Statement</h2>
-      <Statement account={a} />
+      <Statement account={a} onCancel={canCollect ? (receiptId, number) => setCancelling({ receiptId, number }) : undefined} />
 
       <h2 className="subhead">Scholarships</h2>
       <Scholarships studentId={id} yearId={year} canManage={canManage} />
@@ -158,6 +171,20 @@ export default function StudentFeesPage() {
       {dialog === "concession" && <ConcessionDialog account={a} onClose={() => setDialog(null)} />}
       {dialog === "charge" && <ChargeDialog account={a} onClose={() => setDialog(null)} />}
       {dialog === "scholarship" && <ScholarshipDialog account={a} onClose={() => setDialog(null)} />}
+      {dialog === "refund" && <RefundDialog account={a} onClose={() => setDialog(null)} />}
+      <ConfirmDialog
+        open={cancelling !== null}
+        title={`Cancel receipt ${cancelling?.number ?? ""}?`}
+        message="The Principal must approve. Then the payment is reversed and the receipt shows CANCELLED everywhere, including the Verify page. The number is never reused."
+        confirmLabel="Send for approval"
+        requireReason
+        danger
+        onCancel={() => setCancelling(null)}
+        onConfirm={(reason) => {
+          cancel.mutate({ receiptId: cancelling!.receiptId, reason });
+          setCancelling(null);
+        }}
+      />
     </>
   );
 }
@@ -173,7 +200,7 @@ function Tile({ label, paise, strong, warn }: { label: string; paise: number; st
   );
 }
 
-export function Statement({ account }: { account: FeeAccount }) {
+export function Statement({ account, onCancel }: { account: FeeAccount; onCancel?: (receiptId: string, number: string) => void }) {
   const balances = account.entries.reduce<number[]>((acc, e) => [...acc, (acc.at(-1) ?? 0) + e.amount], []);
   return (
     <div className="data-table-scroll">
@@ -204,6 +231,14 @@ export function Statement({ account }: { account: FeeAccount }) {
                     </>
                   ) : null}
                   {e.reversed ? " (cancelled)" : ""}
+                  {onCancel && e.type === "payment" && !e.reversed && e.receipt_id && (
+                    <>
+                      {" "}
+                      <button type="button" className="link-btn small" onClick={() => onCancel(e.receipt_id!, e.receipt_number ?? "")}>
+                        Request cancellation
+                      </button>
+                    </>
+                  )}
                   <div className="muted small">{e.reason ?? e.lines.map((l) => `${l.head} ${formatPaise(Math.abs(l.amount))}`).join(", ")}</div>
                 </td>
                 <td className="num">{e.amount > 0 ? <MoneyText paise={e.amount} /> : ""}</td>
@@ -503,6 +538,59 @@ function ScholarshipDialog({ account, onClose }: { account: FeeAccount; onClose:
           </button>
           <button type="submit" className="btn btn-primary" disabled={create.isPending || parseRupees(expected) === null}>
             Save
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function RefundDialog({ account, onClose }: { account: FeeAccount; onClose: () => void }) {
+  const send = useRefundRequest();
+  const [amount, setAmount] = useState(String(-account.balance / 100));
+  const [mode, setMode] = useState("bank_transfer");
+  const [reference, setReference] = useState("");
+  const [reason, setReason] = useState("");
+  return (
+    <Modal open title="Request a refund" onClose={onClose}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          send.mutate({ student_id: account.student_id, academic_year_id: account.academic_year_id, amount: parseRupees(amount), mode, reference, reason }, { onSuccess: onClose });
+        }}
+      >
+        <p className="muted">The student is in credit by {formatPaise(-account.balance)}. The Principal approves the refund before it is recorded.</p>
+        {send.error && <div className="form-error">{send.error.message}</div>}
+        <div className="field">
+          <label htmlFor="rf-amt">Amount</label>
+          <AmountInput id="rf-amt" value={amount} onChange={setAmount} required />
+        </div>
+        <div className="field">
+          <label htmlFor="rf-mode">Paid back by</label>
+          <select id="rf-mode" value={mode} onChange={(e) => setMode(e.target.value)}>
+            {MODES.map(([v, l]) => (
+              <option key={v} value={v}>
+                {l}
+              </option>
+            ))}
+          </select>
+        </div>
+        {mode !== "cash" && (
+          <div className="field">
+            <label htmlFor="rf-ref">Reference</label>
+            <input id="rf-ref" value={reference} onChange={(e) => setReference(e.target.value)} required />
+          </div>
+        )}
+        <div className="field">
+          <label htmlFor="rf-reason">Reason</label>
+          <input id="rf-reason" value={reason} onChange={(e) => setReason(e.target.value)} required minLength={5} />
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="btn btn-ghost" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={send.isPending || parseRupees(amount) === null}>
+            Send for approval
           </button>
         </div>
       </form>

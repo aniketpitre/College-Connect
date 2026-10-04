@@ -54,6 +54,12 @@ export default function ApprovalsPage() {
                 </>
               )}
               {r.details.receipt_number && <>Receipt {r.details.receipt_number}. </>}
+              {r.kind === "refund" && (
+                <>
+                  Pay back by {r.details.mode_label}
+                  {r.details.reference ? ` (${r.details.reference})` : ""}.{" "}
+                </>
+              )}
               <span className="muted">Reason:</span> {r.reason}
             </p>
             <p className="muted small">

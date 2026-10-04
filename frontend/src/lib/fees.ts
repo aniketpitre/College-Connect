@@ -212,3 +212,7 @@ export function useReceipts(params: Record<string, string | undefined>) {
 
 export const useCollect = () => useFeesMutation((b: Record<string, unknown>) => post<Receipt>("/fees/collect", b));
 export const useEmailReceipt = () => useFeesMutation((id: string) => post<{ sent_to: string }>(`/fees/receipts/${id}/email`));
+
+export const useCancelRequest = () =>
+  useFeesMutation(({ receiptId, reason }: { receiptId: string; reason: string }) => post<Approval>(`/fees/receipts/${receiptId}/cancel-request`, { reason }));
+export const useRefundRequest = () => useFeesMutation((b: Record<string, unknown>) => post<Approval>("/fees/refunds", b));

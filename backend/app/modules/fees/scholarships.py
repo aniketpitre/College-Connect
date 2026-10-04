@@ -99,14 +99,8 @@ def act(ctx: AuthContext, scholarship_id: str, body: ScholarshipAction, ip: str)
             if s["status"] != "expected":
                 raise AppError(409, "Only an expected scholarship can be sanctioned.", "conflict")
             amount = body.amount or s["expected"]
+            # If the student has already paid, this leaves them in credit, which Accounts can refund.
             rows = ledger.entries(s["student_id"], s["academic_year_id"], session=session)
-            balance = sum(e["amount"] for e in rows)
-            if amount > balance:
-                raise AppError(
-                    422,
-                    f"The student owes only {balance / 100:.2f}; record the rest as a refund later.",
-                    field="amount",
-                )
             entry = ledger.post(
                 student_id=s["student_id"],
                 academic_year_id=s["academic_year_id"],
