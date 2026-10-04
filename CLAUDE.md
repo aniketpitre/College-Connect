@@ -4,7 +4,7 @@ A college ERP for an Indian undergraduate college with a built-in AI help desk
 (CollegeConnect AI: cited answers from official documents, in English, Hindi and Marathi).
 
 ## Plans — read these before starting ERP work
-- [docs/erp/01-product-spec.md](docs/erp/01-product-spec.md): roles and logins, every module's features, unique features, open decisions (D1–D7).
+- [docs/erp/01-product-spec.md](docs/erp/01-product-spec.md): roles and logins, every module's features, unique features, confirmed decisions (D1–D7).
 - [docs/erp/02-implementation-plan.md](docs/erp/02-implementation-plan.md): architecture, data model, auth/RBAC design, API outline, phases and the PR list.
 
 Build order: **core ERP first (Phases 0–2), then other features incl. the unique ones (Phases 3–4), CollegeConnect AI last (Phase 5)**. The existing public help desk keeps running unchanged until Phase 5. Work follows the phase/PR order in the implementation plan. If a change departs from the plan, update the plan in the same PR.

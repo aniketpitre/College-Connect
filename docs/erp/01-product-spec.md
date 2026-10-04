@@ -424,11 +424,11 @@ Staff records, qualifications, appointments, leave types and balances, leave app
 
 ---
 
-## 6. Decisions to confirm
+## 6. Decisions (confirmed 2026-10-04)
 
-These have defaults so work can start; change them and the plan adapts.
+Confirmed by the project owner on 2026-10-04. Changing one later means updating this table and the plan in the same PR.
 
-| # | Question | Default used in this plan |
+| # | Question | Decision |
 |---|---|---|
 | D1 | Which university is the college affiliated to? | An affiliating state university (e.g. SPPU-style): internal marks uploaded to the university portal, semester pattern, ATKT rules |
 | D2 | Which programmes first? | BCA (FY/SY/TY), then BCom and BSc |
@@ -436,4 +436,4 @@ These have defaults so work can start; change them and the plan adapts.
 | D4 | Fees in Phase 1 | Counter collection recorded by Accounts (cash/UPI/cheque); online payment in Phase 3 |
 | D5 | Receipt number format | `R/<YYYY-YY>/<6-digit sequence>`, gap-free per academic year |
 | D6 | Minimum attendance | 75%, warning at 80% |
-| D7 | Hosting | Vercel + MongoDB Atlas (current). Production needs Vercel Pro (Hobby is for non-commercial use) and an Atlas tier with backups |
+| D7 | Hosting | Vercel only (frontend and FastAPI backend as two services on one domain) + MongoDB Atlas. No separate backend host. Production needs Vercel Pro (Hobby is for non-commercial use) and an Atlas tier with backups |
