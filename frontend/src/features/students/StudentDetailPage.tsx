@@ -29,6 +29,8 @@ const ACTIONS: Record<string, string> = {
   "students.document_rejected": "Document rejected",
   "students.imported": "Imported from a file",
   "students.promoted": "Promoted",
+  "students.contact_confirmed": "Student confirmed contact details",
+  "students.privacy_accepted": "Student accepted the privacy notice",
 };
 
 /** Office screen (English): one student's record, documents, corrections and history. */

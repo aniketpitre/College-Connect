@@ -275,12 +275,33 @@ def _to_body(row: dict[str, str], lk: _Lookups) -> tuple[dict[str, Any], list[tu
     return {k: v for k, v in body.items() if v is not None}, problems
 
 
+# Record fields → the spreadsheet column the office sees.
+FIELD_COLUMNS = {
+    "programme_id": "programme",
+    "year_of_study": "year",
+    "division_id": "division",
+    "category_id": "category",
+    "guardian.name": "guardian_name",
+    "guardian.relation": "guardian_relation",
+    "guardian.phone": "guardian_phone",
+    "address.line": "address",
+    "address.city": "city",
+    "address.district": "district",
+    "address.state": "state",
+    "address.pincode": "pincode",
+    "previous_education.exam": "previous_exam",
+    "previous_education.board": "previous_board",
+    "previous_education.year": "previous_year",
+    "previous_education.percentage": "previous_percentage",
+}
+
+
 def _validation_messages(e: ValidationError) -> list[tuple[str, str]]:
     found = []
     for err in e.errors():
-        loc = [str(p) for p in err.get("loc", [])]
+        field = ".".join(str(p) for p in err.get("loc", [])) or "row"
         message = err.get("msg", "Invalid value").removeprefix("Value error, ")
-        found.append((".".join(loc) or "row", message))
+        found.append((FIELD_COLUMNS.get(field, field), message))
     return found
 
 
@@ -297,7 +318,8 @@ def validate(ctx: AuthContext, filename: str, data: bytes) -> dict[str, Any]:
         try:
             model = StudentCreate.model_validate(body)
         except ValidationError as e:
-            problems += _validation_messages(e)
+            reported = {field for field, _ in problems}  # e.g. an unknown programme is already explained
+            problems += [p for p in _validation_messages(e) if p[0] not in reported]
             model = None
         prn = (row.get("prn") or "").strip().upper()
         email = (row.get("email") or "").strip().lower()

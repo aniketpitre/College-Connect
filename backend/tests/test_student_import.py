@@ -80,6 +80,7 @@ def test_errors_are_reported_row_by_row_and_nothing_is_saved(client, sign_in, co
         (9, "gender"),
         (9, "category"),
     } <= by_row
+    assert not any(e["field"] == "programme_id" for e in report["errors"])  # one clear message per column
     assert db.students.count_documents({}) == 0 and db.users.count_documents({"kind": "student"}) == 0
     r = client.post(f"{API}/imports/{report['id']}/commit")
     assert r.status_code == 409
