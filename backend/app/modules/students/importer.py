@@ -155,7 +155,7 @@ def _cell(value: Any) -> str:
     return str(value).strip()
 
 
-def read_rows(filename: str, data: bytes) -> list[dict[str, str]]:
+def read_rows(filename: str, data: bytes, required: tuple[str, ...] = REQUIRED) -> list[dict[str, str]]:
     if not data:
         raise AppError(422, "The file is empty.", field="file")
     if len(data) > MAX_FILE_BYTES:
@@ -178,7 +178,7 @@ def read_rows(filename: str, data: bytes) -> list[dict[str, str]]:
     if not values:
         raise AppError(422, "The file has no rows.", field="file")
     headers = [_key(h) for h in values[0]]
-    missing = [c for c in REQUIRED if c not in headers]
+    missing = [c for c in required if c not in headers]
     if missing:
         raise AppError(422, f"Missing column(s): {', '.join(missing)}. Use the template.", field="file")
     rows = [{h: (row[i] if i < len(row) else "") for i, h in enumerate(headers) if h} for row in values[1:]]

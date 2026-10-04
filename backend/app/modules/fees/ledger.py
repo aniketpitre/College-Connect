@@ -27,6 +27,10 @@ register_indexes(
         IndexModel(
             [("demand_key", ASCENDING)], unique=True, partialFilterExpression={"demand_key": {"$type": "string"}}
         ),
+        # One opening balance (paid / previous dues) per student per year.
+        IndexModel(
+            [("opening_key", ASCENDING)], unique=True, partialFilterExpression={"opening_key": {"$type": "string"}}
+        ),
         # A payment/credit can be reversed only once.
         IndexModel([("reverses", ASCENDING)], unique=True, partialFilterExpression={"reverses": {"$type": "objectId"}}),
     ],

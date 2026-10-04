@@ -216,3 +216,43 @@ export const useEmailReceipt = () => useFeesMutation((id: string) => post<{ sent
 export const useCancelRequest = () =>
   useFeesMutation(({ receiptId, reason }: { receiptId: string; reason: string }) => post<Approval>(`/fees/receipts/${receiptId}/cancel-request`, { reason }));
 export const useRefundRequest = () => useFeesMutation((b: Record<string, unknown>) => post<Approval>("/fees/refunds", b));
+
+export interface ReportColumn {
+  key: string;
+  header: string;
+  kind: "text" | "money" | "int" | "date";
+}
+export interface Report {
+  title: string;
+  columns: ReportColumn[];
+  rows: Record<string, string | number>[];
+  totals: Record<string, number>;
+}
+export interface OpeningReport {
+  total: number;
+  valid: number;
+  paid: number;
+  dues: number;
+  errors: { row: number; field: string; message: string; prn: string | null }[];
+  error_count: number;
+  committed: boolean;
+}
+
+export function reportUrl(name: string, params: Record<string, string | undefined>, format: "json" | "xlsx" = "json") {
+  const all: Record<string, string | undefined> = { ...params, format };
+  const qs = new URLSearchParams(Object.entries(all).filter((e): e is [string, string] => Boolean(e[1])));
+  return `/fees/reports/${name}?${qs}`;
+}
+
+export function useReport(name: string, params: Record<string, string | undefined>) {
+  return useQuery({ queryKey: [...FEES_KEY, "report", name, params], queryFn: () => apiFetch<Report>(reportUrl(name, params)) });
+}
+
+export const OPENING_TEMPLATE_URL = "/api/v1/fees/opening/template.csv";
+
+export const useOpeningImport = () =>
+  useFeesMutation(({ file, commit }: { file: File; commit: boolean }) => {
+    const form = new FormData();
+    form.set("file", file);
+    return apiFetch<OpeningReport>(`/fees/opening?commit=${commit}`, { method: "POST", body: form });
+  });

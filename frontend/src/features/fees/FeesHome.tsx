@@ -23,10 +23,18 @@ export default function FeesHome() {
           <h1>Fees</h1>
         </div>
         <div className="row-actions">
+          <Link className="btn btn-ghost" to="/app/fees/reports">
+            Reports
+          </Link>
           {hasPermission(me, "fees.manage") && (
-            <Link className="btn btn-ghost" to="/app/fees/setup">
-              Fee setup
-            </Link>
+            <>
+              <Link className="btn btn-ghost" to="/app/fees/opening">
+                Opening balances
+              </Link>
+              <Link className="btn btn-ghost" to="/app/fees/setup">
+                Fee setup
+              </Link>
+            </>
           )}
         </div>
       </div>

@@ -1,6 +1,7 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi import APIRouter, Depends, File, Query, Request, Response, UploadFile
+from fastapi.responses import PlainTextResponse
 
 from app.core.auth import AuthContext, require
 from app.core.db import get_db
@@ -8,7 +9,7 @@ from app.core.errors import AppError
 from app.core.ratelimit import hit
 from app.core.rbac import P
 from app.core.requestinfo import base_url, client_ip
-from app.modules.fees import approvals, cancellations, receipt_pdf, receipts, scholarships, service
+from app.modules.fees import approvals, cancellations, opening, receipt_pdf, receipts, reports, scholarships, service
 from app.modules.fees.schemas import (
     CancelRequest,
     ChargeIn,
@@ -223,3 +224,67 @@ def verify(code: str, request: Request) -> dict[str, Any]:
     """Public: anyone holding a receipt (a bank, a scholarship office) can check it."""
     hit(f"verify:{client_ip(request)}", limit=60, window_seconds=3600)
     return cancellations.verify(code)
+
+
+# --- opening balances and reports -----------------------------------------------------------
+
+DAY = r"^\d{4}-\d{2}-\d{2}$"
+
+
+@router.get("/fees/opening/template.csv", response_class=PlainTextResponse)
+def opening_template(ctx: AuthContext = MANAGE) -> PlainTextResponse:
+    return PlainTextResponse(
+        opening.template_csv(),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="opening-balances.csv"'},
+    )
+
+
+@router.post("/fees/opening")
+async def opening_import(
+    request: Request,
+    file: UploadFile = File(...),
+    commit: bool = Query(False),
+    academic_year_id: str | None = None,
+    ctx: AuthContext = MANAGE,
+) -> dict[str, Any]:
+    data = await file.read(2 * 1024 * 1024 + 1)
+    return opening.run(
+        ctx, year_or_current(academic_year_id), file.filename or "opening", data, commit, client_ip(request)
+    )
+
+
+@router.get("/fees/reports/{name}", response_model=None)
+def report(
+    name: str,
+    date_from: str | None = Query(None, pattern=DAY),
+    date_to: str | None = Query(None, pattern=DAY),
+    as_of: str | None = Query(None, pattern=DAY),
+    academic_year_id: str | None = None,
+    programme_id: str | None = None,
+    year_of_study: int | None = Query(None, ge=1, le=6),
+    format: str = Query("json", pattern="^(json|xlsx)$"),
+    ctx: AuthContext = READ,
+) -> dict[str, Any] | Response:
+    year_id = year_or_current(academic_year_id) if name in {"outstanding", "defaulters", "scholarships"} else None
+    data = reports.build(
+        name,
+        {
+            "date_from": date_from,
+            "date_to": date_to,
+            "as_of": as_of,
+            "year_id": year_id,
+            "programme_id": programme_id,
+            "year_of_study": year_of_study,
+        },
+    )
+    if format == "json":
+        return reports.to_json(data)
+    period = f"{date_from} to {date_to or date_from}" if date_from else ""
+    college = setup.institution().get("name") or "CollegeConnect"
+    content = reports.to_xlsx(data, " · ".join(x for x in (college, period) if x))
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{name}-{date_from or "current"}.xlsx"'},
+    )

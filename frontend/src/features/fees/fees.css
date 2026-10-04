@@ -200,3 +200,12 @@ a.tile-link {
   text-decoration: none;
   border-color: var(--warning, #b7791f);
 }
+.filters input[type="date"] {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: var(--paper-card);
+  color: var(--ink);
+  font: inherit;
+  margin-left: 4px;
+}
