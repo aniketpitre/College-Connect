@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Admin from "./Admin";
 import "./App.css";
 import Chat from "./Chat";
 import { UI_STRINGS } from "./i18n";
@@ -10,7 +11,21 @@ const LANGUAGES: { code: Language; label: string }[] = [
   { code: "mr", label: "मर" },
 ];
 
+const isAdminRoute = () => window.location.hash.startsWith("#/admin");
+
 function App() {
+  const [admin, setAdmin] = useState(isAdminRoute);
+
+  useEffect(() => {
+    const onHash = () => setAdmin(isAdminRoute());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  return admin ? <Admin /> : <Site />;
+}
+
+function Site() {
   const [language, setLanguage] = useState<Language>("en");
   const [category, setCategory] = useState<Category | undefined>(undefined);
   const t = UI_STRINGS[language];
@@ -169,8 +184,8 @@ function App() {
           </div>
           <div className="dash-grid">
             {[
-              { eyebrow: t.dash1_eyebrow, h: t.dash1_h, p: t.dash1_p, rows: t.dash1_rows },
-              { eyebrow: t.dash2_eyebrow, h: t.dash2_h, p: t.dash2_p, rows: t.dash2_rows },
+              { eyebrow: t.dash1_eyebrow, h: t.dash1_h, p: t.dash1_p, rows: t.dash1_rows, link: "" },
+              { eyebrow: t.dash2_eyebrow, h: t.dash2_h, p: t.dash2_p, rows: t.dash2_rows, link: t.dash2_link },
             ].map((card) => (
               <div className="dash-card" key={card.h}>
                 <div className="dash-top">
@@ -185,6 +200,11 @@ function App() {
                     <b>{value}</b>
                   </div>
                 ))}
+                {card.link && (
+                  <a className="dash-link" href="#/admin">
+                    {card.link}
+                  </a>
+                )}
               </div>
             ))}
           </div>

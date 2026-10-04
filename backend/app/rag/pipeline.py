@@ -31,6 +31,7 @@ def pipeline_status() -> dict:
         "embedding_model": index.embedding_model,
         "generation": generator.CLAUDE_MODEL if generator.llm_available() else "extractive",
         "chunks": len(index.chunks),
+        "documents": len({c["document"] for c in index.chunks}),
     }
 
 

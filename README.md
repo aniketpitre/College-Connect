@@ -25,6 +25,12 @@ A multilingual, source-grounded web application that acts as a digital college h
 | Generate | [app/rag/generator.py](backend/app/rag/generator.py) | Claude (`claude-opus-5-5`) with structured output: `answer`, `answerable`, `cited_chunk_ids`. It is instructed to refuse to guess when the excerpts don't contain the answer. |
 | Orchestrate | [app/rag/pipeline.py](backend/app/rag/pipeline.py) | Maps cited chunks to source cards, computes confidence, degrades gracefully (no key / API error → shows the best-matching excerpt). |
 
+### Admin portal and analytics (MongoDB Atlas)
+
+Every question is logged to MongoDB (`collegeconnect.queries`) after the answer is sent: the question, language, office, whether it was answered from a document, confidence, sources and response time. Open **`/#/admin`** and sign in with `ADMIN_TOKEN` to see questions per office and language, the share answered from documents, average response time, recent questions, and **knowledge gaps** (questions no document could answer, i.e. what the college should publish next).
+
+The database is optional: without `MONGODB_URI` the help desk still answers questions and the admin portal says analytics are off. A database outage never blocks an answer. Code: [app/db.py](backend/app/db.py), [app/analytics.py](backend/app/analytics.py), [app/routers/admin.py](backend/app/routers/admin.py).
+
 The API contract (`/api/query`, `/api/categories`, `/api/health`) is unchanged, so the React frontend works as before. `/api/health` reports which retrieval and generation modes are active.
 
 ### Degradation modes
@@ -92,7 +98,10 @@ The repo deploys as **one Vercel project with two services** ([vercel.json](verc
 3. **Set environment variables** (Project → Settings → Environment Variables), for Production and Preview:
    - `ANTHROPIC_API_KEY` — required for generated answers
    - `VOYAGE_API_KEY` — required for vector search (must be the same embedding model that built the index)
+   - `MONGODB_URI` — Atlas connection string, for query logs and the admin portal
+   - `ADMIN_TOKEN` — a long random string; the password for `/#/admin`
    - optional: `RAG_CLAUDE_MODEL`, `RAG_CLAUDE_EFFORT`, `RAG_TOP_K`, `RAG_MIN_SIMILARITY`
+   In Atlas → **Network Access**, allow `0.0.0.0/0`: Vercel functions don't have fixed IP addresses. Keep the database user's password strong, since that is then the only lock.
 4. **Deploy.** Then open `https://<project>.vercel.app/api/health` and check that `retrieval` is `vector` and `generation` is the Claude model.
 
 Every push to the default branch redeploys production; every other branch gets a preview URL.
