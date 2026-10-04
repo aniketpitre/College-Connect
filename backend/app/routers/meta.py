@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.models import CategoryInfo
+from app.rag.pipeline import pipeline_status
 
 router = APIRouter(prefix="/api", tags=["meta"])
 
@@ -21,4 +22,4 @@ def get_categories() -> list[CategoryInfo]:
 
 @router.get("/health")
 def health_check() -> dict:
-    return {"status": "ok", "rag_pipeline": "stub", "note": "Retrieval is running on a demo document set, not a live document repository."}
+    return {"status": "ok", "rag_pipeline": pipeline_status()}
