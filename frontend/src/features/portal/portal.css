@@ -110,3 +110,24 @@
   margin: 0;
   font-weight: 600;
 }
+.tiles.fee-tiles {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+@media (max-width: 600px) {
+  .tiles.fee-tiles {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .fee-tiles .tile {
+    padding: 12px 14px;
+    min-width: 0;
+  }
+  .fee-tiles .tile-value {
+    font-size: 1.3rem !important;
+    overflow-wrap: anywhere;
+  }
+  .statement th,
+  .statement td {
+    white-space: nowrap;
+  }
+}

@@ -26,8 +26,8 @@ STAFF = [
     ("accounts", "Meera Joshi", "accounts@demo.college"),
     ("faculty", "Prakash More", "faculty@demo.college"),
 ]
-FIRST = ["Rohan", "Neha", "Om", "Priya", "Aditya", "Sneha", "Kunal", "Pooja", "Sahil", "Anjali", "Yash", "Rutuja",
-         "Tejas", "Shruti", "Omkar", "Komal", "Pratik", "Vaishnavi", "Sairaj", "Gauri"]  # fmt: skip
+MALE = ["Rohan", "Om", "Aditya", "Kunal", "Sahil", "Yash", "Tejas", "Omkar", "Pratik", "Sairaj"]
+FEMALE = ["Neha", "Priya", "Sneha", "Pooja", "Anjali", "Rutuja", "Shruti", "Komal", "Vaishnavi", "Gauri"]
 LAST = ["Patil", "Joshi", "Shinde", "Kulkarni", "Pawar", "Jadhav", "Deshpande", "More", "Chavan", "Bhosale"]
 FEES = {1: (22_000, 4_000, 1_500), 2: (24_000, 4_000, 1_500), 3: (26_000, 4_000, 2_000)}  # tuition, dev, exam (₹)
 
@@ -119,7 +119,8 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
     for y in (1, 2, 3):
         batch = start.year - (y - 1)
         for n in range(1, 21):
-            name = f"{rng.choice(FIRST)} {rng.choice(LAST)}"
+            gender = rng.choice(["male", "female"])
+            name = f"{rng.choice(MALE if gender == 'male' else FEMALE)} {rng.choice(LAST)}"
             body = office.call(
                 "POST",
                 "/students",
@@ -130,10 +131,10 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
                     "year_of_study": y,
                     "division_id": divisions[y],
                     "category_id": rng.choice(categories),
-                    "gender": rng.choice(["male", "female"]),
+                    "gender": gender,
                     "dob": f"{batch - 18}-{rng.randint(1, 12):02d}-{rng.randint(1, 28):02d}",
                     "phone": f"9{rng.randint(100000000, 999999999)}",
-                    "guardian": {"name": f"{rng.choice(FIRST)} {name.split()[1]}", "relation": "Parent"},
+                    "guardian": {"name": f"{rng.choice(MALE)} {name.split()[1]}", "relation": "Father"},
                 },
             )
             students.append(body["student"])
