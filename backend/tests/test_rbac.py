@@ -13,7 +13,18 @@ def test_permission_matrix():
         P.FEES_COLLECT,
         P.APPROVALS_DECIDE,
     }
-    assert permissions_for(["system_admin"]) == frozenset(P) - records_and_money
+    # Nor does it run the academic side (timetable, attendance).
+    academics = {
+        P.TIMETABLE_READ,
+        P.TIMETABLE_MANAGE,
+        P.TIMETABLE_MANAGE_DEPT,
+        P.ATTENDANCE_TAKE,
+        P.ATTENDANCE_READ,
+        P.ATTENDANCE_READ_DEPT,
+        P.ATTENDANCE_APPROVE,
+        P.ATTENDANCE_EXEMPT,
+    }
+    assert permissions_for(["system_admin"]) == frozenset(P) - records_and_money - academics
     assert permissions_for(["principal"]) == {
         P.ANALYTICS_VIEW,
         P.AUDIT_READ,
@@ -24,6 +35,8 @@ def test_permission_matrix():
         P.APPROVALS_DECIDE,
         P.NOTICES_READ,
         P.NOTICES_PUBLISH,
+        P.TIMETABLE_READ,
+        P.ATTENDANCE_READ,
     }
     assert P.USERS_CREATE_STAFF not in permissions_for(["office"])
     assert P.USERS_CREATE_STUDENT in permissions_for(["office"])
@@ -36,7 +49,8 @@ def test_permission_matrix():
         P.FEES_MANAGE,
         P.FEES_COLLECT,
     }
-    assert permissions_for(["faculty"]) == {P.SETUP_READ, P.NOTICES_READ}
+    assert permissions_for(["faculty"]) == {P.SETUP_READ, P.NOTICES_READ, P.TIMETABLE_READ, P.ATTENDANCE_TAKE}
+    assert P.TIMETABLE_MANAGE_DEPT in permissions_for(["hod"]) and P.TIMETABLE_MANAGE not in permissions_for(["hod"])
     for role in (Role.STUDENT, Role.PARENT):
         assert permissions_for([role.value]) == frozenset(), role
 

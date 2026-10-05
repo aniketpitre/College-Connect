@@ -27,6 +27,8 @@ const NAV: NavItem[] = [
   { to: "/app/students", label: "students", permission: "students.read" },
   { to: "/app/fees", label: "fees", permission: "fees.read", kind: "staff" },
   { to: "/app/approvals", label: "approvals", permission: "approvals.decide" },
+  { to: "/app/timetable", label: "timetable", kind: "student" },
+  { to: "/app/timetable", label: "timetable", permission: "timetable.read", kind: "staff" },
   { to: "/app/notices", label: "notices" },
   { to: "/app/attendance", label: "attendance", phase: 2 },
   { to: "/app/exams", label: "exams", phase: 2 },

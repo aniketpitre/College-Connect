@@ -72,6 +72,14 @@ class P(StrEnum):
     APPROVALS_DECIDE = "approvals.decide"
     NOTICES_READ = "notices.read"
     NOTICES_PUBLISH = "notices.publish"
+    TIMETABLE_READ = "timetable.read"
+    TIMETABLE_MANAGE = "timetable.manage"  # every division
+    TIMETABLE_MANAGE_DEPT = "timetable.manage.dept"  # HOD: divisions of their own department
+    ATTENDANCE_TAKE = "attendance.take"  # lectures they teach (or substitute for)
+    ATTENDANCE_READ = "attendance.read"  # every division
+    ATTENDANCE_READ_DEPT = "attendance.read.dept"  # HOD: their own department
+    ATTENDANCE_APPROVE = "attendance.approve"  # HOD: edits after the 48-hour window, own department
+    ATTENDANCE_EXEMPT = "attendance.exempt"  # office: medical / official-duty exemptions
     EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
 
 
@@ -98,7 +106,16 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
     }
     | _PUBLISH,
     Role.PRINCIPAL: _STAFF_BASE
-    | {P.ANALYTICS_VIEW, P.AUDIT_READ, P.USERS_READ, P.STUDENTS_READ, P.FEES_READ, P.APPROVALS_DECIDE}
+    | {
+        P.ANALYTICS_VIEW,
+        P.AUDIT_READ,
+        P.USERS_READ,
+        P.STUDENTS_READ,
+        P.FEES_READ,
+        P.APPROVALS_DECIDE,
+        P.TIMETABLE_READ,
+        P.ATTENDANCE_READ,
+    }
     | _PUBLISH,
     Role.OFFICE: _STAFF_BASE
     | {
@@ -111,23 +128,29 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.STUDENTS_MANAGE,
         P.STUDENTS_IMPORT,
         P.FEES_READ,
+        P.TIMETABLE_READ,
+        P.TIMETABLE_MANAGE,
+        P.ATTENDANCE_READ,
+        P.ATTENDANCE_EXEMPT,
     }
     | _PUBLISH,
     Role.ACCOUNTS: _STAFF_BASE | {P.STUDENTS_READ, P.FEES_READ, P.FEES_MANAGE, P.FEES_COLLECT} | _PUBLISH,
     # Read the student master (spec §2.3). HOD/faculty/mentor get scoped access with class
     # assignments in Phase 2.
-    **{role: _STAFF_BASE | {P.STUDENTS_READ} | _PUBLISH for role in (Role.ADMISSION, Role.EXAM_CELL)},
-    **{
-        role: _STAFF_BASE
-        for role in (
-            Role.HOD,
-            Role.FACULTY,
-            Role.MENTOR,
-            Role.LIBRARIAN,
-            Role.WARDEN,
-            Role.PLACEMENT,
-        )
+    Role.ADMISSION: _STAFF_BASE | {P.STUDENTS_READ} | _PUBLISH,
+    Role.EXAM_CELL: _STAFF_BASE | {P.STUDENTS_READ, P.TIMETABLE_READ, P.ATTENDANCE_READ} | _PUBLISH,
+    # Phase 2: HOD builds the department timetable and sees department attendance; faculty and
+    # mentors take attendance for the lectures they teach.
+    Role.HOD: _STAFF_BASE
+    | {
+        P.TIMETABLE_READ,
+        P.TIMETABLE_MANAGE_DEPT,
+        P.ATTENDANCE_TAKE,
+        P.ATTENDANCE_READ_DEPT,
+        P.ATTENDANCE_APPROVE,
     },
+    **{role: _STAFF_BASE | {P.TIMETABLE_READ, P.ATTENDANCE_TAKE} for role in (Role.FACULTY, Role.MENTOR)},
+    **{role: _STAFF_BASE for role in (Role.LIBRARIAN, Role.WARDEN, Role.PLACEMENT)},
 }
 
 

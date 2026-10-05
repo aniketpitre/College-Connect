@@ -18,6 +18,7 @@ from app.modules.portal import router as portal
 from app.modules.setup import router as setup
 from app.modules.students import router as students
 from app.modules.system import router as system
+from app.modules.timetable import router as timetable
 from app.modules.users import router as users
 
 logging.basicConfig(level=logging.INFO)
@@ -38,6 +39,7 @@ ROUTERS: list[APIRouter] = [
     notices.router,
     auditlog.router,
     exports.router,
+    timetable.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

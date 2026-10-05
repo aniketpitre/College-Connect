@@ -116,6 +116,7 @@ def public_user(user: dict[str, Any]) -> dict[str, Any]:
         "prn": user.get("prn"),
         "phone": user.get("phone"),
         "roles": roles,
+        "department_id": str(user["department_id"]) if user.get("department_id") else None,
         "role_labels": [ROLE_LABELS[Role(r)] for r in roles if r in Role.__members__.values()],
         "status": user.get("status", "active"),
         "must_change_password": bool(user.get("must_change_password")),

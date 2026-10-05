@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from bson import ObjectId
+from bson.errors import InvalidId
 
 from app.core import audit
 from app.core.auth import AuthContext, revoke_user_sessions
@@ -27,6 +28,18 @@ def _can_manage(ctx: AuthContext, target_kind: str) -> bool:
 def _require_manage(ctx: AuthContext, target_kind: str) -> None:
     if not _can_manage(ctx, target_kind):
         raise AppError(403, "You can't manage this kind of account.", "forbidden")
+
+
+def _department(value: str | None) -> ObjectId | None:
+    if not value:
+        return None
+    try:
+        dept = get_db().departments.find_one({"_id": ObjectId(value)}, {"_id": 1})
+    except InvalidId:
+        dept = None
+    if not dept:
+        raise AppError(422, "Choose a department from the list.", field="department_id")
+    return dept["_id"]
 
 
 def role_catalog() -> list[dict[str, Any]]:
@@ -74,6 +87,10 @@ def create(ctx: AuthContext, body: UserCreate, ip: str) -> dict[str, Any]:
         must_change_password=True,
         created_by=ctx.user_id,
     )
+    department_id = _department(body.department_id)
+    if department_id:
+        get_db().users.update_one({"_id": user["_id"]}, {"$set": {"department_id": department_id}})
+        user["department_id"] = department_id
     audit.record(
         "users.created",
         actor_id=ctx.user_id,
@@ -103,6 +120,11 @@ def update(ctx: AuthContext, user_id: ObjectId, body: UserUpdate, ip: str) -> di
         changes["email"] = repo.normalize_email(str(body.email))
     if body.phone is not None:
         changes["phone"] = body.phone.strip()
+
+    if body.department_id is not None and target["kind"] == "staff":
+        new_dept = _department(body.department_id)
+        if new_dept != target.get("department_id"):
+            changes["department_id"] = new_dept
 
     if body.roles is not None and sorted(set(body.roles)) != sorted(target.get("roles", [])):
         if target["kind"] != "staff":
