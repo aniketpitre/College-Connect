@@ -39,7 +39,7 @@ const NAV: NavItem[] = [
     permission: ["attendance.take", "attendance.read", "attendance.read.dept", "attendance.approve", "attendance.exempt"],
   },
   { to: "/app/exams", label: "exams", kind: "student" },
-  { to: "/app/exams", label: "exams", kind: "staff", permission: ["marks.enter", "marks.approve", "marks.read", "exams.manage", "marks.scheme.dept"] },
+  { to: "/app/exams", label: "exams", kind: "staff", permission: ["marks.enter", "marks.approve", "marks.read", "exams.manage", "marks.scheme.dept", "results.read"] },
   { to: "/app/certificates", label: "certificates", phase: 2 },
   { to: "/app/account", label: "account" },
   { to: "/app/users", label: "users", permission: "users.read" },

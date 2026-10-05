@@ -9,6 +9,7 @@ from app.core.errors import install_error_handlers
 from app.modules.attendance import router as attendance
 from app.modules.auditlog import router as auditlog
 from app.modules.auth import router as auth
+from app.modules.exams import router as exams
 from app.modules.exports import router as exports
 from app.modules.fees import router as fees
 from app.modules.helpdesk import admin as helpdesk_admin
@@ -44,6 +45,7 @@ ROUTERS: list[APIRouter] = [
     timetable.router,
     attendance.router,
     marks.router,
+    exams.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

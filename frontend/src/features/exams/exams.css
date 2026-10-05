@@ -65,3 +65,7 @@
 .guard-ineligible {
   color: #8a5a12;
 }
+.exam-actions {
+  margin: 14px 0;
+  flex-wrap: wrap;
+}

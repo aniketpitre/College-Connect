@@ -5,6 +5,7 @@ import ApprovalsPage from "../features/approvals/ApprovalsPage";
 import AttendancePage from "../features/attendance/AttendancePage";
 import TakeAttendancePage from "../features/attendance/TakeAttendancePage";
 import AuditPage from "../features/audit/AuditPage";
+import ExamSessionPage from "../features/exams/ExamSessionPage";
 import ExamsPage from "../features/exams/ExamsPage";
 import MarksSheetPage from "../features/exams/MarksSheetPage";
 import TimetableEditorPage from "../features/timetable/TimetableEditorPage";
@@ -105,6 +106,7 @@ export default function App() {
         <Route path="attendance/take/:slotId/:date" element={<TakeAttendancePage />} />
         <Route path="exams" element={<ExamsPage />} />
         <Route path="exams/marks/:divisionId/:subjectId" element={<MarksSheetPage />} />
+        <Route path="exams/sessions/:id" element={<ExamSessionPage />} />
         <Route path="timetable" element={<TimetablePage />} />
         <Route path="timetable/:id" element={<TimetableEditorPage />} />
         <Route path="audit" element={<AuditPage />} />

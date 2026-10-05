@@ -152,3 +152,62 @@ describe("University Upload Guard", () => {
     expect(calls.some((c) => c.path.startsWith("/marks/guard/check-file"))).toBe(true);
   });
 });
+
+describe("exam forms", () => {
+  const session = {
+    id: "e1", name: "Oct-Nov 2026 university exams", kind: "university", term: 1, academic_year_id: "y1",
+    classes: [{ programme_id: "p1", year_of_study: 1, label: "BCA FY" }], form_deadline: "2026-10-10", form_open: true,
+    fee_head_code: "EXAM", seat_prefix: "B", hall_tickets_released: false,
+    papers: [{ subject_id: "sub1", code: "BCA101", name: "Programming in C", date: "2026-11-02", start: "10:00", end: "13:00" }],
+  };
+
+  it("a student submits the form and sees what blocks eligibility (Hindi)", async () => {
+    localStorage.setItem("cc-lang", "hi");
+    const student = makeMe({ kind: "student", prn: "2026BCA003", roles: ["student"], role_labels: ["Student"] });
+    let submitted = false;
+    mockApi((method, path) => {
+      if (path === "/auth/me") return { status: 200, body: student };
+      if (path === "/me/marks") return { status: 200, body: [] };
+      if (path === "/me/exams/e1/form" && method === "POST") {
+        submitted = true;
+        return { status: 200, body: {} };
+      }
+      if (path === "/me/exams")
+        return {
+          status: 200,
+          body: [{ ...session, form_status: submitted ? "submitted" : "not_submitted", subjects: [{ code: "BCA101", name: "Programming in C" }, { code: "BCA102", name: "Maths", backlog: true }],
+            seat_no: null, reason: null, attendance_ok: false, low_subjects: ["BCA101 25.0%"], fee_ok: false, fee_due: 100000, hall_ticket: false }],
+        };
+      return { status: 404 };
+    });
+    renderApp("/app/exams");
+    expect(await screen.findByText("परीक्षा फ़ॉर्म")).toBeTruthy();
+    expect(screen.getByText(/BCA101 25.0% में उपस्थिति न्यूनतम से कम है/)).toBeTruthy();
+    expect(screen.getByText(/परीक्षा शुल्क बकाया: ₹1,000.00/)).toBeTruthy();
+    expect(screen.getByText(/Maths \(बैकलॉग\)/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "परीक्षा फ़ॉर्म जमा करें" }));
+    expect(await screen.findByText("जमा किया, परीक्षा विभाग की प्रतीक्षा")).toBeTruthy();
+  });
+
+  it("the Exam Cell verifies a form that isn't eligible only with a reason", async () => {
+    const exam = makeMe({ roles: ["exam_cell"], permissions: ["exams.manage", "marks.read", "results.read"] });
+    const row = { student_id: "s3", name: "Om Shinde", prn: "2026BCA003", class: "BCA FY A", status: "submitted", status_label: "Submitted", subjects: ["BCA101"], backlogs: [], seat_no: null, reason: null, attendance_ok: false, low_subjects: ["BCA101 25.0%"], fee_ok: true, fee_due: 0, eligible: false };
+    const calls = mockApi((_m, path) => {
+      if (path === "/auth/me") return { status: 200, body: exam };
+      if (path === "/exams/sessions") return { status: 200, body: [{ ...session, counts: { students: 3, submitted: 1, verified: 0, rejected: 0 } }] };
+      if (path === "/exams/sessions/e1/forms") return { status: 200, body: [row] };
+      if (path.endsWith("/verify")) return { status: 200, body: { ...row, status: "verified" } };
+      return { status: 404 };
+    });
+    renderApp("/app/exams/sessions/e1");
+    expect(await screen.findByText("BCA101 25.0%")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Verify" }));
+    const dialog = document.querySelector("dialog[open]") as HTMLElement;
+    expect(within(dialog).getByText(/NOT eligible/)).toBeTruthy();
+    const confirm = within(dialog).getByRole("button", { name: "Verify" }) as HTMLButtonElement;
+    expect(confirm.disabled).toBe(true);
+    fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "Condoned by the Principal" } });
+    fireEvent.click(confirm);
+    await waitFor(() => expect(calls.find((c) => c.path.endsWith("/verify"))?.body).toEqual({ approve: true, reason: "Condoned by the Principal" }));
+  });
+});
