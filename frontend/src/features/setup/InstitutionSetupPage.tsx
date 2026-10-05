@@ -89,7 +89,7 @@ function CollegeForm({ institution, canManage }: { institution: Institution; can
   const [form, setForm] = useState<Institution>(institution);
   const save = useSetupAction();
   const err = save.error instanceof ApiError ? save.error : null;
-  const fields: [keyof Institution, string, string?][] = [
+  const fields: [Exclude<keyof Institution, "attendance_min_percent" | "attendance_warn_percent">, string, string?][] = [
     ["name", "College name"],
     ["short_name", "Short name"],
     ["university", "Affiliated university"],
@@ -116,6 +116,30 @@ function CollegeForm({ institution, canManage }: { institution: Institution; can
             <label htmlFor={`i-${key}`}>{label}</label>
             <input id={`i-${key}`} value={form[key] ?? ""} disabled={!canManage} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
             {hint && <span className="field-hint">{hint}</span>}
+            {err?.field === key && <span className="field-error">{err.message}</span>}
+          </div>
+        ))}
+      </div>
+      <h3 className="form-section">Attendance rules</h3>
+      <div className="field-row">
+        {(
+          [
+            ["attendance_min_percent", "Minimum attendance (%)", "Below this in any subject, a student is a defaulter."],
+            ["attendance_warn_percent", "Warning below (%)", "Students get an email when they drop below this."],
+          ] as const
+        ).map(([key, label, hint]) => (
+          <div className="field" key={key}>
+            <label htmlFor={`i-${key}`}>{label}</label>
+            <input
+              id={`i-${key}`}
+              type="number"
+              min={1}
+              max={100}
+              value={form[key] ?? ""}
+              disabled={!canManage}
+              onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
+            />
+            <span className="field-hint">{hint}</span>
             {err?.field === key && <span className="field-error">{err.message}</span>}
           </div>
         ))}

@@ -20,18 +20,27 @@ import {
   type Exemption,
 } from "../../lib/attendance";
 import { useStudents } from "../../lib/students";
+import { useAttendanceClasses, useClassReport } from "../../lib/attendance";
+import StudentAttendance from "./StudentAttendance";
 import { isoDay, shiftDays } from "../../lib/timetable";
 import "./attendance.css";
 
-type Tab = "today" | "requests" | "exemptions";
+type Tab = "today" | "reports" | "requests" | "exemptions";
 
 export default function AttendancePage() {
+  const { data: me } = useMe();
+  if (me?.kind === "student") return <StudentAttendance />;
+  return <StaffAttendance />;
+}
+
+function StaffAttendance() {
   const { data: me } = useMe();
   const location = useLocation();
   const saved = (location.state as { saved?: string } | null)?.saved;
   const teaches = hasPermission(me, "attendance.take");
   const tabs: [Tab, string][] = [
     ...(teaches ? ([["today", "My lectures"]] as [Tab, string][]) : []),
+    ["reports", "Reports"],
     ...(teaches || hasPermission(me, "attendance.approve") ? ([["requests", "Change requests"]] as [Tab, string][]) : []),
     ...(hasPermission(me, "attendance.exempt") ? ([["exemptions", "Exemptions"]] as [Tab, string][]) : []),
   ];
@@ -60,9 +69,9 @@ export default function AttendancePage() {
         </div>
       )}
       {tab === "today" && <MyLectures />}
+      {tab === "reports" && <Reports />}
       {tab === "requests" && <Requests canDecide={hasPermission(me, "attendance.approve")} myId={me?.id} />}
       {tab === "exemptions" && <Exemptions />}
-      {!tab && <EmptyState title="Attendance reports arrive with the next update" />}
     </>
   );
 }
@@ -313,6 +322,97 @@ function Exemptions() {
           setCancelling(null);
         }}
       />
+    </>
+  );
+}
+
+function Reports() {
+  const classes = useAttendanceClasses();
+  const [divisionId, setDivisionId] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [onlyDefaulters, setOnlyDefaulters] = useState(false);
+  const report = useClassReport(divisionId, from, to);
+  const r = report.data;
+  const rows = (r?.students ?? []).filter((s) => !onlyDefaulters || s.defaulter);
+  return (
+    <>
+      <div className="tt-toolbar">
+        <div className="field">
+          <label htmlFor="rp-class">Class</label>
+          <select id="rp-class" value={divisionId} onChange={(e) => setDivisionId(e.target.value)}>
+            <option value="">Choose a class…</option>
+            {classes.data?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="rp-from">From</label>
+          <input id="rp-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+        </div>
+        <div className="field">
+          <label htmlFor="rp-to">To</label>
+          <input id="rp-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+        </div>
+        <label className="check-label">
+          <input type="checkbox" checked={onlyDefaulters} onChange={(e) => setOnlyDefaulters(e.target.checked)} /> Only defaulters
+        </label>
+      </div>
+      {classes.data?.length === 0 && <EmptyState title="No classes to show" />}
+      {report.error && <p className="form-error">{report.error.message}</p>}
+      {r && (
+        <>
+          <p className="muted small">
+            Minimum {r.minimum}%, warning below {r.warning}%. A defaulter is below the minimum in any subject. Exempted absences count as attended.
+          </p>
+          {r.subjects.length === 0 ? (
+            <EmptyState title="No attendance marked yet" />
+          ) : (
+            <div className="table-wrap data-table-scroll">
+              <table className="report-table audit-table">
+                <thead>
+                  <tr>
+                    <th>Roll</th>
+                    <th>Student</th>
+                    {r.subjects.map((s) => (
+                      <th key={s.id} title={s.name ?? ""}>
+                        {s.code}
+                        <div className="muted small">{s.held} held</div>
+                      </th>
+                    ))}
+                    <th>Overall</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((s) => (
+                    <tr key={s.student_id}>
+                      <td>{s.roll_no ?? "–"}</td>
+                      <td>
+                        {s.name}
+                        <div className="muted small">{s.prn}</div>
+                      </td>
+                      {r.subjects.map((sub) => {
+                        const c = s.subjects[sub.id];
+                        return (
+                          <td key={sub.id} className={`att-${c?.status ?? "none"}`}>
+                            {c?.percent ?? "–"}
+                            {c?.percent != null && "%"}
+                          </td>
+                        );
+                      })}
+                      <td className={`att-${s.status}`}>{s.overall ?? "–"}{s.overall != null && "%"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {onlyDefaulters && rows.length === 0 && <EmptyState title="No defaulters" />}
+        </>
+      )}
     </>
   );
 }

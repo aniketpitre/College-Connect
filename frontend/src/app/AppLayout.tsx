@@ -31,6 +31,7 @@ const NAV: NavItem[] = [
   { to: "/app/timetable", label: "timetable", kind: "student" },
   { to: "/app/timetable", label: "timetable", permission: "timetable.read", kind: "staff" },
   { to: "/app/notices", label: "notices" },
+  { to: "/app/attendance", label: "attendance", kind: "student" },
   {
     to: "/app/attendance",
     label: "attendance",

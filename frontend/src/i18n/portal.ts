@@ -20,6 +20,9 @@ export interface PortalStrings {
   payAtOffice: string;
   view: string;
   newNotice: string;
+  attendanceLow: (code: string, pct: number, n: number) => string;
+  attendanceWarning: (code: string, pct: number, n: number) => string;
+  attendanceTile: string;
   // My fees
   feesTitle: string;
   year: string;
@@ -65,6 +68,9 @@ const EN: PortalStrings = {
   payAtOffice: "Pay at the college accounts counter.",
   view: "View",
   newNotice: "New notice",
+  attendanceLow: (code, pct, n) => `Attendance in ${code} is ${pct}%. Attend the next ${n} lectures to reach the minimum.`,
+  attendanceWarning: (code, pct, n) => `Attendance in ${code} is ${pct}%. You can miss only ${n} more.`,
+  attendanceTile: "Attendance",
   feesTitle: "My fees",
   year: "Year",
   totalFee: "Total fee",
@@ -119,6 +125,9 @@ const HI: PortalStrings = {
   payAtOffice: "कॉलेज के लेखा काउंटर पर भुगतान करें।",
   view: "देखें",
   newNotice: "नई सूचना",
+  attendanceLow: (code, pct, n) => `${code} में उपस्थिति ${pct}% है। न्यूनतम तक पहुँचने के लिए अगले ${n} लेक्चर में आएँ।`,
+  attendanceWarning: (code, pct, n) => `${code} में उपस्थिति ${pct}% है। आप केवल ${n} और छोड़ सकते हैं।`,
+  attendanceTile: "उपस्थिति",
   feesTitle: "मेरी फ़ीस",
   year: "वर्ष",
   totalFee: "कुल फ़ीस",
@@ -173,6 +182,9 @@ const MR: PortalStrings = {
   payAtOffice: "महाविद्यालयाच्या लेखा खिडकीवर भरणा करा.",
   view: "पहा",
   newNotice: "नवीन सूचना",
+  attendanceLow: (code, pct, n) => `${code} मध्ये हजेरी ${pct}% आहे. किमान गाठण्यासाठी पुढील ${n} लेक्चर उपस्थित राहा.`,
+  attendanceWarning: (code, pct, n) => `${code} मध्ये हजेरी ${pct}% आहे. तुम्ही फक्त आणखी ${n} चुकवू शकता.`,
+  attendanceTile: "हजेरी",
   feesTitle: "माझे शुल्क",
   year: "वर्ष",
   totalFee: "एकूण शुल्क",

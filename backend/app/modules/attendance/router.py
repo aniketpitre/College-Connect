@@ -1,15 +1,16 @@
 from datetime import date
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Header, Request
 from pydantic import BaseModel, Field
 
 from app.core import clock
 from app.core.auth import AuthContext, require, signed_in
+from app.core.config import settings
 from app.core.errors import AppError
 from app.core.rbac import P
 from app.core.requestinfo import client_ip
-from app.modules.attendance import service
+from app.modules.attendance import service, stats
 from app.modules.attendance.schemas import DecideIn, EditRequestIn, ExemptionIn, MarkIn
 
 router = APIRouter(tags=["attendance"])
@@ -75,3 +76,28 @@ def list_exemptions(student_id: str | None = None, ctx: AuthContext = EXEMPT) ->
 @router.post("/attendance/exemptions/{exemption_id}/cancel", status_code=204)
 def cancel_exemption(exemption_id: str, body: ReasonIn, request: Request, ctx: AuthContext = EXEMPT) -> None:
     service.cancel_exemption(ctx, exemption_id, body.reason, client_ip(request))
+
+
+@router.get("/attendance/classes")
+def classes(ctx: AuthContext = STAFF) -> list[dict[str, Any]]:
+    """Classes whose attendance this person may see."""
+    return stats.readable_divisions(ctx)
+
+
+@router.get("/attendance/report")
+def report(
+    division_id: str, date_from: date | None = None, date_to: date | None = None, ctx: AuthContext = STAFF
+) -> dict[str, Any]:
+    return stats.division_report(ctx, division_id, date_from, date_to)
+
+
+@router.get("/me/attendance")
+def my_attendance(ctx: AuthContext = Depends(signed_in)) -> dict[str, Any]:
+    return stats.my_attendance(ctx)
+
+
+@router.get("/cron/attendance-alerts", include_in_schema=False)
+def attendance_alerts(authorization: str | None = Header(None)) -> dict[str, int]:
+    if not settings.cron_secret or authorization != f"Bearer {settings.cron_secret}":
+        raise AppError(401, "Not allowed.", "unauthorized")
+    return stats.send_alerts()

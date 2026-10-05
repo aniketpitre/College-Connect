@@ -10,9 +10,11 @@ from typing import Any
 
 from bson import ObjectId
 
+from app.core import clock
 from app.core.auth import AuthContext
 from app.core.db import get_db
 from app.core.errors import AppError
+from app.modules.attendance import stats
 from app.modules.fees import ledger
 from app.modules.fees import receipts as receipts_mod
 from app.modules.fees import service as fees
@@ -121,7 +123,7 @@ def home(ctx: AuthContext) -> dict[str, Any]:
                     {"kind": "fee_overdue", "severity": "danger", "amount": info["overdue"], "since": first["due_date"]}
                 )
             else:
-                soon = date.today() + timedelta(days=DUE_SOON_DAYS)
+                soon = clock.today() + timedelta(days=DUE_SOON_DAYS)
                 upcoming = next((i for i in info["installments"] if i["due"] > 0), None)
                 if upcoming and date.fromisoformat(upcoming["due_date"]) <= soon:
                     cards.append(
@@ -133,12 +135,30 @@ def home(ctx: AuthContext) -> dict[str, Any]:
                             "label": upcoming["label"],
                         }
                     )
+    attendance = stats.student_summary(student)
+    low = [
+        x
+        for x in attendance["subjects"]
+        if x["status"] in ("critical", "warning") and x["held"] >= stats.ALERT_MIN_LECTURES
+    ]
+    for x in sorted(low, key=lambda x: x["percent"] or 0)[:3]:
+        cards.append(
+            {
+                "kind": "attendance_low" if x["status"] == "critical" else "attendance_warning",
+                "severity": "danger" if x["status"] == "critical" else "warning",
+                "code": x["code"],
+                "percent": x["percent"],
+                "minimum": attendance["minimum"],
+                "must_attend": x["must_attend"],
+                "can_miss": x["can_miss"],
+            }
+        )
     for d in student.get("documents", []):
         if d["status"] == "rejected":
             cards.append(
                 {"kind": "document_rejected", "severity": "warning", "type": d["type"], "reason": d.get("reason")}
             )
-    recent = date.today() - timedelta(days=14)
+    recent = clock.today() - timedelta(days=14)
     for r in db.student_change_requests.find(
         {"student_id": student["_id"], "status": {"$in": ["approved", "rejected"]}}
     ):
@@ -170,5 +190,6 @@ def home(ctx: AuthContext) -> dict[str, Any]:
         "academic_year": current["name"] if current else None,
         "photo_url": f"/files/{student['photo_file_id']}" if student.get("photo_file_id") else None,
         "balance": balance,
+        "attendance": attendance["overall"]["percent"],
         "cards": cards,
     }

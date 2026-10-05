@@ -30,6 +30,10 @@ export default function StudentHome() {
         return { body: t.correctionApproved, to: "/app/profile" };
       case "correction_rejected":
         return { body: `${t.correctionRejected}${c.reason ? ` ${c.reason}` : ""}`, to: "/app/profile" };
+      case "attendance_low":
+        return { body: t.attendanceLow(c.code!, c.percent!, c.must_attend!), to: "/app/attendance" };
+      case "attendance_warning":
+        return { body: t.attendanceWarning(c.code!, c.percent!, c.can_miss!), to: "/app/attendance" };
       case "notice":
         return { body: `${t.newNotice}: ${(language !== "en" && c[language]?.title) || c.title}`, to: `/app/notices/${c.notice_id}` };
     }
@@ -72,6 +76,12 @@ export default function StudentHome() {
       )}
 
       <div className="home-grid">
+        {h.attendance != null && (
+          <Link to="/app/attendance" className="card home-tile">
+            <div className="tile-label">{t.attendanceTile}</div>
+            <div className="tile-value">{h.attendance}%</div>
+          </Link>
+        )}
         {h.balance !== null && (
           <Link to="/app/my-fees" className="card home-tile">
             <div className="tile-label">{h.balance >= 0 ? t.balanceDue : t.inCredit}</div>

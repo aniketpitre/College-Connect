@@ -154,3 +154,64 @@ describe("offline attendance", () => {
     await waitFor(() => expect(screen.queryByText(/Someone else saved/)).toBeNull());
   });
 });
+
+describe("attendance percentages", () => {
+  it("a student sees what they can miss, in Hindi", async () => {
+    localStorage.setItem("cc-lang", "hi");
+    const student = makeMe({ kind: "student", prn: "2026BCA001", roles: ["student"], role_labels: ["Student"] });
+    mockApi((_m, path) => {
+      if (path === "/auth/me") return { status: 200, body: student };
+      if (path === "/me/attendance")
+        return {
+          status: 200,
+          body: {
+            minimum: 75, warning: 80,
+            overall: { held: 28, attended: 21, percent: 75, status: "warning" },
+            subjects: [
+              { subject_id: "1", code: "BCA101", name: "C", held: 8, attended: 5, percent: 62.5, status: "critical", can_miss: 0, must_attend: 4 },
+              { subject_id: "2", code: "BCA102", name: "Maths", held: 20, attended: 16, percent: 80, status: "ok", can_miss: 1, must_attend: 0 },
+            ],
+            days: [{ date: "2026-07-06", lectures: [{ code: "BCA101", start: "09:00", mark: "exempt" }] }],
+          },
+        };
+      return { status: 404 };
+    });
+    renderApp("/app/attendance");
+    expect(await screen.findByRole("heading", { name: "मेरी उपस्थिति" })).toBeTruthy();
+    expect(await screen.findByText("न्यूनतम तक पहुँचने के लिए लगातार अगले 4 लेक्चर में आएँ।")).toBeTruthy();
+    expect(screen.getByText("आप 1 और लेक्चर छोड़ सकते हैं।")).toBeTruthy();
+    expect(screen.getByText(/BCA101 09:00 · छूट/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "उपस्थिति" })).toBeTruthy();
+  });
+
+  it("HOD sees a class report and filters defaulters", async () => {
+    const hod = makeMe({ roles: ["hod"], permissions: ["attendance.take", "attendance.approve", "attendance.read.dept"] });
+    const cell = (percent: number, status: string) => ({ held: 8, attended: Math.round((percent * 8) / 100), percent, status });
+    mockApi((_m, path) => {
+      if (path === "/auth/me") return { status: 200, body: hod };
+      if (path.startsWith("/attendance/today")) return { status: 200, body: { date: "2026-07-06", holiday: null, lectures: [] } };
+      if (path === "/attendance/classes") return { status: 200, body: [{ id: "v1", label: "BCA FY A" }] };
+      if (path.startsWith("/attendance/report"))
+        return {
+          status: 200,
+          body: {
+            class: "BCA FY A", minimum: 75, warning: 80,
+            subjects: [{ id: "s1", code: "BCA101", name: "C", held: 8 }],
+            students: [
+              { student_id: "a", name: "Rohan Patil", prn: "2026BCA001", roll_no: "1", subjects: { s1: cell(62.5, "critical") }, overall: 62.5, status: "critical", defaulter: true },
+              { student_id: "b", name: "Om Shinde", prn: "2026BCA003", roll_no: "2", subjects: { s1: cell(100, "ok") }, overall: 100, status: "ok", defaulter: false },
+            ],
+          },
+        };
+      return { status: 404 };
+    });
+    renderApp("/app/attendance");
+    fireEvent.click(await screen.findByRole("tab", { name: "Reports" }));
+    await screen.findByRole("option", { name: "BCA FY A" });
+    fireEvent.change(screen.getByLabelText("Class"), { target: { value: "v1" } });
+    expect(await screen.findByText("Om Shinde")).toBeTruthy();
+    fireEvent.click(screen.getByLabelText(/Only defaulters/));
+    expect(screen.queryByText("Om Shinde")).toBeNull();
+    expect(screen.getByText("Rohan Patil")).toBeTruthy();
+  });
+});

@@ -128,3 +128,104 @@
   margin-bottom: 12px;
   font-size: 0.9rem;
 }
+.att-subjects {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+.att-subject {
+  margin: 0;
+  border-top: 4px solid var(--teal);
+}
+.att-subject.att-warning {
+  border-top-color: #b7791f;
+}
+.att-subject.att-critical {
+  border-top-color: var(--danger);
+}
+.att-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+.att-percent {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+.att-critical .att-percent {
+  color: var(--danger);
+}
+.att-bar {
+  position: relative;
+  height: 8px;
+  background: var(--paper-soft);
+  border-radius: 999px;
+  margin: 8px 0 4px;
+  overflow: visible;
+}
+.att-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--teal);
+}
+.att-critical .att-bar span {
+  background: var(--danger);
+}
+.att-warning .att-bar span {
+  background: #b7791f;
+}
+.att-bar i {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 14px;
+  background: var(--ink);
+}
+.att-advice {
+  margin: 8px 0 0;
+  font-weight: 600;
+}
+.att-days {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.att-days li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.att-day {
+  min-width: 110px;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+.att-mark {
+  font-size: 0.8rem;
+  border-radius: 999px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+}
+.att-mark-absent {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.att-mark-exempt {
+  color: var(--teal);
+  border-color: var(--teal);
+}
+.report-table td.att-critical {
+  color: var(--danger);
+  font-weight: 700;
+}
+.report-table td.att-warning {
+  color: #b7791f;
+  font-weight: 600;
+}

@@ -26,6 +26,14 @@ class InstitutionSettings(BaseModel):
     college_code: str = Field("", max_length=40, description="University / AISHE code")
     receipt_prefix: str = Field("R", min_length=1, max_length=6, pattern=r"^[A-Z]+$")
     certificate_prefix: str = Field("C", min_length=1, max_length=6, pattern=r"^[A-Z]+$")
+    attendance_min_percent: int = Field(75, ge=1, le=100, description="Below this a student is a defaulter")
+    attendance_warn_percent: int = Field(80, ge=1, le=100, description="Below this the student gets a warning")
+
+    @model_validator(mode="after")
+    def _attendance(self) -> "InstitutionSettings":
+        if self.attendance_warn_percent < self.attendance_min_percent:
+            raise ValueError("attendance_warn_percent: The warning level must be at or above the minimum.")
+        return self
 
 
 class AcademicYearIn(BaseModel):

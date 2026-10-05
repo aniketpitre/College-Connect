@@ -233,3 +233,60 @@ export const useCancelExemption = () =>
   useAttendanceMutation(({ id, reason }: { id: string; reason: string }) =>
     apiFetch<void>(`/attendance/exemptions/${id}/cancel`, { method: "POST", body: JSON.stringify({ reason }) }),
   );
+
+// --- percentages ------------------------------------------------------------------------------
+
+export type AttendanceStatus = "ok" | "warning" | "critical" | "none";
+
+export interface SubjectAttendance {
+  subject_id: string;
+  code: string | null;
+  name: string | null;
+  held: number;
+  attended: number;
+  percent: number | null;
+  status: AttendanceStatus;
+  can_miss: number;
+  must_attend: number;
+}
+
+export interface MyAttendance {
+  minimum: number;
+  warning: number;
+  overall: { held: number; attended: number; percent: number | null; status: AttendanceStatus };
+  subjects: SubjectAttendance[];
+  days: { date: string; lectures: { code: string | null; start: string; mark: "present" | "absent" | "exempt" }[] }[];
+}
+
+export const useMyAttendance = () => useQuery({ queryKey: [...ATTENDANCE_KEY, "mine"], queryFn: () => apiFetch<MyAttendance>("/me/attendance") });
+
+export interface ClassReport {
+  class: string;
+  minimum: number;
+  warning: number;
+  subjects: { id: string; code: string | null; name: string | null; held: number }[];
+  students: {
+    student_id: string;
+    name: string;
+    prn: string;
+    roll_no: string | null;
+    subjects: Record<string, { held: number; attended: number; percent: number | null; status: AttendanceStatus }>;
+    overall: number | null;
+    status: AttendanceStatus;
+    defaulter: boolean;
+  }[];
+}
+
+export const useAttendanceClasses = () =>
+  useQuery({ queryKey: [...ATTENDANCE_KEY, "classes"], queryFn: () => apiFetch<{ id: string; label: string }[]>("/attendance/classes") });
+
+export function useClassReport(divisionId: string, from: string, to: string) {
+  const q = new URLSearchParams({ division_id: divisionId });
+  if (from) q.set("date_from", from);
+  if (to) q.set("date_to", to);
+  return useQuery({
+    queryKey: [...ATTENDANCE_KEY, "report", divisionId, from, to],
+    queryFn: () => apiFetch<ClassReport>(`/attendance/report?${q}`),
+    enabled: Boolean(divisionId),
+  });
+}
