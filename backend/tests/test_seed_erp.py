@@ -17,6 +17,11 @@ def test_erp_seed_builds_a_consistent_demo(db):
     assert db.notices.count_documents({}) == 3
     assert db.sessions.count_documents({}) == 0  # the seeder's own sessions are removed
     assert db.users.count_documents({"kind": "student", "must_change_password": False}) == 60
+    # Academics: subjects, a timetable per class, past attendance, teachers in the department.
+    assert db.timetables.count_documents({}) == 3 and db.subjects.count_documents({}) == 15
+    assert db.attendance_sessions.count_documents({}) == counts["lectures marked"]
+    assert db.users.count_documents({"roles": "faculty", "department_id": {"$exists": True}}) == 9
+    assert db.students.count_documents({"batch": "B1"}) == 30
 
 
 def test_seed_refuses_production(monkeypatch, capsys):

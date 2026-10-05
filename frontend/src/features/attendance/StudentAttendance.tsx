@@ -1,3 +1,4 @@
+import { useState } from "react";
 import LanguageToggle from "../../app/LanguageToggle";
 import { EmptyState } from "../../components/EmptyState";
 import { ATTENDANCE_STRINGS } from "../../i18n/attendance";
@@ -10,6 +11,7 @@ export default function StudentAttendance() {
   const [language, setLanguage] = useLanguage();
   const T = ATTENDANCE_STRINGS[language];
   const mine = useMyAttendance();
+  const [allDays, setAllDays] = useState(false);
   const a = mine.data;
   const locale = language === "en" ? "en-IN" : `${language}-IN`;
   const day = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short" });
@@ -50,7 +52,7 @@ export default function StudentAttendance() {
           <p className="muted small">{T.exemptNote}</p>
           <h2 className="subhead">{T.recentDays}</h2>
           <ul className="att-days">
-            {a.days.map((d) => (
+            {(allDays ? a.days : a.days.slice(0, 14)).map((d) => (
               <li key={d.date}>
                 <span className="att-day">{day(d.date)}</span>
                 {d.lectures.map((x, i) => (
@@ -61,6 +63,11 @@ export default function StudentAttendance() {
               </li>
             ))}
           </ul>
+          {!allDays && a.days.length > 14 && (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAllDays(true)}>
+              {T.showAll(a.days.length)}
+            </button>
+          )}
         </>
       )}
     </div>

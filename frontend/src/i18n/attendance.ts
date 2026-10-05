@@ -13,6 +13,7 @@ export interface AttendanceStrings {
   recentDays: string;
   marks: { present: string; absent: string; exempt: string };
   exemptNote: string;
+  showAll: (n: number) => string;
 }
 
 export const ATTENDANCE_STRINGS: Record<Language, AttendanceStrings> = {
@@ -28,6 +29,7 @@ export const ATTENDANCE_STRINGS: Record<Language, AttendanceStrings> = {
     recentDays: "Day by day",
     marks: { present: "Present", absent: "Absent", exempt: "Exempted" },
     exemptNote: "Medical leave or official duty? Submit the document at the college office; those days then count as attended.",
+    showAll: (n) => `Show all ${n} days`,
   },
   hi: {
     title: "मेरी उपस्थिति",
@@ -41,6 +43,7 @@ export const ATTENDANCE_STRINGS: Record<Language, AttendanceStrings> = {
     recentDays: "दिन-प्रतिदिन",
     marks: { present: "उपस्थित", absent: "अनुपस्थित", exempt: "छूट" },
     exemptNote: "मेडिकल छुट्टी या आधिकारिक ड्यूटी? कॉलेज ऑफ़िस में दस्तावेज़ जमा करें; वे दिन उपस्थित माने जाएँगे।",
+    showAll: (n) => `सभी ${n} दिन दिखाएँ`,
   },
   mr: {
     title: "माझी हजेरी",
@@ -54,5 +57,6 @@ export const ATTENDANCE_STRINGS: Record<Language, AttendanceStrings> = {
     recentDays: "दिवसानुसार",
     marks: { present: "उपस्थित", absent: "गैरहजर", exempt: "सवलत" },
     exemptNote: "वैद्यकीय रजा किंवा अधिकृत ड्युटी? कॉलेज ऑफिसमध्ये कागदपत्र जमा करा; ते दिवस उपस्थित धरले जातील.",
+    showAll: (n) => `सर्व ${n} दिवस दाखवा`,
   },
 };

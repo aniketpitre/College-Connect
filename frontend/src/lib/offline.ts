@@ -58,6 +58,13 @@ export async function all<T>(store: Store): Promise<T[]> {
   return ((await run(store, "readonly", (s) => s.getAll())) ?? []) as T[];
 }
 
+/** Forgets the cached copies (not the waiting saves): on sign-out, so a shared phone keeps no class lists. */
+export async function clearCache(): Promise<void> {
+  memory.cache.clear();
+  if (!(await openDb())) return;
+  await run("cache", "readwrite", (s) => s.clear());
+}
+
 /** For tests: forget everything kept in memory. */
 export function resetOfflineForTests() {
   memory.cache.clear();
