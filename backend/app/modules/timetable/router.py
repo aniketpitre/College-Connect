@@ -3,6 +3,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request, Response
 
+from app.core import clock
 from app.core.auth import AuthContext, require, signed_in
 from app.core.errors import AppError
 from app.core.rbac import P
@@ -85,7 +86,7 @@ def week(
     division_id: str | None = None, mine: bool = False, day: date | None = None, ctx: AuthContext = READ
 ) -> dict[str, Any]:
     """One week (Mon–Sat) of a division's lectures, or (mine=true) the signed-in teacher's own."""
-    start = day or date.today()
+    start = day or clock.today()
     if mine:
         return service.week(start, faculty_id=ctx.user_id)
     if not division_id:
@@ -98,4 +99,4 @@ def my_timetable(day: date | None = None, ctx: AuthContext = Depends(signed_in))
     student = students.my_student(ctx)
     if not student.get("division_id"):
         raise AppError(404, "You haven't been placed in a division yet.", "no_division")
-    return service.week(day or date.today(), division_ids=[student["division_id"]])
+    return service.week(day or clock.today(), division_ids=[student["division_id"]])

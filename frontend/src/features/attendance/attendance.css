@@ -1,0 +1,122 @@
+.day-pick {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.lecture-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lecture-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  border-left: 4px solid var(--teal);
+}
+.lecture-card.lecture-cancelled,
+.lecture-card.lecture-handed_over {
+  border-left-color: var(--line);
+  opacity: 0.75;
+}
+.lecture-card .lecture-time {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.lecture-card-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.take {
+  padding-bottom: 84px;
+}
+.roster {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.roster-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 14px;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.roster-row:disabled {
+  cursor: default;
+}
+.roster-row.absent {
+  background: color-mix(in srgb, var(--danger) 12%, var(--paper-card));
+  border-color: var(--danger);
+}
+.roster-roll {
+  min-width: 2.2em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+.roster-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.roster-exempt {
+  margin-left: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--teal);
+  border: 1px solid var(--teal);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.roster-mark {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--teal);
+}
+.roster-row.absent .roster-mark {
+  color: var(--danger);
+}
+.take-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px max(16px, env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom));
+  background: var(--paper-card);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 16px rgba(20, 33, 61, 0.08);
+}
+.absent-count {
+  color: var(--danger);
+}
+.ask-hod {
+  margin-top: 14px;
+}
+.exemption-form {
+  margin-bottom: 16px;
+}

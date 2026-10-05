@@ -146,6 +146,7 @@ def summary(doc: dict[str, Any], lookups: dict[str, dict[Any, dict[str, Any]]] |
         "division_id": str(doc["division_id"]) if doc.get("division_id") else None,
         "division": division.get("name"),
         "roll_no": doc.get("roll_no"),
+        "batch": doc.get("batch"),
         "category_code": category.get("code"),
         "status": doc.get("status", "active"),
         "has_photo": bool(doc.get("photo_file_id")),

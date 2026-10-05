@@ -9,7 +9,7 @@ const NUMBER_FIELDS = new Set(["year_of_study", "previous_education.year", "prev
 export function toValues(s?: Partial<Student>): Values {
   const v: Values = {};
   const flat = (key: string, value: unknown) => (v[key] = value === null || value === undefined ? "" : String(value));
-  for (const key of ["name", "prn", "mother_name", "gender", "dob", "email", "phone", "category_id", "apaar_id", "programme_id", "year_of_study", "division_id", "roll_no", "admission_date", "status"] as const)
+  for (const key of ["name", "prn", "mother_name", "gender", "dob", "email", "phone", "category_id", "apaar_id", "programme_id", "year_of_study", "division_id", "roll_no", "batch", "admission_date", "status"] as const)
     flat(key, s?.[key]);
   for (const group of NESTED) {
     const obj = (s?.[group] ?? {}) as Record<string, unknown>;

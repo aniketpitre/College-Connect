@@ -116,12 +116,18 @@ class StudentUpdate(PersonalFields):
     year_of_study: int | None = Field(None, ge=1, le=6)
     division_id: str | None = None
     roll_no: str | None = Field(None, max_length=20)
+    batch: str | None = Field(None, max_length=10, description="Practical batch, e.g. B1")
     admission_date: date | None = None
     status: StudentStatus | None = None
     guardian_consent: bool | None = Field(None, description="Parental consent recorded (under-18 students)")
     reason: str | None = Field(None, max_length=300)
 
     _aadhaar = field_validator("aadhaar")(aadhaar_last4)
+
+    @field_validator("batch")
+    @classmethod
+    def _batch(cls, v: str | None) -> str | None:
+        return (v or "").strip().upper() or None
 
 
 class StudentCreate(StudentUpdate):

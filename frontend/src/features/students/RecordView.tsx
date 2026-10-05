@@ -35,6 +35,7 @@ export function RecordView({ s, lang = "en" }: { s: Student; lang?: "en" | "hi" 
           {row(T.fields.year_of_study, s.year_label)}
           {row(T.fields.division_id, s.division)}
           {row(T.fields.roll_no, s.roll_no)}
+          {s.batch && row(T.fields.batch, s.batch)}
           {row(T.fields.admission_date, fmt(s.admission_date))}
           {row(T.fields.status, T.studentStatus[s.status])}
         </dl>

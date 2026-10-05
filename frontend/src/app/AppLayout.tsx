@@ -12,8 +12,8 @@ interface NavItem {
   to: string;
   /** Key in NAV_LABELS. */
   label: string;
-  /** Shown only to users with this permission. */
-  permission?: string;
+  /** Shown only to users with this permission (or any of these). */
+  permission?: string | string[];
   /** Shown only to this kind of account. */
   kind?: "student" | "staff";
   /** The plan phase that builds this screen; shown disabled until then. */
@@ -30,7 +30,12 @@ const NAV: NavItem[] = [
   { to: "/app/timetable", label: "timetable", kind: "student" },
   { to: "/app/timetable", label: "timetable", permission: "timetable.read", kind: "staff" },
   { to: "/app/notices", label: "notices" },
-  { to: "/app/attendance", label: "attendance", phase: 2 },
+  {
+    to: "/app/attendance",
+    label: "attendance",
+    kind: "staff",
+    permission: ["attendance.take", "attendance.read", "attendance.read.dept", "attendance.approve", "attendance.exempt"],
+  },
   { to: "/app/exams", label: "exams", phase: 2 },
   { to: "/app/certificates", label: "certificates", phase: 2 },
   { to: "/app/account", label: "account" },
@@ -54,7 +59,8 @@ export default function AppLayout() {
     }
   }, [me, language]);
   const items = NAV.filter(
-    (item) => (!item.permission || hasPermission(me, item.permission)) && (!item.kind || item.kind === me?.kind),
+    (item) =>
+      (!item.permission || [item.permission].flat().some((p) => hasPermission(me, p))) && (!item.kind || item.kind === me?.kind),
   );
 
   return (

@@ -2,6 +2,8 @@ import { Navigate, Route, Routes, useLocation } from "react-router";
 import AccountPage from "../features/account/AccountPage";
 import AnalyticsPage from "../features/analytics/AnalyticsPage";
 import ApprovalsPage from "../features/approvals/ApprovalsPage";
+import AttendancePage from "../features/attendance/AttendancePage";
+import TakeAttendancePage from "../features/attendance/TakeAttendancePage";
 import AuditPage from "../features/audit/AuditPage";
 import TimetableEditorPage from "../features/timetable/TimetableEditorPage";
 import TimetablePage from "../features/timetable/TimetablePage";
@@ -97,6 +99,8 @@ export default function App() {
         <Route path="students/import" element={<ImportPage />} />
         <Route path="students/promote" element={<PromotePage />} />
         <Route path="students/:id" element={<StudentDetailPage />} />
+        <Route path="attendance" element={<AttendancePage />} />
+        <Route path="attendance/take/:slotId/:date" element={<TakeAttendancePage />} />
         <Route path="timetable" element={<TimetablePage />} />
         <Route path="timetable/:id" element={<TimetableEditorPage />} />
         <Route path="audit" element={<AuditPage />} />
