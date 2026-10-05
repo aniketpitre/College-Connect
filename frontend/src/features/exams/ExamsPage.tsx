@@ -10,6 +10,7 @@ import { hasPermission, useMe } from "../../lib/auth";
 import { useLanguage } from "../../lib/language";
 import { STATUS_TONE, useMarksOverview, useMyClasses, useMyMarks, useSaveScheme, useSchemes, type ClassRow, type SchemeRow, type SheetStatus } from "../../lib/marks";
 import { useSetup } from "../../lib/setup";
+import UploadGuard from "./UploadGuard";
 import "./exams.css";
 
 /** Exams & results: students see their marks; staff enter, approve and lock marks and set schemes. */
@@ -28,6 +29,7 @@ function StaffExams() {
     ...(teaches ? ([["mine", "My classes"]] as [string, string][]) : []),
     ...(oversees ? ([["department", hasPermission(me, "marks.approve") && !hasPermission(me, "exams.manage") ? "Department marks" : "All marks"]] as [string, string][]) : []),
     ...(schemes ? ([["schemes", "Assessment schemes"]] as [string, string][]) : []),
+    ...(hasPermission(me, "exams.manage") || hasPermission(me, "marks.approve") ? ([["guard", "Upload Guard"]] as [string, string][]) : []),
   ];
   const [tab, setTab] = useState(tabs[0]?.[0]);
   return (
@@ -48,6 +50,7 @@ function StaffExams() {
       {tab === "mine" && <ClassList mine />}
       {tab === "department" && <ClassList />}
       {tab === "schemes" && <Schemes />}
+      {tab === "guard" && <UploadGuard canExport={hasPermission(me, "exams.manage")} />}
     </>
   );
 }

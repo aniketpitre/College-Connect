@@ -122,3 +122,48 @@ export const useSheetAction = () =>
   useMarksMutation((b: { division_id: string; subject_id: string; action: string; reason?: string }) =>
     apiFetch<Sheet>("/marks/sheet/action", { method: "POST", body: JSON.stringify(b) }),
   );
+
+// --- University Upload Guard ------------------------------------------------------------------
+
+export interface GuardRow {
+  class: string;
+  division_id: string;
+  subject_id: string;
+  code: string;
+  name: string;
+  department?: string;
+  has_scheme: boolean;
+  status: SheetStatus;
+  status_label: string;
+  deadline: string | null;
+  days_left: number | null;
+  students: number;
+  counts: { missing: number; above_max: number; absent_marked: number; ineligible: number };
+  ready: boolean;
+}
+
+export interface GuardDetail extends GuardRow {
+  issues: { kind: keyof GuardRow["counts"]; label: string; student_id: string; name: string; prn: string; detail: string }[];
+}
+
+export const useGuard = (enabled: boolean) =>
+  useQuery({
+    queryKey: [...MARKS_KEY, "guard"],
+    queryFn: () => apiFetch<{ rows: GuardRow[]; departments: { name: string; subjects: number; ready: number; locked: number }[] }>("/marks/guard"),
+    enabled,
+  });
+
+export const useGuardDetail = (divisionId: string, subjectId: string) =>
+  useQuery({
+    queryKey: [...MARKS_KEY, "guard", divisionId, subjectId],
+    queryFn: () => apiFetch<GuardDetail>(`/marks/guard/detail?division_id=${divisionId}&subject_id=${subjectId}`),
+  });
+
+export function checkUploadFile(divisionId: string, subjectId: string, file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return apiFetch<{ ok: boolean; rows?: number; problems: string[] }>(`/marks/guard/check-file?division_id=${divisionId}&subject_id=${subjectId}`, {
+    method: "POST",
+    body: form,
+  });
+}

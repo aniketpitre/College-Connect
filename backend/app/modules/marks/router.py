@@ -1,12 +1,12 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, File, Request, Response, UploadFile
 
 from app.core.auth import AuthContext, signed_in
 from app.core.errors import AppError
 from app.core.rbac import P
 from app.core.requestinfo import client_ip
-from app.modules.marks import service
+from app.modules.marks import guard, service
 from app.modules.marks.schemas import SchemeIn, SheetAction, SheetSave
 
 router = APIRouter(tags=["marks"])
@@ -62,3 +62,33 @@ def act(body: SheetAction, request: Request, ctx: AuthContext = STAFF) -> dict[s
 @router.get("/me/marks")
 def my_marks(ctx: AuthContext = Depends(signed_in)) -> list[dict[str, Any]]:
     return service.my_marks(ctx)
+
+
+@router.get("/marks/guard")
+def guard_dashboard(ctx: AuthContext = STAFF) -> dict[str, Any]:
+    return guard.dashboard(ctx)
+
+
+@router.get("/marks/guard/detail")
+def guard_detail(division_id: str, subject_id: str, ctx: AuthContext = STAFF) -> dict[str, Any]:
+    return guard.detail(ctx, division_id, subject_id)
+
+
+@router.get("/marks/guard/export")
+def guard_export(division_id: str, subject_id: str, ctx: AuthContext = STAFF) -> Response:
+    filename, data = guard.export_csv(ctx, division_id, subject_id)
+    return Response(
+        content=data,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"', "Cache-Control": "private, no-store"},
+    )
+
+
+@router.post("/marks/guard/check-file")
+async def guard_check_file(
+    division_id: str, subject_id: str, file: UploadFile = File(...), ctx: AuthContext = STAFF
+) -> dict[str, Any]:
+    data = await file.read(2_000_001)
+    if len(data) > 2_000_000:
+        raise AppError(413, "The file is too large (2 MB at most).", "too_large")
+    return guard.check_file(ctx, division_id, subject_id, data)

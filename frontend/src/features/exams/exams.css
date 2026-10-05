@@ -46,3 +46,22 @@
 .scheme-row {
   align-items: end;
 }
+.guard-table td {
+  vertical-align: middle;
+}
+.guard-issues {
+  padding-left: 18px;
+  margin: 8px 0 14px;
+  font-size: 0.9rem;
+}
+.guard-issues li {
+  margin-bottom: 4px;
+}
+.guard-missing,
+.guard-above_max {
+  color: var(--danger);
+}
+.guard-absent_marked,
+.guard-ineligible {
+  color: #8a5a12;
+}

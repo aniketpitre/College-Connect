@@ -121,3 +121,34 @@ describe("internal marks", () => {
     expect(screen.getByRole("link", { name: "परीक्षा आणि निकाल" })).toBeTruthy();
   });
 });
+
+describe("University Upload Guard", () => {
+  it("the Exam Cell sees what blocks each subject and checks a file", async () => {
+    const exam = makeMe({ roles: ["exam_cell"], permissions: ["exams.manage", "marks.read"] });
+    const row = {
+      class: "BCA FY A", division_id: "v1", subject_id: "sub1", code: "BCA101", name: "Programming in C", department: "Computer Science",
+      has_scheme: true, status: "published", status_label: "Published to students", deadline: "2026-10-07", days_left: 2, students: 3,
+      counts: { missing: 1, above_max: 0, absent_marked: 1, ineligible: 1 }, ready: false,
+    };
+    const calls = mockApi((method, path) => {
+      if (path === "/auth/me") return { status: 200, body: exam };
+      if (path === "/marks/overview") return { status: 200, body: [] };
+      if (path === "/marks/guard") return { status: 200, body: { rows: [row], departments: [{ name: "Computer Science", subjects: 1, ready: 0, locked: 0 }] } };
+      if (path.startsWith("/marks/guard/detail"))
+        return { status: 200, body: { ...row, issues: [{ kind: "missing", label: "Marks missing", student_id: "c", name: "Om Shinde", prn: "2026BCA003", detail: "Assignment" }] } };
+      if (path.startsWith("/marks/guard/check-file") && method === "POST") return { status: 200, body: { ok: false, rows: 2, problems: ["2026BCA003 (Om Shinde) is missing."] } };
+      return { status: 404 };
+    });
+    renderApp("/app/exams");
+    fireEvent.click(await screen.findByRole("tab", { name: "Upload Guard" }));
+    expect(await screen.findByText("0/1 ready")).toBeTruthy();
+    expect(screen.getByText("2 days left")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Check" }));
+    expect(await screen.findByText(/Om Shinde \(2026BCA003\)\. Assignment/)).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Download university file" })).toBeNull(); // not ready
+    const input = screen.getByLabelText(/Check a file before uploading/) as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [new File(["PRN"], "u.csv", { type: "text/csv" })] } });
+    expect(await screen.findByText("2026BCA003 (Om Shinde) is missing.")).toBeTruthy();
+    expect(calls.some((c) => c.path.startsWith("/marks/guard/check-file"))).toBe(true);
+  });
+});
