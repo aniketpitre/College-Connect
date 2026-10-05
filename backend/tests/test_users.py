@@ -171,3 +171,19 @@ def test_role_catalog(client, sign_in):
     sign_in(client, ["office"])
     roles = {r["id"]: r for r in client.get("/api/v1/users/roles").json()}
     assert "student" not in roles and roles["accounts"]["mfa_required"] is True
+
+
+def test_staff_department(client, sign_in, db):
+    from datetime import UTC, datetime
+
+    sign_in(client, ["system_admin"])
+    cs = db.departments.insert_one(
+        {"code": "CS", "name": "Computer Science", "status": "active", "created_at": datetime.now(UTC)}
+    ).inserted_id
+    body = {**STAFF, "email": "mehta@college.edu.in", "roles": ["hod"], "department_id": str(cs)}
+    created = client.post("/api/v1/users", json=body).json()["user"]
+    assert created["department_id"] == str(cs)
+    bad = client.post("/api/v1/users", json={**body, "email": "x@college.edu.in", "department_id": "nope"})
+    assert bad.status_code == 422 and bad.json()["error"]["field"] == "department_id"
+    cleared = client.patch(f"/api/v1/users/{created['id']}", json={"department_id": ""})
+    assert cleared.status_code == 200 and cleared.json()["department_id"] is None

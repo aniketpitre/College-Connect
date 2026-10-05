@@ -10,7 +10,7 @@ afterEach(() => {
 
 const year = { id: "y1", status: "active" as const, name: "2026-27", start_date: "2026-06-01", end_date: "2027-05-31", is_current: true };
 const overview: SetupOverview = {
-  institution: { name: "Shivaji College", short_name: "", address: "", phone: "", email: null, website: "", university: "SPPU", college_code: "", receipt_prefix: "R", certificate_prefix: "C" },
+  institution: { name: "Shivaji College", short_name: "", address: "", phone: "", email: null, website: "", university: "SPPU", college_code: "", receipt_prefix: "R", certificate_prefix: "C", attendance_min_percent: 75, attendance_warn_percent: 80 },
   current_year: year,
   academic_years: [year],
   departments: [{ id: "d1", status: "active", code: "CS", name: "Computer Science" }],

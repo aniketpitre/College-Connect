@@ -3,7 +3,15 @@ import { apiFetch } from "./api";
 import type { FeeAccount } from "./fees";
 
 export interface HomeCard {
-  kind: "fee_overdue" | "fee_due_soon" | "document_rejected" | "correction_approved" | "correction_rejected" | "notice";
+  kind:
+    | "fee_overdue"
+    | "fee_due_soon"
+    | "document_rejected"
+    | "correction_approved"
+    | "correction_rejected"
+    | "notice"
+    | "attendance_low"
+    | "attendance_warning";
   severity: "danger" | "warning" | "info";
   amount?: number;
   since?: string;
@@ -16,6 +24,10 @@ export interface HomeCard {
   title?: string;
   hi?: { title: string } | null;
   mr?: { title: string } | null;
+  code?: string;
+  percent?: number;
+  must_attend?: number;
+  can_miss?: number;
 }
 export interface StudentHome {
   name: string;
@@ -24,6 +36,7 @@ export interface StudentHome {
   academic_year: string | null;
   photo_url: string | null;
   balance: number | null;
+  attendance?: number | null;
   cards: HomeCard[];
 }
 export interface MyFees extends Omit<FeeAccount, "student_id" | "student" | "late_fee"> {

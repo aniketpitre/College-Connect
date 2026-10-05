@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 const setup: SetupOverview = {
-  institution: { name: "", short_name: "", address: "", phone: "", email: null, website: "", university: "", college_code: "", receipt_prefix: "R", certificate_prefix: "C" },
+  institution: { name: "", short_name: "", address: "", phone: "", email: null, website: "", university: "", college_code: "", receipt_prefix: "R", certificate_prefix: "C", attendance_min_percent: 75, attendance_warn_percent: 80 },
   current_year: null,
   academic_years: [],
   departments: [],

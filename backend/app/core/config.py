@@ -39,6 +39,8 @@ class Settings:
     app_base_url: str | None
     email_api_key: str | None
     email_from: str
+    # Vercel Cron sends "Authorization: Bearer <CRON_SECRET>"; scheduled jobs refuse calls without it.
+    cron_secret: str | None
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -52,6 +54,7 @@ class Settings:
             app_base_url=(os.getenv("APP_BASE_URL") or "").rstrip("/") or None,
             email_api_key=os.getenv("EMAIL_API_KEY") or None,
             email_from=os.getenv("EMAIL_FROM", "CollegeConnect <onboarding@resend.dev>"),
+            cron_secret=os.getenv("CRON_SECRET") or None,
         )
 
 

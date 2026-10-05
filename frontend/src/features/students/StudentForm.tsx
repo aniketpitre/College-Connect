@@ -59,6 +59,7 @@ export function StudentFields({ setup, values, onChange, error, isNew }: Props) 
         {select("year_of_study", (programme?.year_labels ?? []).map((label, i) => ({ value: String(i + 1), label })), true)}
         {select("division_id", divisions.map((d) => ({ value: d.id, label: d.name })))}
         {field("roll_no")}
+        {field("batch", { hint: "Practical batch, e.g. B1" })}
         {field("admission_date", { type: "date" })}
         {!isNew && select("status", Object.entries(L.studentStatus).map(([value, label]) => ({ value, label })), true)}
       </div>

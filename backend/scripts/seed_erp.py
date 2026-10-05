@@ -25,7 +25,40 @@ STAFF = [
     ("office", "Sunil Gaikwad", "office@demo.college"),
     ("accounts", "Meera Joshi", "accounts@demo.college"),
     ("faculty", "Prakash More", "faculty@demo.college"),
+    ("hod", "Dr. Sunita Rane", "hod@demo.college"),
 ]
+# Other Computer Science teachers (they can sign in too, with the demo password).
+TEACHERS = [
+    "Anita Rao",
+    "Imran Khan",
+    "Kavita Shah",
+    "Rahul Desai",
+    "Swati Kale",
+    "Nitin Bhave",
+    "Farah Shaikh",
+    "Ajay Naik",
+]
+SUBJECTS = {
+    1: [("BCA101", "Programming in C", "theory"), ("BCA102", "Mathematics I", "theory"),
+        ("BCA103", "Digital Electronics", "theory"), ("BCA104", "Communication Skills", "theory"),
+        ("BCA105", "C Programming Lab", "practical")],
+    3: [("BCA301", "Database Management Systems", "theory"), ("BCA302", "Data Structures", "theory"),
+        ("BCA303", "Object-Oriented Programming", "theory"), ("BCA304", "Financial Accounting", "theory"),
+        ("BCA305", "DBMS Lab", "practical")],
+    5: [("BCA501", "Java Programming", "theory"), ("BCA502", "Web Technologies", "theory"),
+        ("BCA503", "Software Engineering", "theory"), ("BCA504", "Python Programming", "theory"),
+        ("BCA505", "Java Lab", "practical")],
+}  # fmt: skip
+PERIODS = [("09:00", "10:00"), ("10:00", "11:00"), ("11:15", "12:15"), ("12:15", "13:15")]
+# day → subject index per period (4 = the practical, two hours, one batch at a time)
+WEEK: dict[int, list[int | str]] = {
+    1: [0, 1, 2, 3],
+    2: [1, 2, 0, 3],
+    3: [2, 0, "B1"],
+    4: [3, 0, "B2"],
+    5: [0, 1, 2, 3],
+    6: [1, 2],
+}
 MALE = ["Rohan", "Om", "Aditya", "Kunal", "Sahil", "Yash", "Tejas", "Omkar", "Pratik", "Sairaj"]
 FEMALE = ["Neha", "Priya", "Sneha", "Pooja", "Anjali", "Rutuja", "Shruti", "Komal", "Vaishnavi", "Gauri"]
 LAST = ["Patil", "Joshi", "Shinde", "Kulkarni", "Pawar", "Jadhav", "Deshpande", "More", "Chavan", "Bhosale"]
@@ -130,6 +163,8 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
                     "programme_id": bca["id"],
                     "year_of_study": y,
                     "division_id": divisions[y],
+                    "batch": f"B{n % 2 + 1}",
+                    "roll_no": str(n),
                     "category_id": rng.choice(categories),
                     "gender": gender,
                     "dob": f"{batch - 18}-{rng.randint(1, 12):02d}-{rng.randint(1, 28):02d}",
@@ -213,7 +248,128 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
             },
         )
 
+    lectures = _seed_academics(app, db, rng, users, api, bca, year, divisions)
+
     for one in api.values():
         db.sessions.delete_one({"_id": one.token_id})
     _ = principal
-    return {"staff accounts": len(users), "students": len(students), "receipts": receipts, "notices": 3}
+    return {
+        "staff accounts": len(users),
+        "students": len(students),
+        "receipts": receipts,
+        "notices": 3,
+        "timetables": 3,
+        "lectures marked": lectures,
+    }
+
+
+def _seed_academics(
+    app: Any,
+    db: Database[dict[str, Any]],
+    rng: random.Random,
+    users: dict[str, dict[str, Any]],
+    api: dict[str, "_Api"],
+    bca: dict[str, Any],
+    year: dict[str, Any],
+    divisions: dict[int, str],
+) -> int:
+    """Subjects, teachers, the term-1 timetable of each class and three weeks of attendance."""
+    admin, office, hod = api["system_admin"], api["office"], api["hod"]
+    dept = bca["department_id"]
+    from bson import ObjectId
+
+    teacher_ids = [users["faculty"]["_id"]]
+    for name in TEACHERS:
+        email = f"{name.split()[0].lower()}@demo.college"
+        user = db.users.find_one({"email": email}) or repo.create_user(
+            kind="staff",
+            name=name,
+            email=email,
+            roles=["faculty"],
+            password_hash=hash_password(DEMO_PASSWORD),
+            must_change_password=False,
+            created_by=None,
+        )
+        teacher_ids.append(user["_id"])
+    db.users.update_many(
+        {"_id": {"$in": [*teacher_ids, users["hod"]["_id"]]}}, {"$set": {"department_id": ObjectId(dept)}}
+    )
+
+    start = date.fromisoformat(year["start_date"])
+    term_end = date(start.year, 11, 30)
+    marked = 0
+    for y, sem in ((1, 1), (2, 3), (3, 5)):
+        subject_ids = []
+        for code, name, kind in SUBJECTS[sem]:
+            internal = 40 if kind == "theory" else 50
+            body = {
+                "programme_id": bca["id"],
+                "semester": sem,
+                "code": code,
+                "name": name,
+                "credits": 4,
+                "type": kind,
+                "max_internal": internal,
+                "max_external": 100 - internal,
+            }
+            subject_ids.append(admin.call("POST", "/setup/subjects", json=body)["id"])
+        tt = office.call(
+            "POST",
+            "/timetables",
+            json={
+                "academic_year_id": year["id"],
+                "division_id": divisions[y],
+                "term": 1,
+                "valid_from": start.isoformat(),
+                "valid_to": term_end.isoformat(),
+            },
+        )
+        # Three teachers per class: no teacher has two classes at once.
+        t = [str(x) for x in teacher_ids[(y - 1) * 3 : y * 3]]
+        teacher_of = {0: t[0], 1: t[1], 2: t[2], 3: t[1], 4: t[0]}
+        for weekday, plan in WEEK.items():
+            for i, item in enumerate(plan):
+                practical = isinstance(item, str)  # practical batch: periods 3–4 together
+                subject = 4 if practical else int(item)
+                slot = {
+                    "day": weekday,
+                    "start": PERIODS[2 if practical else i][0],
+                    "end": PERIODS[3 if practical else i][1],
+                    "subject_id": subject_ids[subject],
+                    "faculty_ids": [teacher_of[subject]],
+                    "room": f"LAB{y}" if practical else f"10{y}",
+                    "batch": item if practical else None,
+                }
+                office.call("POST", f"/timetables/{tt['id']}/slots", json=slot)
+
+        # Past attendance, marked by the HOD (who may mark any lecture of the department).
+        absence = {}
+        for st in db.students.find({"division_id": ObjectId(divisions[y])}, {"_id": 1}):
+            roll = rng.random()
+            absence[str(st["_id"])] = (
+                rng.uniform(0.3, 0.45)
+                if roll < 0.1
+                else rng.uniform(0.12, 0.25)
+                if roll < 0.3
+                else rng.uniform(0.0, 0.1)
+            )
+        first = max(start, date.today() - timedelta(days=21))
+        day = first
+        while day < date.today():
+            if day.isoweekday() != 7:
+                week = hod.call("GET", "/timetable/week", params={"division_id": divisions[y], "day": day.isoformat()})
+                lectures = next(d for d in week["days"] if d["date"] == day.isoformat())["lectures"]
+                for lec in lectures:
+                    sheet = hod.call(
+                        "GET", "/attendance/sheet", params={"slot_id": lec["slot_id"], "day": day.isoformat()}
+                    )
+                    absent = [x["id"] for x in sheet["students"] if rng.random() < absence[x["id"]]]
+                    hod.call(
+                        "PUT",
+                        "/attendance/sheet",
+                        json={"slot_id": lec["slot_id"], "date": day.isoformat(), "absent": absent},
+                    )
+                    marked += 1
+            day += timedelta(days=1)
+    _ = app
+    return marked

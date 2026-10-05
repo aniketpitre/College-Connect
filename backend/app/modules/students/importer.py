@@ -45,6 +45,7 @@ COLUMNS = [
     "year",
     "division",
     "roll_no",
+    "batch",
     "gender",
     "dob",
     "category",
@@ -106,6 +107,7 @@ EXAMPLE = {
     "year": "FY",
     "division": "A",
     "roll_no": "1",
+    "batch": "B1",
     "gender": "M",
     "dob": "12-04-2007",
     "category": "OPEN",
@@ -248,7 +250,7 @@ def _to_body(row: dict[str, str], lk: _Lookups) -> tuple[dict[str, Any], list[tu
             body[field] = _date(row.get(column, ""))
         except ValueError as e:
             problems.append((column, str(e)))
-    for field in ("roll_no", "phone", "email", "mother_name", "aadhaar", "apaar_id"):
+    for field in ("roll_no", "batch", "phone", "email", "mother_name", "aadhaar", "apaar_id"):
         if row.get(field):
             body[field] = row[field]
     if any(row.get(k) for k in ("guardian_name", "guardian_relation", "guardian_phone")):

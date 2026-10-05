@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, apiFetch } from "./api";
 import { chooseLanguage } from "./language";
+import * as offline from "./offline";
 import type { Language } from "./types";
 
 export type SessionState = "active" | "mfa_pending" | "mfa_setup";
@@ -30,9 +31,19 @@ export function useMe() {
     queryKey: ME_KEY,
     queryFn: async () => {
       try {
-        return await apiFetch<Me>("/auth/me");
+        const me = await apiFetch<Me>("/auth/me");
+        // Teachers can open the app without a connection (offline attendance): keep who is signed in.
+        if (me.permissions.includes("attendance.take") && me.session_state === "active") await offline.put("cache", "me", me);
+        return me;
       } catch (e) {
-        if (e instanceof ApiError && e.status === 401) return null;
+        if (e instanceof ApiError && e.status === 401) {
+          void offline.clearCache(); // not awaited: a slower answer here must not overwrite a sign-in that just happened
+          return null;
+        }
+        if (e instanceof ApiError && e.code === "network_error") {
+          const saved = await offline.get<Me>("cache", "me");
+          if (saved) return saved;
+        }
         throw e;
       }
     },
@@ -64,6 +75,8 @@ export function useLogout() {
     onSettled: () => {
       qc.clear();
       qc.setQueryData(ME_KEY, null);
+      // Class lists and the user kept for offline use leave the phone with the user.
+      void offline.clearCache();
     },
   });
 }

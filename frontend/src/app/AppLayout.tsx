@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import { apiFetch } from "../lib/api";
+import { OfflineSync } from "../features/attendance/OfflineSync";
 import { NAV_LABELS } from "../i18n/nav";
 import { hasPermission, useLogout, useMe } from "../lib/auth";
 import { useLanguage } from "../lib/language";
@@ -12,8 +13,8 @@ interface NavItem {
   to: string;
   /** Key in NAV_LABELS. */
   label: string;
-  /** Shown only to users with this permission. */
-  permission?: string;
+  /** Shown only to users with this permission (or any of these). */
+  permission?: string | string[];
   /** Shown only to this kind of account. */
   kind?: "student" | "staff";
   /** The plan phase that builds this screen; shown disabled until then. */
@@ -27,8 +28,16 @@ const NAV: NavItem[] = [
   { to: "/app/students", label: "students", permission: "students.read" },
   { to: "/app/fees", label: "fees", permission: "fees.read", kind: "staff" },
   { to: "/app/approvals", label: "approvals", permission: "approvals.decide" },
+  { to: "/app/timetable", label: "timetable", kind: "student" },
+  { to: "/app/timetable", label: "timetable", permission: "timetable.read", kind: "staff" },
   { to: "/app/notices", label: "notices" },
-  { to: "/app/attendance", label: "attendance", phase: 2 },
+  { to: "/app/attendance", label: "attendance", kind: "student" },
+  {
+    to: "/app/attendance",
+    label: "attendance",
+    kind: "staff",
+    permission: ["attendance.take", "attendance.read", "attendance.read.dept", "attendance.approve", "attendance.exempt"],
+  },
   { to: "/app/exams", label: "exams", phase: 2 },
   { to: "/app/certificates", label: "certificates", phase: 2 },
   { to: "/app/account", label: "account" },
@@ -52,7 +61,8 @@ export default function AppLayout() {
     }
   }, [me, language]);
   const items = NAV.filter(
-    (item) => (!item.permission || hasPermission(me, item.permission)) && (!item.kind || item.kind === me?.kind),
+    (item) =>
+      (!item.permission || [item.permission].flat().some((p) => hasPermission(me, p))) && (!item.kind || item.kind === me?.kind),
   );
 
   return (
@@ -92,6 +102,7 @@ export default function AppLayout() {
           )}
         </nav>
         <main className="portal-main">
+          {hasPermission(me, "attendance.take") && <OfflineSync />}
           <Outlet />
         </main>
       </div>

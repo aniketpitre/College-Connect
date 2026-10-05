@@ -1,0 +1,231 @@
+.day-pick {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.lecture-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lecture-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  border-left: 4px solid var(--teal);
+}
+.lecture-card.lecture-cancelled,
+.lecture-card.lecture-handed_over {
+  border-left-color: var(--line);
+  opacity: 0.75;
+}
+.lecture-card .lecture-time {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.lecture-card-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.take {
+  padding-bottom: 84px;
+}
+.roster {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.roster-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 14px;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.roster-row:disabled {
+  cursor: default;
+}
+.roster-row.absent {
+  background: color-mix(in srgb, var(--danger) 12%, var(--paper-card));
+  border-color: var(--danger);
+}
+.roster-roll {
+  min-width: 2.2em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+.roster-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.roster-exempt {
+  margin-left: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--teal);
+  border: 1px solid var(--teal);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.roster-mark {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--teal);
+}
+.roster-row.absent .roster-mark {
+  color: var(--danger);
+}
+.take-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px max(16px, env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom));
+  background: var(--paper-card);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 16px rgba(20, 33, 61, 0.08);
+}
+.absent-count {
+  color: var(--danger);
+}
+.ask-hod {
+  margin-top: 14px;
+}
+.exemption-form {
+  margin-bottom: 16px;
+}
+.offline-banner {
+  background: color-mix(in srgb, #b7791f 14%, var(--paper-card));
+  border: 1px solid #b7791f;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+.att-subjects {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+.att-subject {
+  margin: 0;
+  border-top: 4px solid var(--teal);
+}
+.att-subject.att-warning {
+  border-top-color: #b7791f;
+}
+.att-subject.att-critical {
+  border-top-color: var(--danger);
+}
+.att-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+.att-percent {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+.att-critical .att-percent {
+  color: var(--danger);
+}
+.att-bar {
+  position: relative;
+  height: 8px;
+  background: var(--paper-soft);
+  border-radius: 999px;
+  margin: 8px 0 4px;
+  overflow: visible;
+}
+.att-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--teal);
+}
+.att-critical .att-bar span {
+  background: var(--danger);
+}
+.att-warning .att-bar span {
+  background: #b7791f;
+}
+.att-bar i {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 14px;
+  background: var(--ink);
+}
+.att-advice {
+  margin: 8px 0 0;
+  font-weight: 600;
+}
+.att-days {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.att-days li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.att-day {
+  min-width: 110px;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+.att-mark {
+  font-size: 0.8rem;
+  border-radius: 999px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+}
+.att-mark-absent {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.att-mark-exempt {
+  color: var(--teal);
+  border-color: var(--teal);
+}
+.report-table td.att-critical {
+  color: var(--danger);
+  font-weight: 700;
+}
+.report-table td.att-warning {
+  color: #b7791f;
+  font-weight: 600;
+}

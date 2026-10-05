@@ -63,6 +63,8 @@ export interface Institution {
   college_code: string;
   receipt_prefix: string;
   certificate_prefix: string;
+  attendance_min_percent: number;
+  attendance_warn_percent: number;
 }
 export interface SetupOverview {
   institution: Institution;

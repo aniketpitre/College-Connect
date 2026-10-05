@@ -5,12 +5,15 @@ import { BrowserRouter } from "react-router";
 import App from "./app/App";
 import "./components/components.css";
 import "./index.css";
+import { registerServiceWorker } from "./lib/offline";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false },
   },
 });
+
+registerServiceWorker();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

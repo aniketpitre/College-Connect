@@ -9,6 +9,7 @@ export interface User {
   prn: string | null;
   phone: string | null;
   roles: string[];
+  department_id: string | null;
   role_labels: string[];
   status: "active" | "disabled";
   must_change_password: boolean;
@@ -32,6 +33,7 @@ export interface NewUser {
   prn?: string;
   phone?: string;
   roles: string[];
+  department_id?: string;
 }
 
 export interface UserChanges {
@@ -39,6 +41,7 @@ export interface UserChanges {
   email?: string;
   phone?: string;
   roles?: string[];
+  department_id?: string;
   status?: "active" | "disabled";
   reason?: string;
 }

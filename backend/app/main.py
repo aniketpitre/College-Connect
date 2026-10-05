@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.auth import csrf_guard
 from app.core.config import settings
 from app.core.errors import install_error_handlers
+from app.modules.attendance import router as attendance
 from app.modules.auditlog import router as auditlog
 from app.modules.auth import router as auth
 from app.modules.exports import router as exports
@@ -18,6 +19,7 @@ from app.modules.portal import router as portal
 from app.modules.setup import router as setup
 from app.modules.students import router as students
 from app.modules.system import router as system
+from app.modules.timetable import router as timetable
 from app.modules.users import router as users
 
 logging.basicConfig(level=logging.INFO)
@@ -38,6 +40,8 @@ ROUTERS: list[APIRouter] = [
     notices.router,
     auditlog.router,
     exports.router,
+    timetable.router,
+    attendance.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

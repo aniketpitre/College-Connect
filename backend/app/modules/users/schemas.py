@@ -15,6 +15,7 @@ class UserCreate(BaseModel):
     prn: str | None = Field(default=None, max_length=20)
     phone: str | None = Field(default=None, max_length=20)
     roles: list[str] = Field(default_factory=list)
+    department_id: str | None = Field(None, description="Staff: their department (HOD/faculty scope)")
 
     @field_validator("prn")
     @classmethod
@@ -49,6 +50,7 @@ class UserUpdate(BaseModel):
     email: EmailStr | None = None
     phone: str | None = Field(default=None, max_length=20)
     roles: list[str] | None = None
+    department_id: str | None = Field(None, description='"" removes the department')
     status: Literal["active", "disabled"] | None = None
     reason: str | None = Field(default=None, max_length=300)
 

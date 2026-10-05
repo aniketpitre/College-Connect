@@ -29,5 +29,11 @@
         "service": "web"
       }
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/v1/cron/attendance-alerts",
+      "schedule": "30 3 * * *"
+    }
   ]
 }

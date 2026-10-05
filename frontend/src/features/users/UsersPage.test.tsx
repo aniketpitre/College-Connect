@@ -17,6 +17,7 @@ function makeUser(overrides: Partial<User> = {}): User {
     prn: "2026BCA001",
     phone: null,
     roles: ["student"],
+    department_id: null,
     role_labels: ["Student"],
     status: "active",
     must_change_password: true,

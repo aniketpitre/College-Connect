@@ -405,6 +405,35 @@ address on record reset through the office (temporary password). Reset emails ne
 | 2.10 | Certificate PDFs + QR on the Verify page; TC → read-only account |
 | 2.11 | Faculty home, HOD dashboard, Exam Cell console, student portal additions; e2e tests |
 
+**Delivered in the "Phase 2A" PR (2.1–2.4):**
+- Staff accounts can belong to a department; an HOD manages their department's timetables,
+  sees its attendance and approves late attendance changes. Students have an optional practical
+  batch (B1, B2…); a batch lecture's class list is that batch.
+- Timetable: one per class and term (`timetables`) with a date window; weekly lectures
+  (`timetable_slots`) are checked for teacher, room and class clashes (two different practical
+  batches may run in parallel). One-day changes (cancelled / substitute) are
+  `timetable_changes` (the plan's `substitutions`). Holidays from College setup have no
+  lectures. "Today" is always the date in India (the server runs in UTC).
+- Attendance is one record per lecture held (`attendance_sessions`: class list + absentees),
+  instead of one row per student (`attendance_marks`): one write per lecture, and the
+  percentages are computed from it. Teachers change it for 48 hours after the lecture ends;
+  then a change request (`attendance_edit_requests`) goes to the HOD, who can also change it
+  directly. Exemptions (`attendance_exemptions`) are entered by the office; an exempted absence
+  counts as attended. Extra lectures outside the timetable are not in v1.
+- Offline: a service worker keeps the app shell; the teacher's day, class lists and signed-in
+  user are kept in IndexedDB; saves made offline wait on the phone and are sent when back
+  online, with a device id (no double saves) and the version edited (someone else's newer save
+  is a conflict shown to the teacher, never overwritten). Signing out clears the cached copies.
+  Tested in a real browser with the network switched off, including a reload.
+- Percentages per subject; the college sets the minimum (75%) and warning level (80%) in College
+  setup. Students see "you can miss N more" or "attend the next N" (en/hi/mr) and a home card
+  when low; staff get a class report with defaulters. A daily Vercel Cron job
+  (`/api/v1/cron/attendance-alerts`, 9:00 IST, needs `CRON_SECRET`) emails a student once per
+  subject per level (`attendance_alerts`). Parent and mentor alerts come with their portals
+  (Phase 3); SMS/WhatsApp in Phase 3.
+- The ERP demo seed adds subjects, nine Computer Science teachers, an HOD, term-1 timetables for
+  FY/SY/TY and three weeks of attendance.
+
 ### 6.4 Acceptance criteria
 - A faculty member marks attendance for 60 students in under 10 seconds, including in airplane mode, and it syncs when back online.
 - A student sees exactly how many lectures they can miss in each subject.

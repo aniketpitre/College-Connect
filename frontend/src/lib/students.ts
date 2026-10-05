@@ -37,6 +37,7 @@ export interface StudentSummary {
   division_id: string | null;
   division: string | null;
   roll_no: string | null;
+  batch?: string | null;
   category_code: string | null;
   status: StudentStatus;
   has_photo: boolean;

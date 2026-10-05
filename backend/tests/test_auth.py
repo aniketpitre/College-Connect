@@ -70,7 +70,7 @@ def test_me_never_returns_secrets(client, make_user):
     login(client, "staff@college.test")
     me = client.get("/api/v1/auth/me").json()
     assert "password_hash" not in me and "mfa" not in me
-    assert me["permissions"] == ["notices.read", "setup.read"]  # faculty read notices and the college structure
+    assert me["permissions"] == ["attendance.take", "notices.read", "setup.read", "timetable.read"]
 
 
 def test_logout_ends_the_session(client, make_user, db):

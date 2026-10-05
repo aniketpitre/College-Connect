@@ -6,6 +6,7 @@ import { Modal } from "../../components/Modal";
 import { StatusBadge } from "../../components/StatusBadge";
 import { ApiError } from "../../lib/api";
 import { hasPermission, useMe } from "../../lib/auth";
+import { useSetup } from "../../lib/setup";
 import {
   useCreateUser,
   useResetPassword,
@@ -233,6 +234,26 @@ function RoleChecklist({ roles, value, onChange }: { roles: RoleInfo[]; value: s
   );
 }
 
+/** Staff department: HODs manage their department's timetable; faculty belong to one. */
+function DepartmentSelect({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+  const setup = useSetup();
+  return (
+    <div className="field">
+      <label htmlFor={id}>Department (optional)</label>
+      <select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">None</option>
+        {(setup.data?.departments ?? [])
+          .filter((d) => d.status === "active" || d.id === value)
+          .map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.code} · {d.name}
+            </option>
+          ))}
+      </select>
+    </div>
+  );
+}
+
 function FieldError({ error, field }: { error: unknown; field: string }) {
   if (!(error instanceof ApiError) || error.field !== field) return null;
   return <span className="field-error">{error.message}</span>;
@@ -251,7 +272,7 @@ function AddUserModal({
   allowedKinds: Kind[];
   onCreated: (user: User, temporaryPassword: string) => void;
 }) {
-  const empty: NewUser = { kind: allowedKinds[0] ?? "student", name: "", email: "", prn: "", phone: "", roles: [] };
+  const empty: NewUser = { kind: allowedKinds[0] ?? "student", name: "", email: "", prn: "", phone: "", roles: [], department_id: "" };
   const [form, setForm] = useState<NewUser>(empty);
   const create = useCreateUser();
   const close = () => {
@@ -272,6 +293,7 @@ function AddUserModal({
             name: form.name.trim(),
             phone: form.phone?.trim() || undefined,
             roles: form.kind === "staff" ? form.roles : [],
+            department_id: form.kind === "staff" && form.department_id ? form.department_id : undefined,
             ...(form.kind === "staff" ? { email: form.email?.trim() } : { prn: form.prn?.trim() }),
           };
           create.mutate(body, { onSuccess: (r) => (setForm(empty), onCreated(r.user, r.temporary_password)) });
@@ -310,6 +332,7 @@ function AddUserModal({
           <input id="u-phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         </div>
         {form.kind === "staff" && <RoleChecklist roles={roles} value={form.roles} onChange={(r) => setForm({ ...form, roles: r })} />}
+        {form.kind === "staff" && <DepartmentSelect id="u-dept" value={form.department_id ?? ""} onChange={(v) => setForm({ ...form, department_id: v })} />}
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={close}>
             Cancel
@@ -340,6 +363,7 @@ function EditUserModal({
   const [email, setEmail] = useState(user.email ?? "");
   const [phone, setPhone] = useState(user.phone ?? "");
   const [selected, setSelected] = useState(user.roles);
+  const [department, setDepartment] = useState(user.department_id ?? "");
   const [status, setStatus] = useState(user.status);
   const [reason, setReason] = useState("");
   const update = useUpdateUser();
@@ -358,7 +382,7 @@ function EditUserModal({
                 // A student's name and contact details live in their student record.
                 ...(user.kind === "staff" ? { name: name.trim(), phone: phone.trim() } : {}),
                 ...(user.kind === "staff" && email.trim() ? { email: email.trim() } : {}),
-                ...(user.kind === "staff" && canManageRoles ? { roles: selected } : {}),
+                ...(user.kind === "staff" && canManageRoles ? { roles: selected, department_id: department } : {}),
                 status,
                 reason: reason.trim() || undefined,
               },
@@ -396,6 +420,7 @@ function EditUserModal({
           <>
             <RoleChecklist roles={roles} value={selected} onChange={setSelected} />
             <FieldError error={update.error} field="roles" />
+            <DepartmentSelect id="e-dept" value={department} onChange={setDepartment} />
           </>
         )}
         {!isSelf && (
