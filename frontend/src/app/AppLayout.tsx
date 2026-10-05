@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import { apiFetch } from "../lib/api";
+import { OfflineSync } from "../features/attendance/OfflineSync";
 import { NAV_LABELS } from "../i18n/nav";
 import { hasPermission, useLogout, useMe } from "../lib/auth";
 import { useLanguage } from "../lib/language";
@@ -100,6 +101,7 @@ export default function AppLayout() {
           )}
         </nav>
         <main className="portal-main">
+          {hasPermission(me, "attendance.take") && <OfflineSync />}
           <Outlet />
         </main>
       </div>

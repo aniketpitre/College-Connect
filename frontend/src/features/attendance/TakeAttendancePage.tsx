@@ -2,23 +2,27 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../../lib/api";
-import { ATTENDANCE_KEY, saveAttendance, useRequestEdit, useSheet, type Sheet } from "../../lib/attendance";
+import { ATTENDANCE_KEY, outboxKey, saveOrQueue, useOutbox, useRequestEdit, useSheet, type OutboxItem, type Sheet } from "../../lib/attendance";
 import "./attendance.css";
 
 /** The 10-second flow: everyone starts present; tap the absentees; save. */
 export default function TakeAttendancePage() {
   const { slotId = "", date = "" } = useParams();
   const sheet = useSheet(slotId, date);
+  const outbox = useOutbox();
   if (sheet.error) return <p className="form-error">{sheet.error.message}</p>;
-  if (!sheet.data) return <p className="muted">Loading the class list…</p>;
+  if (!sheet.data || !outbox.data) return <p className="muted">Loading the class list…</p>;
+  const waiting = outbox.data.find((i) => i.key === outboxKey(slotId, date));
   // Remount when the server copy changes (e.g. after loading someone else's newer save).
-  return <SheetForm key={`${sheet.data.session?.version ?? 0}`} data={sheet.data} slotId={slotId} date={date} />;
+  return <SheetForm key={`${sheet.data.session?.version ?? 0}:${waiting?.state ?? ""}`} data={sheet.data} waiting={waiting} slotId={slotId} date={date} />;
 }
 
-function SheetForm({ data, slotId, date }: { data: Sheet; slotId: string; date: string }) {
+function SheetForm({ data, waiting, slotId, date }: { data: Sheet; waiting?: OutboxItem; slotId: string; date: string }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [absent, setAbsent] = useState<Set<string>>(() => new Set(data.session?.absent ?? []));
+  // A save still waiting on this phone is newer than the server copy: start from it.
+  const [absent, setAbsent] = useState<Set<string>>(() => new Set(waiting?.state === "pending" ? waiting.body.absent : (data.session?.absent ?? [])));
+  const [clientId] = useState(() => waiting?.body.client_id ?? crypto.randomUUID());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
   const [asking, setAsking] = useState(false);
@@ -40,9 +44,15 @@ function SheetForm({ data, slotId, date }: { data: Sheet; slotId: string; date: 
     setSaving(true);
     setError(null);
     try {
-      await saveAttendance({ slot_id: slotId, date, absent: [...absent], base_version: data.session?.version ?? null, client_id: crypto.randomUUID() });
+      const result = await saveOrQueue(
+        { slot_id: slotId, date, absent: [...absent], base_version: waiting?.body.base_version ?? data.session?.version ?? null, client_id: clientId },
+        `${lec.subject_code} · ${lec.division} · ${date} ${lec.start}`,
+      );
       await qc.invalidateQueries({ queryKey: ATTENDANCE_KEY });
-      navigate("/app/attendance", { state: { saved: `${lec.subject_code}: ${total - absent.size} of ${total} present` } });
+      const counts = `${lec.subject_code}: ${total - absent.size} of ${total} present`;
+      navigate("/app/attendance", {
+        state: { saved: result.queued ? `${counts}. Saved on this phone; it will be sent when you're back online.` : counts },
+      });
     } catch (e) {
       setError(e instanceof ApiError ? e : new ApiError(0, "error", "Could not save."));
     } finally {
@@ -67,6 +77,8 @@ function SheetForm({ data, slotId, date }: { data: Sheet; slotId: string; date: 
           </p>
         </div>
       </div>
+      {data.offline && <div className="offline-banner">No connection. You can still mark attendance; it's saved on this phone and sent when you're back online.</div>}
+      {waiting?.state === "pending" && <div className="offline-banner">A save from this phone is waiting to be sent.</div>}
       {data.session && (
         <p className="muted small">
           Saved by {data.session.saved_by} at {new Date(data.session.saved_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}.

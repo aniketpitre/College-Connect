@@ -7,7 +7,7 @@ import type { Me } from "../lib/auth";
 
 export type Handler = (method: string, path: string, body: unknown, headers: Headers) => { status: number; body?: unknown };
 
-/** Replaces fetch with a fake API; returns the list of calls made. */
+/** Replaces fetch with a fake API; returns the list of calls made. A handler returning status 0 means "no network". */
 export function mockApi(handler: Handler) {
   const calls: { method: string; path: string; body: unknown; headers: Headers }[] = [];
   vi.stubGlobal(
@@ -19,6 +19,7 @@ export function mockApi(handler: Handler) {
       const headers = new Headers(init.headers);
       calls.push({ method, path, body, headers });
       const res = handler(method, path, body, headers);
+      if (res.status === 0) throw new TypeError("Failed to fetch"); // simulates no network
       return new Response(res.body === undefined ? null : JSON.stringify(res.body), {
         status: res.status,
         headers: { "Content-Type": "application/json" },

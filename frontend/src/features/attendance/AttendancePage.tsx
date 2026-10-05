@@ -4,12 +4,17 @@ import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { EmptyState } from "../../components/EmptyState";
 import { StatusBadge } from "../../components/StatusBadge";
 import { hasPermission, useMe } from "../../lib/auth";
+import { useQueryClient } from "@tanstack/react-query";
 import {
+  ATTENDANCE_KEY,
+  discardOutbox,
+  outboxKey,
   useAddExemption,
   useCancelExemption,
   useDecideEdit,
   useEditRequests,
   useExemptions,
+  useOutbox,
   useToday,
   type EditRequest,
   type Exemption,
@@ -66,9 +71,29 @@ function MyLectures() {
   const [todayIso] = useState(() => isoDay(new Date()));
   const [day, setDay] = useState(todayIso);
   const today = useToday(day);
+  const outbox = useOutbox();
+  const qc = useQueryClient();
+  const waiting = new Set((outbox.data ?? []).filter((i) => i.state === "pending").map((i) => i.key));
+  const problems = (outbox.data ?? []).filter((i) => i.state !== "pending");
   const days = [0, 1, 2].map((n) => shiftDays(todayIso, -n));
   return (
     <>
+      {today.data?.offline && <div className="offline-banner">No connection: showing the copy saved on this phone.</div>}
+      {waiting.size > 0 && (
+        <div className="offline-banner">
+          {waiting.size} attendance save{waiting.size > 1 ? "s" : ""} waiting to be sent. They go automatically when you're back online.
+        </div>
+      )}
+      {problems.map((p) => (
+        <div key={p.key} className="form-error" role="alert">
+          {p.label}: {p.error}{" "}
+          <Link to={`/app/attendance/take/${p.body.slot_id}/${p.body.date}`}>Open the lecture</Link>
+          {" · "}
+          <button type="button" className="link-btn" onClick={() => void discardOutbox(p.key).then(() => qc.invalidateQueries({ queryKey: ATTENDANCE_KEY }))}>
+            Discard the copy on this phone
+          </button>
+        </div>
+      ))}
       <div className="day-pick" role="group" aria-label="Day">
         {days.map((d, i) => (
           <button key={d} type="button" className={`btn btn-sm ${d === day ? "btn-primary" : "btn-ghost"}`} onClick={() => setDay(d)}>
@@ -99,6 +124,7 @@ function MyLectures() {
               {x.status === "handed_over" && <StatusBadge tone="neutral">Taken by {x.substitute.join(", ")}</StatusBadge>}
             </div>
             <div className="lecture-card-action">
+              {waiting.has(outboxKey(x.slot_id, x.date)) && <StatusBadge tone="warning">Waiting to sync</StatusBadge>}
               {x.session && (
                 <div className="small">
                   <b>{x.session.present}</b>/{x.session.total} present

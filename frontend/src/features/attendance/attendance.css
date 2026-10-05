@@ -120,3 +120,11 @@
 .exemption-form {
   margin-bottom: 16px;
 }
+.offline-banner {
+  background: color-mix(in srgb, #b7791f 14%, var(--paper-card));
+  border: 1px solid #b7791f;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}

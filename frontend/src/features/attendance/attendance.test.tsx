@@ -93,3 +93,64 @@ describe("attendance", () => {
     await waitFor(() => expect(calls.find((c) => c.path === "/attendance/edit-requests/r1/decide")?.body).toEqual({ approve: true }));
   });
 });
+
+describe("offline attendance", () => {
+  it("saves on the phone without a network and sends it when back online", async () => {
+    let online = true;
+    const delivered: { absent: string[]; client_id: string }[] = [];
+    const today = { date: "2026-07-06", holiday: null, lectures: [{ ...lecture, takeable: true, editable_until: "", window_open: true, session: null }] };
+    const calls = mockApi((method, path, body) => {
+      if (path === "/auth/me") return { status: 200, body: faculty };
+      if (!online) return { status: 0 };
+      if (path.startsWith("/attendance/today")) return { status: 200, body: today };
+      if (path.startsWith("/attendance/sheet") && method === "GET") return { status: 200, body: { lecture, students, session: null, can_save: true, can_request_edit: false, editable_until: "" } };
+      if (path === "/attendance/sheet" && method === "PUT") {
+        delivered.push(body as { absent: string[]; client_id: string });
+        return { status: 200, body: { id: "x", absent: ["a"], present: 2, total: 3, version: 1, saved_by: "Asha", saved_at: "" } };
+      }
+      return { status: 404 };
+    });
+    // Online: the day and its class lists are saved on the phone.
+    renderApp("/app/attendance");
+    await screen.findByRole("link", { name: "Take attendance" });
+    await waitFor(() => expect(calls.filter((c) => c.path.startsWith("/attendance/sheet")).length).toBe(1));
+    cleanup();
+
+    // The signal drops in the classroom.
+    online = false;
+    renderApp("/app/attendance/take/s1/2026-07-06");
+    expect(await screen.findByText(/No connection. You can still mark attendance/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Om Shinde/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Save attendance" }));
+    expect(await screen.findByText(/Saved on this phone; it will be sent when you're back online/)).toBeTruthy();
+    expect(await screen.findByText(/1 attendance save waiting to be sent/)).toBeTruthy();
+    expect(screen.getByText("Waiting to sync")).toBeTruthy();
+    expect(delivered).toHaveLength(0);
+
+    // Back online: it is sent once, with the device's id so a retry isn't doubled.
+    online = true;
+    window.dispatchEvent(new Event("online"));
+    await waitFor(() => expect(delivered).toHaveLength(1));
+    expect(delivered[0].absent).toEqual(["a"]);
+    expect(delivered[0].client_id).toMatch(/[0-9a-f-]{36}/);
+    await waitFor(() => expect(screen.queryByText(/waiting to be sent/)).toBeNull());
+  });
+
+  it("a conflicting offline save is shown, not lost", async () => {
+    const { put } = await import("../../lib/offline");
+    await put("outbox", "s1:2026-07-06", {
+      key: "s1:2026-07-06", label: "BCA101 · BCA FY A · 2026-07-06 09:00", queued_at: "2026-07-06T04:00:00Z", state: "pending",
+      body: { slot_id: "s1", date: "2026-07-06", absent: ["a"], client_id: "c-1", base_version: null },
+    });
+    mockApi((method, path) => {
+      if (path === "/auth/me") return { status: 200, body: faculty };
+      if (path.startsWith("/attendance/today")) return { status: 200, body: { date: "2026-07-06", holiday: null, lectures: [] } };
+      if (path === "/attendance/sheet" && method === "PUT") return { status: 409, body: { error: { code: "attendance_conflict", message: "Someone else saved this lecture's attendance in the meantime." } } };
+      return { status: 404 };
+    });
+    renderApp("/app/attendance");
+    expect(await screen.findByText(/BCA101 · BCA FY A · 2026-07-06 09:00: Someone else saved/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Discard the copy on this phone" }));
+    await waitFor(() => expect(screen.queryByText(/Someone else saved/)).toBeNull());
+  });
+});

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "./api";
+import { ApiError, apiFetch } from "./api";
+import * as offline from "./offline";
 import type { Lecture } from "./timetable";
 
 export interface TodayLecture extends Lecture {
@@ -13,6 +14,8 @@ export interface Today {
   date: string;
   holiday: string | null;
   lectures: TodayLecture[];
+  /** Set when the network was unreachable and this is the copy saved on the phone. */
+  offline?: boolean;
 }
 
 export interface SheetStudent {
@@ -41,6 +44,7 @@ export interface Sheet {
   can_save: boolean;
   can_request_edit: boolean;
   editable_until: string;
+  offline?: boolean;
 }
 
 export interface MarkBody {
@@ -86,18 +90,112 @@ export interface Exemption {
 
 export const ATTENDANCE_KEY = ["attendance"] as const;
 
-export function useToday(day: string, enabled = true) {
-  return useQuery({ queryKey: [...ATTENDANCE_KEY, "today", day], queryFn: () => apiFetch<Today>(`/attendance/today?day=${day}`), enabled });
+const isOffline = (e: unknown) => e instanceof ApiError && e.code === "network_error";
+
+/** Fetch, keep a copy on the phone, and fall back to that copy when there is no network. */
+async function withCache<T extends object>(key: string, path: string): Promise<T> {
+  try {
+    const data = await apiFetch<T>(path);
+    await offline.put("cache", key, data);
+    return data;
+  } catch (e) {
+    if (isOffline(e)) {
+      const saved = await offline.get<T>("cache", key);
+      if (saved) return { ...saved, offline: true };
+    }
+    throw e;
+  }
 }
 
 export const sheetPath = (slotId: string, day: string) => `/attendance/sheet?slot_id=${slotId}&day=${day}`;
+const sheetKey = (slotId: string, day: string) => `sheet:${slotId}:${day}`;
+
+export function useToday(day: string, enabled = true) {
+  return useQuery({
+    queryKey: [...ATTENDANCE_KEY, "today", day],
+    queryFn: async () => {
+      const today = await withCache<Today>(`today:${day}`, `/attendance/today?day=${day}`);
+      if (!today.offline) {
+        // Save today's class lists on the phone too, so attendance works in a room without signal.
+        for (const x of today.lectures.filter((l) => l.takeable))
+          void withCache<Sheet>(sheetKey(x.slot_id, x.date), sheetPath(x.slot_id, x.date)).catch(() => undefined);
+      }
+      return today;
+    },
+    enabled,
+  });
+}
 
 export function useSheet(slotId: string, day: string) {
-  return useQuery({ queryKey: [...ATTENDANCE_KEY, "sheet", slotId, day], queryFn: () => apiFetch<Sheet>(sheetPath(slotId, day)) });
+  return useQuery({ queryKey: [...ATTENDANCE_KEY, "sheet", slotId, day], queryFn: () => withCache<Sheet>(sheetKey(slotId, day), sheetPath(slotId, day)) });
 }
 
 export function saveAttendance(body: MarkBody): Promise<Session> {
   return apiFetch<Session>("/attendance/sheet", { method: "PUT", body: JSON.stringify(body) });
+}
+
+// --- saves made offline ----------------------------------------------------------------------
+
+export interface OutboxItem {
+  key: string;
+  body: MarkBody & { client_id: string };
+  label: string;
+  queued_at: string;
+  state: "pending" | "conflict" | "failed";
+  error?: string;
+}
+
+export const outboxKey = (slotId: string, day: string) => `${slotId}:${day}`;
+
+/** Saves now, or keeps it on the phone when there is no network. */
+export async function saveOrQueue(body: MarkBody & { client_id: string }, label: string): Promise<{ queued: boolean; session?: Session }> {
+  try {
+    return { queued: false, session: await saveAttendance(body) };
+  } catch (e) {
+    if (!isOffline(e)) throw e;
+    const item: OutboxItem = { key: outboxKey(body.slot_id, body.date), body, label, queued_at: new Date().toISOString(), state: "pending" };
+    await offline.put("outbox", item.key, item);
+    return { queued: true };
+  }
+}
+
+export function outboxItems(): Promise<OutboxItem[]> {
+  return offline.all<OutboxItem>("outbox");
+}
+
+export function discardOutbox(key: string): Promise<void> {
+  return offline.remove("outbox", key);
+}
+
+let syncing: Promise<{ sent: number; problems: number }> | null = null;
+
+/** Sends waiting saves, oldest first. Stops at the first network failure (still offline). */
+export function syncOutbox(): Promise<{ sent: number; problems: number }> {
+  if (syncing) return syncing;
+  syncing = (async () => {
+    let sent = 0;
+    let problems = 0;
+    const items = (await outboxItems()).filter((i) => i.state === "pending").sort((a, b) => a.queued_at.localeCompare(b.queued_at));
+    for (const item of items) {
+      try {
+        await saveAttendance(item.body);
+        await offline.remove("outbox", item.key);
+        await offline.remove("cache", sheetKey(item.body.slot_id, item.body.date));
+        sent++;
+      } catch (e) {
+        if (isOffline(e)) break;
+        const conflict = e instanceof ApiError && e.code === "attendance_conflict";
+        await offline.put("outbox", item.key, { ...item, state: conflict ? "conflict" : "failed", error: (e as Error).message });
+        problems++;
+      }
+    }
+    return { sent, problems };
+  })().finally(() => (syncing = null));
+  return syncing;
+}
+
+export function useOutbox() {
+  return useQuery({ queryKey: [...ATTENDANCE_KEY, "outbox"], queryFn: outboxItems, staleTime: 0 });
 }
 
 function useAttendanceMutation<V, R>(fn: (v: V) => Promise<R>) {
