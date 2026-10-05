@@ -4,6 +4,7 @@ import { Modal } from "../../components/Modal";
 import { StatusBadge } from "../../components/StatusBadge";
 import { CORRECTABLE, STUDENT_STRINGS, type StudentStrings } from "../../i18n/student";
 import { ApiError } from "../../lib/api";
+import { API_V1 } from "../../lib/api";
 import { useLanguage } from "../../lib/language";
 import { fileUrl, useCorrectionOptions, useMyRequests, useMyStudent, useRequestChange, useUpload, type ChangeRequest, type Student } from "../../lib/students";
 import type { Language } from "../../lib/types";
@@ -57,6 +58,12 @@ export default function ProfilePage() {
 
       <h2 className="subhead">{T.myRequests}</h2>
       <MyRequests T={T} language={language} />
+
+      <h2 className="subhead">{T.myData.title}</h2>
+      <p className="muted">{T.myData.text}</p>
+      <a className="btn btn-ghost" href={`${API_V1}/me/data-export`} download>
+        {T.myData.button}
+      </a>
 
       {asking && <CorrectionModal s={s} T={T} onClose={() => setAsking(false)} onSent={() => (setAsking(false), setSent(true))} />}
     </div>

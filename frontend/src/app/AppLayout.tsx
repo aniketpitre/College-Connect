@@ -15,7 +15,7 @@ interface NavItem {
   /** Shown only to users with this permission. */
   permission?: string;
   /** Shown only to this kind of account. */
-  kind?: "student";
+  kind?: "student" | "staff";
   /** The plan phase that builds this screen; shown disabled until then. */
   phase?: number;
 }
@@ -23,16 +23,19 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/app", label: "home" },
   { to: "/app/profile", label: "profile", kind: "student" },
+  { to: "/app/my-fees", label: "fees", kind: "student" },
   { to: "/app/students", label: "students", permission: "students.read" },
-  { to: "/app/fees", label: "fees", permission: "fees.read" },
+  { to: "/app/fees", label: "fees", permission: "fees.read", kind: "staff" },
   { to: "/app/approvals", label: "approvals", permission: "approvals.decide" },
-  { to: "/app/notices", label: "notices", phase: 1 },
+  { to: "/app/notices", label: "notices" },
   { to: "/app/attendance", label: "attendance", phase: 2 },
   { to: "/app/exams", label: "exams", phase: 2 },
   { to: "/app/certificates", label: "certificates", phase: 2 },
   { to: "/app/account", label: "account" },
   { to: "/app/users", label: "users", permission: "users.read" },
   { to: "/app/setup", label: "setup", permission: "setup.read" },
+  { to: "/app/audit", label: "audit", permission: "audit.read" },
+  { to: "/app/exports", label: "exports", permission: "export.request" },
   { to: "/app/analytics", label: "analytics", permission: "analytics.view" },
 ];
 

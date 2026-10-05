@@ -42,8 +42,8 @@ describe("portal access", () => {
     mockApi((_m, path) => (path === "/auth/me" ? { status: 200, body: makeMe() } : { status: 404 }));
     renderApp("/app");
     expect(await screen.findByRole("heading", { name: "Welcome, Asha" })).toBeTruthy();
-    expect(screen.getByText("Faculty")).toBeTruthy();
-    expect(screen.getByText("Notices").closest("[aria-disabled]")).toBeTruthy();
+    expect(screen.getAllByText("Faculty").length).toBeGreaterThan(0);
+    expect(screen.getByText("Attendance").closest("[aria-disabled]")).toBeTruthy();
     expect(screen.queryByText("Fees & receipts")).toBeNull(); // needs fees.read
     expect(screen.queryByText("Students")).toBeNull(); // needs students.read
     expect(screen.queryByRole("link", { name: "Users" })).toBeNull();

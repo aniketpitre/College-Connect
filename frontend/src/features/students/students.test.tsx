@@ -113,6 +113,7 @@ describe("my profile (student)", () => {
     expect(screen.getByText("वैयक्तिक माहिती")).toBeTruthy();
     expect(screen.getByText("तपासणी बाकी")).toBeTruthy(); // document waiting for check
     expect(screen.getByRole("link", { name: "माझी प्रोफाइल" })).toBeTruthy(); // nav follows the language
+    expect(screen.getByRole("link", { name: "माझा डेटा डाउनलोड करा" }).getAttribute("href")).toBe("/api/v1/me/data-export");
 
     fireEvent.click(screen.getByRole("button", { name: "दुरुस्तीची विनंती करा" }));
     fireEvent.change(screen.getByLabelText("काय दुरुस्त करायचे?"), { target: { value: "address.city" } });

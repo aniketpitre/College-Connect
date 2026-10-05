@@ -2,12 +2,17 @@ import { Navigate, Route, Routes, useLocation } from "react-router";
 import AccountPage from "../features/account/AccountPage";
 import AnalyticsPage from "../features/analytics/AnalyticsPage";
 import ApprovalsPage from "../features/approvals/ApprovalsPage";
+import AuditPage from "../features/audit/AuditPage";
+import ExportsPage from "../features/exports/ExportsPage";
 import CollectPage from "../features/fees/CollectPage";
 import FeeSetupPage from "../features/fees/FeeSetupPage";
 import FeesHome from "../features/fees/FeesHome";
 import OpeningPage from "../features/fees/OpeningPage";
 import ReportsPage from "../features/fees/ReportsPage";
 import StudentFeesPage from "../features/fees/StudentFeesPage";
+import NoticeDetailPage from "../features/notices/NoticeDetailPage";
+import NoticesPage from "../features/notices/NoticesPage";
+import MyFeesPage from "../features/portal/MyFeesPage";
 import ProfilePage from "../features/profile/ProfilePage";
 import HelpDesk from "../features/helpdesk/HelpDesk";
 import InstitutionSetupPage from "../features/setup/InstitutionSetupPage";
@@ -74,6 +79,9 @@ export default function App() {
         <Route index element={<PortalHome />} />
         <Route path="account" element={<AccountPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="my-fees" element={<MyFeesPage />} />
+        <Route path="notices" element={<NoticesPage />} />
+        <Route path="notices/:id" element={<NoticeDetailPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="setup" element={<InstitutionSetupPage />} />
         <Route path="fees" element={<FeesHome />} />
@@ -87,6 +95,8 @@ export default function App() {
         <Route path="students/import" element={<ImportPage />} />
         <Route path="students/promote" element={<PromotePage />} />
         <Route path="students/:id" element={<StudentDetailPage />} />
+        <Route path="audit" element={<AuditPage />} />
+        <Route path="exports" element={<ExportsPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

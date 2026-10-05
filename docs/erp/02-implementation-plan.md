@@ -311,6 +311,32 @@ address on record reset through the office (temporary password). Reset emails ne
 - Collections added: `fee_heads`, `fee_structures`, `ledger_entries`, `receipts`, `counters`,
   `approvals`, `scholarships`.
 
+**Delivered in the "Phase 1D" PR (1.12–1.14):**
+- Student portal: home with "needs your attention" cards (fee overdue / due in 15 days, rejected
+  documents, decided corrections, new notices), My fees with installments, receipts (downloads
+  are marked STUDENT COPY and never use up the office's ORIGINAL print) and a fee statement PDF.
+- Notices: audiences everyone / students / staff / one class (programme, optionally year and
+  division); scheduled publishing and expiry are applied when notices are read (no background
+  job); pinned first; withdrawal needs a reason; optional Hindi and Marathi versions and a PDF.
+  Email goes out in chunks of 100 that the publisher's browser requests one after another
+  (fits Vercel's function time limit); each recipient is emailed once (`notice_emails`).
+  WhatsApp/SMS stay in Phase 3. Publishers: admin, principal, office, accounts, admission and
+  exam cell; HOD/faculty publishing waits for class assignments in Phase 2.
+- Audit viewer at `/app/audit` (System Admin, Principal): filters by area, person and dates,
+  100 entries per page.
+- Data export: the System Admin asks for a CSV of students, fee balances or receipts; the
+  Principal approves; the requester downloads it for 24 hours. Exports have their own
+  `export_requests` collection (not `approvals`, which are per-student money requests). Cells
+  starting with = + - @ are prefixed with ' so spreadsheets don't run them as formulas.
+  Students download all their own data as JSON from My profile. The full export of every
+  collection with a data dictionary stays in Phase 4 (4.6).
+- Demo data: `python -m scripts.seed_demo --erp` loads BCA with 60 students over three years,
+  fees, payments, a pending concession, notices and one demo login per staff role; it goes
+  through the API so the data obeys the same rules, and refuses the production database.
+- End-to-end tests: Playwright (`frontend/e2e/`) against the real backend and the seeded demo
+  database, run in CI as the `e2e` job.
+- Collections added: `notices`, `notice_emails`, `export_requests`.
+
 ### 5.6 Acceptance criteria
 - Office imports 60 students from Excel; errors are reported row by row; each student gets a login.
 - A student signs in with PRN + temporary password, sets their own, accepts the privacy notice and sees the **correct balance**.

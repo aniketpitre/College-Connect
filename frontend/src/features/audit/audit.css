@@ -1,0 +1,36 @@
+.audit-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+  margin: 16px 0;
+}
+.audit-filters .field {
+  margin: 0;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.audit-table th,
+.audit-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.audit-table code {
+  font-size: 0.8rem;
+}
+.audit-details {
+  max-width: 360px;
+  overflow-wrap: anywhere;
+}
+.nowrap {
+  white-space: nowrap;
+}

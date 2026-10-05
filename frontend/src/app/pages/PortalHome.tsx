@@ -1,25 +1,45 @@
-import { EmptyState } from "../../components/EmptyState";
-import { useMe } from "../../lib/auth";
+import { Link } from "react-router";
+import StudentHome from "../../features/portal/StudentHome";
+import { NAV_LABELS } from "../../i18n/nav";
+import { hasPermission, useMe } from "../../lib/auth";
 import { useLanguage } from "../../lib/language";
+import "../../features/portal/portal.css";
 
-const STRINGS = {
-  en: { welcome: "Welcome", soon: "Your dashboard is on its way", body: "Fees, receipts and notices arrive later in Phase 1." },
-  hi: { welcome: "स्वागत है", soon: "आपका डैशबोर्ड जल्द आ रहा है", body: "फ़ीस, रसीदें और सूचनाएं चरण 1 में आगे आएंगी।" },
-  mr: { welcome: "स्वागत आहे", soon: "तुमचा डॅशबोर्ड लवकरच येत आहे", body: "शुल्क, पावत्या आणि सूचना टप्पा 1 मध्ये पुढे येतील." },
-};
+const STAFF_LINKS: [string, string, string][] = [
+  ["/app/fees", "fees", "fees.read"],
+  ["/app/approvals", "approvals", "approvals.decide"],
+  ["/app/students", "students", "students.read"],
+  ["/app/notices", "notices", "notices.read"],
+  ["/app/users", "users", "users.read"],
+  ["/app/setup", "setup", "setup.read"],
+  ["/app/audit", "audit", "audit.read"],
+  ["/app/analytics", "analytics", "analytics.view"],
+];
 
-/** Replaced by the student and staff dashboards in plan item 1.12. */
+/** Students get their own home; staff get shortcuts to what their roles allow. */
 export default function PortalHome() {
   const { data: me } = useMe();
   const [language] = useLanguage();
-  const t = STRINGS[language];
+  if (me?.kind === "student") return <StudentHome />;
+  const t = NAV_LABELS[language];
+  const links = STAFF_LINKS.filter(([, , perm]) => hasPermission(me, perm));
   return (
     <div lang={language}>
       <div className="eyebrow">CollegeConnect</div>
       <h1>
-        {t.welcome}, {me?.name.split(" ")[0]}
+        {language === "en" ? "Welcome" : language === "hi" ? "स्वागत है" : "स्वागत आहे"}, {me?.name.split(" ")[0]}
       </h1>
-      <EmptyState title={t.soon}>{t.body}</EmptyState>
+      <p className="muted">{me?.role_labels.join(", ")}</p>
+      <div className="staff-links">
+        {links.map(([to, key]) => (
+          <Link key={to} to={to} className="card">
+            {t[key] ?? key} →
+          </Link>
+        ))}
+        <Link to="/app/account" className="card">
+          {t.account} →
+        </Link>
+      </div>
     </div>
   );
 }

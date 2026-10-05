@@ -31,6 +31,7 @@ describe("first sign-in wizard", () => {
         onboarded = true;
         return { status: 200, body: { ...status, done: true } };
       }
+      if (path === "/me/home") return { status: 200, body: { name: "Rohan Patil", prn: "2026BCA001", class: "BCA · FY · A", academic_year: "2026-27", photo_url: null, balance: 0, cards: [] } };
       return { status: 404 };
     });
     renderApp("/app/welcome");
@@ -48,7 +49,7 @@ describe("first sign-in wizard", () => {
     fireEvent.click(screen.getByLabelText(/मराठी/));
     expect(await screen.findByRole("heading", { name: "कॉलेजकनेक्टमध्ये स्वागत आहे" })).toBeTruthy(); // switches at once
     fireEvent.click(screen.getByRole("button", { name: "पूर्ण करा" }));
-    await screen.findByRole("heading", { name: /स्वागत आहे, Asha/ });
+    await screen.findByRole("heading", { name: "नमस्कार, Rohan" }); // the student's home, in Marathi
     expect(calls.find((c) => c.method === "POST")?.body).toEqual({
       phone: "9876543210",
       email: "rohan@example.in",

@@ -33,6 +33,9 @@ export default function ApprovalsPage() {
           </button>
         ))}
       </div>
+      <p className="muted small">
+        Data export requests are on the <Link to="/app/exports">Data export</Link> page.
+      </p>
       {decide.error && <p className="form-error">{decide.error.message}</p>}
       {list.data?.length === 0 && <EmptyState title={status === "pending" ? "Nothing waiting for you" : "Nothing here yet"} />}
       <div className="request-list">

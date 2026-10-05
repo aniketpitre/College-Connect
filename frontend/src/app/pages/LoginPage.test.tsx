@@ -22,13 +22,14 @@ describe("sign in", () => {
         return { status: 200, body: makeMe({ kind: "student", name: "Ravi Patil", prn: "2026BCA001" }) };
       }
       if (path === "/auth/me") return signedIn ? { status: 200, body: makeMe({ kind: "student", name: "Ravi Patil" }) } : signedOut;
+      if (path === "/me/home") return { status: 200, body: { name: "Ravi Patil", prn: "2026BCA001", class: "BCA · FY · A", academic_year: "2026-27", photo_url: null, balance: 0, cards: [] } };
       return { status: 404 };
     });
     renderApp("/login");
     fill("PRN", " 2026BCA001 ");
     fill("Password", "my secret 42");
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
-    expect(await screen.findByRole("heading", { name: "Welcome, Ravi" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Hello, Ravi" })).toBeTruthy();
     const login = calls.find((c) => c.path === "/auth/login")!;
     expect(login.headers.get("X-Requested-With")).toBe("XMLHttpRequest");
   });

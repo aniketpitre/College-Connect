@@ -22,11 +22,21 @@ def test_permission_matrix():
         P.STUDENTS_READ,
         P.FEES_READ,
         P.APPROVALS_DECIDE,
+        P.NOTICES_READ,
+        P.NOTICES_PUBLISH,
     }
     assert P.USERS_CREATE_STAFF not in permissions_for(["office"])
     assert P.USERS_CREATE_STUDENT in permissions_for(["office"])
-    assert permissions_for(["accounts"]) == {P.SETUP_READ, P.STUDENTS_READ, P.FEES_READ, P.FEES_MANAGE, P.FEES_COLLECT}
-    assert permissions_for(["faculty"]) == {P.SETUP_READ}
+    assert permissions_for(["accounts"]) == {
+        P.SETUP_READ,
+        P.NOTICES_READ,
+        P.NOTICES_PUBLISH,
+        P.STUDENTS_READ,
+        P.FEES_READ,
+        P.FEES_MANAGE,
+        P.FEES_COLLECT,
+    }
+    assert permissions_for(["faculty"]) == {P.SETUP_READ, P.NOTICES_READ}
     for role in (Role.STUDENT, Role.PARENT):
         assert permissions_for([role.value]) == frozenset(), role
 

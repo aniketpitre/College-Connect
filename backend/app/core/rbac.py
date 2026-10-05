@@ -70,10 +70,16 @@ class P(StrEnum):
     FEES_MANAGE = "fees.manage"  # heads, structures, demands, scholarships, charges, opening balances
     FEES_COLLECT = "fees.collect"  # counter collection; also requests concessions, cancellations, refunds
     APPROVALS_DECIDE = "approvals.decide"
+    NOTICES_READ = "notices.read"
+    NOTICES_PUBLISH = "notices.publish"
+    EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
 
 
 # Every staff member can read the college structure (programmes, divisions, subjects…).
-_STAFF_BASE = frozenset({P.SETUP_READ})
+_STAFF_BASE = frozenset({P.SETUP_READ, P.NOTICES_READ})
+# Spec §2.3 "Notices": admin, principal and office publish; accounts, admission and exam cell publish
+# their own notices. HOD/faculty (department / own class) come with class assignments in Phase 2.
+_PUBLISH = frozenset({P.NOTICES_PUBLISH})
 
 ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
     Role.SYSTEM_ADMIN: _STAFF_BASE
@@ -88,9 +94,12 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.USERS_RESET_STAFF,
         P.USERS_RESET_STUDENT,
         P.SETUP_MANAGE,
-    },
+        P.EXPORT_REQUEST,
+    }
+    | _PUBLISH,
     Role.PRINCIPAL: _STAFF_BASE
-    | {P.ANALYTICS_VIEW, P.AUDIT_READ, P.USERS_READ, P.STUDENTS_READ, P.FEES_READ, P.APPROVALS_DECIDE},
+    | {P.ANALYTICS_VIEW, P.AUDIT_READ, P.USERS_READ, P.STUDENTS_READ, P.FEES_READ, P.APPROVALS_DECIDE}
+    | _PUBLISH,
     Role.OFFICE: _STAFF_BASE
     | {
         P.ANALYTICS_VIEW,
@@ -102,11 +111,12 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.STUDENTS_MANAGE,
         P.STUDENTS_IMPORT,
         P.FEES_READ,
-    },
-    Role.ACCOUNTS: _STAFF_BASE | {P.STUDENTS_READ, P.FEES_READ, P.FEES_MANAGE, P.FEES_COLLECT},
+    }
+    | _PUBLISH,
+    Role.ACCOUNTS: _STAFF_BASE | {P.STUDENTS_READ, P.FEES_READ, P.FEES_MANAGE, P.FEES_COLLECT} | _PUBLISH,
     # Read the student master (spec §2.3). HOD/faculty/mentor get scoped access with class
     # assignments in Phase 2.
-    **{role: _STAFF_BASE | {P.STUDENTS_READ} for role in (Role.ADMISSION, Role.EXAM_CELL)},
+    **{role: _STAFF_BASE | {P.STUDENTS_READ} | _PUBLISH for role in (Role.ADMISSION, Role.EXAM_CELL)},
     **{
         role: _STAFF_BASE
         for role in (

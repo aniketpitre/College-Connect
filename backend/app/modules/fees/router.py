@@ -183,8 +183,11 @@ def get_receipt(receipt_id: str, ctx: AuthContext = READ) -> dict[str, Any]:
     return receipts.view(receipts.get_receipt(receipt_id))
 
 
-def receipt_pdf_response(receipt: dict[str, Any], original: bool, request: Request) -> Response:
-    copy = "CANCELLED" if receipt["status"] == "cancelled" else ("ORIGINAL" if original else "DUPLICATE")
+def receipt_pdf_response(
+    receipt: dict[str, Any], original: bool, request: Request, label: str | None = None
+) -> Response:
+    """`label` overrides ORIGINAL/DUPLICATE (e.g. STUDENT COPY); a cancelled receipt always says CANCELLED."""
+    copy = "CANCELLED" if receipt["status"] == "cancelled" else (label or ("ORIGINAL" if original else "DUPLICATE"))
     link = receipts.verify_url(base_url(request), receipt["verify_code"])
     data = receipt_pdf.build(receipt, setup.institution(), link, copy)
     filename = "receipt-" + receipt["number"].replace("/", "-") + ".pdf"

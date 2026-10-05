@@ -1,5 +1,5 @@
 """
-Private file storage for student photos and documents.
+Private file storage for student photos and documents, and notice attachments.
 
 Files are kept in MongoDB (`files` collection) and served only through an authenticated
 endpoint that checks who may see them. The type is decided from the file's first bytes, not
@@ -39,7 +39,7 @@ def save(
     data: bytes,
     *,
     filename: str,
-    student_id: ObjectId,
+    student_id: ObjectId | None,
     purpose: str,
     created_by: ObjectId,
     images_only: bool = False,
