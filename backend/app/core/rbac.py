@@ -80,6 +80,12 @@ class P(StrEnum):
     ATTENDANCE_READ_DEPT = "attendance.read.dept"  # HOD: their own department
     ATTENDANCE_APPROVE = "attendance.approve"  # HOD: edits after the 48-hour window, own department
     ATTENDANCE_EXEMPT = "attendance.exempt"  # office: medical / official-duty exemptions
+    MARKS_ENTER = "marks.enter"  # internal marks of the subjects they teach
+    MARKS_APPROVE = "marks.approve"  # HOD: approve / return marks of their department
+    MARKS_SCHEME_DEPT = "marks.scheme.dept"  # HOD: assessment schemes of their department
+    MARKS_READ = "marks.read"  # every class
+    EXAMS_MANAGE = "exams.manage"  # Exam Cell: schemes, deadlines, lock, Upload Guard, forms, hall tickets, results
+    RESULTS_READ = "results.read"
     EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
 
 
@@ -115,6 +121,8 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.APPROVALS_DECIDE,
         P.TIMETABLE_READ,
         P.ATTENDANCE_READ,
+        P.MARKS_READ,
+        P.RESULTS_READ,
     }
     | _PUBLISH,
     Role.OFFICE: _STAFF_BASE
@@ -132,13 +140,16 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.TIMETABLE_MANAGE,
         P.ATTENDANCE_READ,
         P.ATTENDANCE_EXEMPT,
+        P.RESULTS_READ,
     }
     | _PUBLISH,
     Role.ACCOUNTS: _STAFF_BASE | {P.STUDENTS_READ, P.FEES_READ, P.FEES_MANAGE, P.FEES_COLLECT} | _PUBLISH,
     # Read the student master (spec §2.3). HOD/faculty/mentor get scoped access with class
     # assignments in Phase 2.
     Role.ADMISSION: _STAFF_BASE | {P.STUDENTS_READ} | _PUBLISH,
-    Role.EXAM_CELL: _STAFF_BASE | {P.STUDENTS_READ, P.TIMETABLE_READ, P.ATTENDANCE_READ} | _PUBLISH,
+    Role.EXAM_CELL: _STAFF_BASE
+    | {P.STUDENTS_READ, P.TIMETABLE_READ, P.ATTENDANCE_READ, P.MARKS_READ, P.EXAMS_MANAGE, P.RESULTS_READ}
+    | _PUBLISH,
     # Phase 2: HOD builds the department timetable and sees department attendance; faculty and
     # mentors take attendance for the lectures they teach.
     Role.HOD: _STAFF_BASE
@@ -148,8 +159,13 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.ATTENDANCE_TAKE,
         P.ATTENDANCE_READ_DEPT,
         P.ATTENDANCE_APPROVE,
+        P.MARKS_ENTER,
+        P.MARKS_APPROVE,
+        P.MARKS_SCHEME_DEPT,
     },
-    **{role: _STAFF_BASE | {P.TIMETABLE_READ, P.ATTENDANCE_TAKE} for role in (Role.FACULTY, Role.MENTOR)},
+    **{
+        role: _STAFF_BASE | {P.TIMETABLE_READ, P.ATTENDANCE_TAKE, P.MARKS_ENTER} for role in (Role.FACULTY, Role.MENTOR)
+    },
     **{role: _STAFF_BASE for role in (Role.LIBRARIAN, Role.WARDEN, Role.PLACEMENT)},
 }
 

@@ -23,6 +23,12 @@ def test_permission_matrix():
         P.ATTENDANCE_READ_DEPT,
         P.ATTENDANCE_APPROVE,
         P.ATTENDANCE_EXEMPT,
+        P.MARKS_ENTER,
+        P.MARKS_APPROVE,
+        P.MARKS_SCHEME_DEPT,
+        P.MARKS_READ,
+        P.EXAMS_MANAGE,
+        P.RESULTS_READ,
     }
     assert permissions_for(["system_admin"]) == frozenset(P) - records_and_money - academics
     assert permissions_for(["principal"]) == {
@@ -37,6 +43,8 @@ def test_permission_matrix():
         P.NOTICES_PUBLISH,
         P.TIMETABLE_READ,
         P.ATTENDANCE_READ,
+        P.MARKS_READ,
+        P.RESULTS_READ,
     }
     assert P.USERS_CREATE_STAFF not in permissions_for(["office"])
     assert P.USERS_CREATE_STUDENT in permissions_for(["office"])
@@ -49,7 +57,14 @@ def test_permission_matrix():
         P.FEES_MANAGE,
         P.FEES_COLLECT,
     }
-    assert permissions_for(["faculty"]) == {P.SETUP_READ, P.NOTICES_READ, P.TIMETABLE_READ, P.ATTENDANCE_TAKE}
+    assert permissions_for(["faculty"]) == {
+        P.SETUP_READ,
+        P.NOTICES_READ,
+        P.TIMETABLE_READ,
+        P.ATTENDANCE_TAKE,
+        P.MARKS_ENTER,
+    }
+    assert P.EXAMS_MANAGE in permissions_for(["exam_cell"]) and P.MARKS_ENTER not in permissions_for(["exam_cell"])
     assert P.TIMETABLE_MANAGE_DEPT in permissions_for(["hod"]) and P.TIMETABLE_MANAGE not in permissions_for(["hod"])
     for role in (Role.STUDENT, Role.PARENT):
         assert permissions_for([role.value]) == frozenset(), role
