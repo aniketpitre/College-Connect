@@ -154,6 +154,11 @@ def signed_in(request: Request, ctx: AuthContext = Depends(signed_in_allow_passw
         raise AppError(403, "Your account is read-only: you have left the college.", "read_only")
     if ctx.user.get("kind") == "parent":
         _parent_guard(request, ctx)
+    elif ctx.user.get("kind") == "applicant":
+        from app.modules.admissions import guard as applicant_guard
+
+        route = request.scope.get("route")
+        applicant_guard.check(request.method, getattr(route, "path", request.url.path))
     return ctx
 
 

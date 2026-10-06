@@ -284,16 +284,17 @@ def _mask(email: str) -> str:
     return f"{name[:2]}{'•' * max(1, len(name) - 2)}@{domain}"
 
 
-def request_code(request: Request, phone: str) -> dict[str, Any]:
+def request_code(request: Request, phone: str, kind: str = "parent") -> dict[str, Any]:
+    """Parents and admission applicants sign in with a one-time code."""
     ip = client_ip(request)
     hit(f"otp:ip:{ip}", limit=20, window_seconds=60 * 60)
-    hit(f"otp:phone:{phone}", limit=5, window_seconds=60 * 60)
+    hit(f"otp:{kind}:{phone}", limit=5, window_seconds=60 * 60)
     db = get_db()
-    user = db.users.find_one({"phone": phone, "kind": "parent", "status": "active"})
+    user = db.users.find_one({"phone": phone, "kind": kind, "status": "active"})
     if user and (user.get("contact_email") or user.get("phone")):
         code = f"{secrets.randbelow(10**6):06d}"
         db.login_codes.replace_one(
-            {"_id": phone},
+            {"_id": f"{kind}:{phone}"},
             {"code_hash": _code_hash(phone, code), "attempts": 0, "expires_at": datetime.now(UTC) + CODE_LIFETIME},
             upsert=True,
         )
@@ -305,19 +306,20 @@ def request_code(request: Request, phone: str) -> dict[str, Any]:
     return {"sent": True}
 
 
-def verify_code(request: Request, response: Response, phone: str, code: str) -> dict[str, Any]:
+def verify_code(request: Request, response: Response, phone: str, code: str, kind: str = "parent") -> dict[str, Any]:
     ip = client_ip(request)
     hit(f"otp:verify:ip:{ip}", limit=30, window_seconds=15 * 60)
     db = get_db()
     wrong = AppError(401, "That code is wrong or has expired. Ask for a new one.", "invalid_code", "code")
-    doc = db.login_codes.find_one({"_id": phone, "expires_at": {"$gt": datetime.now(UTC)}})
+    key = f"{kind}:{phone}"
+    doc = db.login_codes.find_one({"_id": key, "expires_at": {"$gt": datetime.now(UTC)}})
     if not doc or doc["attempts"] >= CODE_ATTEMPTS:
         raise wrong
     if not hmac.compare_digest(doc["code_hash"], _code_hash(phone, code)):
-        db.login_codes.update_one({"_id": phone}, {"$inc": {"attempts": 1}})
+        db.login_codes.update_one({"_id": key}, {"$inc": {"attempts": 1}})
         raise wrong
-    db.login_codes.delete_one({"_id": phone})
-    user = db.users.find_one({"phone": phone, "kind": "parent", "status": "active"})
+    db.login_codes.delete_one({"_id": key})
+    user = db.users.find_one({"phone": phone, "kind": kind, "status": "active"})
     if not user:
         raise wrong
     now = datetime.now(UTC)

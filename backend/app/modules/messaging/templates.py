@@ -19,6 +19,9 @@ VARS: dict[str, tuple[str, ...]] = {
     "fee_overdue": ("student", "amount"),
     "results_published": ("student", "exam"),
     "certificate_ready": ("student", "certificate", "number"),
+    "application_returned": ("student", "reason"),
+    "admission_offer": ("student", "programme", "date"),
+    "admission_confirmed": ("student", "programme", "prn"),
 }
 
 # Which part of the student's record each message is about: parents get it only if shared.
@@ -30,6 +33,9 @@ AREA: dict[str, str | None] = {
     "fee_overdue": "fees",
     "results_published": "results",
     "certificate_ready": None,
+    "application_returned": None,
+    "admission_offer": None,
+    "admission_confirmed": None,
 }
 
 LABELS = {
@@ -40,6 +46,9 @@ LABELS = {
     "fee_overdue": "Fee overdue",
     "results_published": "Results published",
     "certificate_ready": "Certificate ready",
+    "application_returned": "Application returned",
+    "admission_offer": "Admission offered",
+    "admission_confirmed": "Admission confirmed",
 }
 
 TEXT: dict[str, dict[str, tuple[str, str]]] = {
@@ -142,6 +151,54 @@ TEXT: dict[str, dict[str, tuple[str, str]]] = {
         ),
     },
 }
+
+
+TEXT.update(
+    {
+        "application_returned": {
+            "en": (
+                "Your application needs a correction",
+                "The admission application of {student} was returned: {reason}. Sign in at CollegeConnect (Apply), correct it and submit again.",
+            ),
+            "hi": (
+                "आपके आवेदन में सुधार चाहिए",
+                "{student} का प्रवेश आवेदन लौटाया गया: {reason}। CollegeConnect (आवेदन) पर साइन इन करें, सुधार करें और फिर से जमा करें।",
+            ),
+            "mr": (
+                "तुमच्या अर्जात दुरुस्ती हवी",
+                "{student} यांचा प्रवेश अर्ज परत केला: {reason}. CollegeConnect (अर्ज) वर साइन इन करा, दुरुस्ती करा आणि पुन्हा सादर करा.",
+            ),
+        },
+        "admission_offer": {
+            "en": (
+                "Admission offered: {programme}",
+                "{student} is offered admission to {programme}. Come to the college office with the original documents and fees by {date} to confirm.",
+            ),
+            "hi": (
+                "प्रवेश का प्रस्ताव: {programme}",
+                "{student} को {programme} में प्रवेश का प्रस्ताव मिला है। पुष्टि के लिए {date} तक मूल दस्तावेज़ और फ़ीस लेकर कॉलेज कार्यालय आएँ।",
+            ),
+            "mr": (
+                "प्रवेशाची ऑफर: {programme}",
+                "{student} यांना {programme} मध्ये प्रवेशाची ऑफर आहे. निश्चितीसाठी {date} पर्यंत मूळ कागदपत्रे आणि शुल्क घेऊन कॉलेज कार्यालयात या.",
+            ),
+        },
+        "admission_confirmed": {
+            "en": (
+                "Admission confirmed: {programme}",
+                "Admission of {student} to {programme} is confirmed. PRN: {prn}. Sign in to CollegeConnect as a student with the PRN and the temporary password on the admission slip.",
+            ),
+            "hi": (
+                "प्रवेश की पुष्टि: {programme}",
+                "{student} का {programme} में प्रवेश पक्का हो गया है। PRN: {prn}। प्रवेश पर्ची पर दिए अस्थायी पासवर्ड और PRN से CollegeConnect में छात्र के रूप में साइन इन करें।",
+            ),
+            "mr": (
+                "प्रवेश निश्चित: {programme}",
+                "{student} यांचा {programme} मधील प्रवेश निश्चित झाला. PRN: {prn}. प्रवेश पावतीवरील तात्पुरता पासवर्ड आणि PRN ने CollegeConnect मध्ये विद्यार्थी म्हणून साइन इन करा.",
+            ),
+        },
+    }
+)
 
 
 def render(key: str, language: str | None, params: dict[str, Any]) -> tuple[str, str]:

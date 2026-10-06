@@ -25,7 +25,7 @@ register_indexes(
     ],
 )
 
-KINDS = ("staff", "student", "parent")
+KINDS = ("staff", "student", "parent", "applicant")
 
 
 def normalize_email(value: str | None) -> str | None:

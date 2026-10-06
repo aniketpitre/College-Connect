@@ -274,6 +274,50 @@ def update_structure(ctx: AuthContext, structure_id: str, body: StructureUpdate,
 # --- demands --------------------------------------------------------------------------------
 
 
+def structure_for(
+    year_id: ObjectId,
+    programme_id: ObjectId,
+    year_of_study: int,
+    category_id: ObjectId | None,
+    session: ClientSession | None = None,
+) -> dict[str, Any] | None:
+    """The fee structure that applies: the category's own, or the class's default (`*`)."""
+    rows = {
+        s["category_key"]: s
+        for s in get_db().fee_structures.find(
+            {
+                "academic_year_id": year_id,
+                "programme_id": programme_id,
+                "year_of_study": year_of_study,
+                "status": "active",
+            },
+            session=session,
+        )
+    }
+    return rows.get(str(category_id)) or rows.get("*")
+
+
+def post_demand(
+    student_id: ObjectId, year_id: ObjectId, structure: dict[str, Any], by: ObjectId | None, session: ClientSession
+) -> dict[str, Any]:
+    """Charges one student the year's fee from a structure (once per year: `demand_key`)."""
+    entry = ledger.post(
+        student_id=student_id,
+        academic_year_id=year_id,
+        type="demand",
+        lines=[{"head_id": i["head_id"], "amount": i["amount"]} for i in structure["items"]],
+        created_by=by,
+        session=session,
+        ref={"type": "fee_structure", "id": structure["_id"]},
+        demand_key=f"{student_id}:{year_id}",
+        installments=structure["installments"],
+        late_fee=structure.get("late_fee", 0),
+        structure_name=structure["name"],
+    )
+    get_db().fee_structures.update_one({"_id": structure["_id"]}, {"$set": {"locked": True}}, session=session)
+    return entry
+
+
 def generate_demands(ctx: AuthContext, body: GenerateDemands, ip: str) -> dict[str, Any]:
     """Charges each active student of a class the year's fee from their category's structure
     (or the class's default structure). Students already charged for the year are skipped."""
@@ -339,19 +383,7 @@ def generate_demands(ctx: AuthContext, body: GenerateDemands, ip: str) -> dict[s
         for s, structure, outcome in plan:
             if outcome != "charge" or structure is None:
                 continue
-            ledger.post(
-                student_id=s["_id"],
-                academic_year_id=year["_id"],
-                type="demand",
-                lines=[{"head_id": i["head_id"], "amount": i["amount"]} for i in structure["items"]],
-                created_by=ctx.user_id,
-                session=session,
-                ref={"type": "fee_structure", "id": structure["_id"]},
-                demand_key=f"{s['_id']}:{year['_id']}",
-                installments=structure["installments"],
-                late_fee=structure.get("late_fee", 0),
-                structure_name=structure["name"],
-            )
+            post_demand(s["_id"], year["_id"], structure, ctx.user_id, session)
             used.add(structure["_id"])
         if used:
             db.fee_structures.update_many({"_id": {"$in": list(used)}}, {"$set": {"locked": True}}, session=session)

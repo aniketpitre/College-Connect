@@ -24,9 +24,10 @@ class Role(StrEnum):
     PLACEMENT = "placement"
     STUDENT = "student"
     PARENT = "parent"
+    APPLICANT = "applicant"  # someone applying for admission (online application only)
 
 
-STAFF_ROLES = frozenset(Role) - {Role.STUDENT, Role.PARENT}
+STAFF_ROLES = frozenset(Role) - {Role.STUDENT, Role.PARENT, Role.APPLICANT}
 
 # Roles that handle money, marks or accounts must use 2-step verification (spec §2.1).
 MFA_REQUIRED_ROLES = frozenset({Role.SYSTEM_ADMIN, Role.PRINCIPAL, Role.ACCOUNTS, Role.EXAM_CELL})
@@ -46,6 +47,7 @@ ROLE_LABELS: dict[Role, str] = {
     Role.PLACEMENT: "Placement Officer",
     Role.STUDENT: "Student",
     Role.PARENT: "Parent",
+    Role.APPLICANT: "Applicant",
 }
 
 
@@ -90,6 +92,8 @@ class P(StrEnum):
     CERT_SIGN_PRINCIPAL = "certificates.sign.principal"  # TC, migration
     CERT_SIGN_HOD = "certificates.sign.hod"  # department-level certificates (internship NOC)
     CERT_READ = "certificates.read"  # accounts (no-dues), principal
+    ADMISSIONS_READ = "admissions.read"
+    ADMISSIONS_MANAGE = "admissions.manage"  # cycles, scrutiny, merit rounds, confirm and cancel admissions
     MESSAGES_READ = "messages.read"  # the delivery log and the outgoing message queue
     EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
 
@@ -131,6 +135,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.CERT_READ,
         P.CERT_SIGN_PRINCIPAL,
         P.MESSAGES_READ,
+        P.ADMISSIONS_READ,
     }
     | _PUBLISH,
     Role.OFFICE: _STAFF_BASE
@@ -152,14 +157,15 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.CERT_MANAGE,
         P.CERT_READ,
         P.MESSAGES_READ,
+        P.ADMISSIONS_READ,
     }
     | _PUBLISH,
     Role.ACCOUNTS: _STAFF_BASE
-    | {P.STUDENTS_READ, P.FEES_READ, P.FEES_MANAGE, P.FEES_COLLECT, P.CERT_READ, P.MESSAGES_READ}
+    | {P.STUDENTS_READ, P.FEES_READ, P.FEES_MANAGE, P.FEES_COLLECT, P.CERT_READ, P.MESSAGES_READ, P.ADMISSIONS_READ}
     | _PUBLISH,
     # Read the student master (spec §2.3). HOD/faculty/mentor get scoped access with class
     # assignments in Phase 2.
-    Role.ADMISSION: _STAFF_BASE | {P.STUDENTS_READ} | _PUBLISH,
+    Role.ADMISSION: _STAFF_BASE | {P.STUDENTS_READ, P.ADMISSIONS_READ, P.ADMISSIONS_MANAGE} | _PUBLISH,
     Role.EXAM_CELL: _STAFF_BASE
     | {P.STUDENTS_READ, P.TIMETABLE_READ, P.ATTENDANCE_READ, P.MARKS_READ, P.EXAMS_MANAGE, P.RESULTS_READ}
     | _PUBLISH,
