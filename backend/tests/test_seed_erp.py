@@ -54,6 +54,12 @@ def test_erp_seed_builds_a_consistent_demo(db):
     # Mentoring: the first-year class has a mentor, the rules have run, one counselling note.
     assert db.students.count_documents({"mentor_id": {"$type": "objectId"}}) == counts["mentees"] == 20
     assert db.risk_flags.count_documents({}) == 60 and db.mentor_notes.count_documents({}) == 1
+    # Scholarship checker facts: state and HSC percentage for all, income for most.
+    assert (
+        db.students.count_documents({"family_income": {"$type": "int"}})
+        == counts["students with declared income"]
+        == 57
+    )
 
 
 def test_seed_refuses_production(monkeypatch, capsys):
