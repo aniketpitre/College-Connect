@@ -8,6 +8,7 @@ import { hasPermission, useMe } from "../../lib/auth";
 import { examExportUrl, hallTicketUrl, useAssignSeats, useExamForms, useExamSessions, useUpdateSession, useVerifyEligible, useVerifyForm, type ExamSession, type FormRow } from "../../lib/exams";
 import { formatPaise } from "../../lib/money";
 import { useSetup, useSubjects } from "../../lib/setup";
+import ResultsPanel from "./ResultsPanel";
 import "./exams.css";
 
 const TONE = { not_submitted: "neutral", submitted: "info", verified: "success", rejected: "danger" } as const;
@@ -89,6 +90,8 @@ export default function ExamSessionPage() {
           </a>
         </div>
       )}
+      <ResultsPanel sessionId={id} canManage={canManage} />
+      <h2 className="subhead">Exam forms</h2>
       <div className="day-pick" role="group" aria-label="Filter">
         {[
           ["", "All"],

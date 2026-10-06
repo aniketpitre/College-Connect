@@ -88,10 +88,12 @@ def regular_subjects(session: dict[str, Any], student: dict[str, Any]) -> list[d
 BACKLOG_SUBJECTS: list[Any] = []
 
 
-def backlog_subjects(student_id: ObjectId) -> list[dict[str, Any]]:
+def backlog_subjects(student_id: ObjectId, regular: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    """Subjects still to clear from earlier exams (not the ones already on this form)."""
+    skip = {s["_id"] for s in regular or []}
     out: list[dict[str, Any]] = []
     for hook in BACKLOG_SUBJECTS:
-        out += hook(student_id)
+        out += [s for s in hook(student_id) if s["_id"] not in skip]
     return out
 
 
@@ -425,8 +427,9 @@ def _my_view(s: dict[str, Any], student: dict[str, Any]) -> dict[str, Any]:
     db = get_db()
     form = db.exam_forms.find_one({"session_id": s["_id"], "student_id": student["_id"]})
     stored = [{k: v for k, v in x.items() if k != "subject_id"} for x in (form or {}).get("subjects", [])]
-    subjects = stored or [{"code": x["code"], "name": x["name"]} for x in regular_subjects(s, student)] + [
-        {"code": x["code"], "name": x["name"], "backlog": True} for x in backlog_subjects(student["_id"])
+    regular = regular_subjects(s, student)
+    subjects = stored or [{"code": x["code"], "name": x["name"]} for x in regular] + [
+        {"code": x["code"], "name": x["name"], "backlog": True} for x in backlog_subjects(student["_id"], regular)
     ]
     e = eligibility(s, [student])[student["_id"]]
     v = session_view(s, counts=False)
@@ -480,11 +483,10 @@ def submit_form(ctx: AuthContext, session_id: str, ip: str) -> dict[str, Any]:
     existing = db.exam_forms.find_one({"session_id": s["_id"], "student_id": student["_id"]})
     if existing and existing["status"] in ("verified",):
         raise AppError(409, "Your form is already verified.", "conflict")
-    subjects = [
-        {"subject_id": x["_id"], "code": x["code"], "name": x["name"]} for x in regular_subjects(s, student)
-    ] + [
+    regular = regular_subjects(s, student)
+    subjects = [{"subject_id": x["_id"], "code": x["code"], "name": x["name"]} for x in regular] + [
         {"subject_id": x["_id"], "code": x["code"], "name": x["name"], "backlog": True}
-        for x in backlog_subjects(student["_id"])
+        for x in backlog_subjects(student["_id"], regular)
     ]
     if not subjects:
         raise AppError(409, "No subjects are set for your semester yet. Contact the Exam Cell.", "no_subjects")

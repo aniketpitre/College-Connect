@@ -211,3 +211,67 @@ describe("exam forms", () => {
     await waitFor(() => expect(calls.find((c) => c.path.endsWith("/verify"))?.body).toEqual({ approve: true, reason: "Condoned by the Principal" }));
   });
 });
+
+describe("results", () => {
+  it("a student sees CGPA, backlogs and asks for revaluation (Marathi)", async () => {
+    localStorage.setItem("cc-lang", "mr");
+    const student = makeMe({ kind: "student", prn: "2026BCA002", roles: ["student"], role_labels: ["Student"] });
+    let asked = false;
+    const result = (revaluation: unknown) => ({
+      cgpa: 4.67, credits_earned: 8, backlogs: [{ code: "BCA102", name: "Maths", semester: 1 }],
+      results: [{
+        id: "r1", exam: "Oct-Nov 2026", semesters: [1], sgpa: 4.67, outcome: "atkt", credits: 12, credits_earned: 8, revaluation_until: "2026-12-30",
+        subjects: [
+          { code: "BCA101", name: "C", credits: 4, internal: 32, external: 50, total: 82, grade: "A", grade_point: 8, passed: true, revaluation: null, can_request_revaluation: true },
+          { code: "BCA102", name: "Maths", credits: 4, internal: 20, external: 10, total: 30, grade: "F", grade_point: 0, passed: false, revaluation, can_request_revaluation: !revaluation },
+        ],
+      }],
+    });
+    const calls = mockApi((method, path) => {
+      if (path === "/auth/me") return { status: 200, body: student };
+      if (path === "/me/marks" || path === "/me/exams") return { status: 200, body: [] };
+      if (path === "/me/results/r1/revaluation" && method === "POST") {
+        asked = true;
+        return { status: 200, body: result({ status: "requested", status_label: "Requested" }) };
+      }
+      if (path === "/me/results") return { status: 200, body: result(asked ? { status: "requested", status_label: "Requested" } : null) };
+      return { status: 404 };
+    });
+    renderApp("/app/exams");
+    expect(await screen.findByText("निकाल")).toBeTruthy();
+    expect(screen.getByText("ATKT (बॅकलॉग)")).toBeTruthy();
+    expect(screen.getAllByText("BCA102").length).toBeGreaterThan(0);
+    const buttons = screen.getAllByRole("button", { name: "पुनर्मूल्यांकन मागा" });
+    fireEvent.click(buttons[1]);
+    await waitFor(() => expect(calls.find((c) => c.method === "POST")?.body).toEqual({ code: "BCA102" }));
+    expect(await screen.findByText("Requested")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "निवेदन डाउनलोड करा (PDF)" }).getAttribute("href")).toBe("/api/v1/me/results/r1.pdf");
+  });
+
+  it("the Exam Cell checks a result file before importing it", async () => {
+    const exam = makeMe({ roles: ["exam_cell"], permissions: ["exams.manage", "results.read"] });
+    const session = { id: "e1", name: "Oct-Nov 2026", kind: "university", term: 1, academic_year_id: "y1", classes: [{ programme_id: "p1", year_of_study: 1, label: "BCA FY" }], form_deadline: "2026-10-10", form_open: false, fee_head_code: null, seat_prefix: "", papers: [], hall_tickets_released: false };
+    let imported = false;
+    const calls = mockApi((_m, path) => {
+      if (path === "/auth/me") return { status: 200, body: exam };
+      if (path === "/exams/sessions") return { status: 200, body: [session] };
+      if (path === "/exams/sessions/e1/forms") return { status: 200, body: [] };
+      if (path === "/exams/sessions/e1/results")
+        return { status: 200, body: { published: false, revaluation_until: null, counts: { pass: 1, atkt: 0, absent: 0 }, students: imported ? [{ result_id: "r1", student_id: "s1", name: "Rohan", prn: "2026BCA001", sgpa: 8.33, outcome: "pass", failed: [] }] : [] } };
+      if (path.startsWith("/exams/sessions/e1/results/import")) {
+        imported = path.includes("dry_run=false");
+        return { status: 200, body: { rows: 3, students: 1, pass: 1, atkt: 0, problems: [], imported } };
+      }
+      return { status: 404 };
+    });
+    renderApp("/app/exams/sessions/e1");
+    const input = (await screen.findByLabelText("Result file")) as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [new File(["PRN"], "r.csv", { type: "text/csv" })] } });
+    expect((screen.getByRole("button", { name: "Import" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Check" }));
+    expect(await screen.findByText(/Checked: 3 rows, 1 students/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Import" }));
+    expect(await screen.findByText("8.33")).toBeTruthy();
+    expect(calls.filter((c) => c.path.startsWith("/exams/sessions/e1/results/import")).map((c) => c.path.split("?")[1])).toEqual(["dry_run=true", "dry_run=false"]);
+  });
+});

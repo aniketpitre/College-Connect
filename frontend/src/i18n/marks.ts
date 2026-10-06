@@ -22,6 +22,16 @@ export interface MarksStrings {
   seatNo: string;
   hallTicket: string;
   papers: string;
+  results: string;
+  cgpa: string;
+  sgpa: string;
+  backlogs: string;
+  noBacklogs: string;
+  outcome: Record<string, string>;
+  grade: string;
+  download: string;
+  askReval: string;
+  revalUntil: (d: string) => string;
 }
 
 export const MARKS_STRINGS: Record<Language, MarksStrings> = {
@@ -46,6 +56,16 @@ export const MARKS_STRINGS: Record<Language, MarksStrings> = {
     seatNo: "Seat number",
     hallTicket: "Download hall ticket",
     papers: "Paper timetable",
+    results: "Results",
+    cgpa: "CGPA",
+    sgpa: "SGPA",
+    backlogs: "Backlogs to clear",
+    noBacklogs: "No backlogs.",
+    outcome: { pass: "Pass", atkt: "ATKT (backlog)", absent: "Absent" },
+    grade: "Grade",
+    download: "Download statement (PDF)",
+    askReval: "Ask for revaluation",
+    revalUntil: (d) => `Revaluation can be asked until ${d}.`,
   },
   hi: {
     title: "परीक्षा और परिणाम",
@@ -68,6 +88,16 @@ export const MARKS_STRINGS: Record<Language, MarksStrings> = {
     seatNo: "सीट नंबर",
     hallTicket: "हॉल टिकट डाउनलोड करें",
     papers: "पेपर समय सारणी",
+    results: "परिणाम",
+    cgpa: "CGPA",
+    sgpa: "SGPA",
+    backlogs: "बाकी बैकलॉग",
+    noBacklogs: "कोई बैकलॉग नहीं।",
+    outcome: { pass: "उत्तीर्ण", atkt: "ATKT (बैकलॉग)", absent: "अनुपस्थित" },
+    grade: "ग्रेड",
+    download: "विवरण डाउनलोड करें (PDF)",
+    askReval: "पुनर्मूल्यांकन माँगें",
+    revalUntil: (d) => `पुनर्मूल्यांकन ${d} तक माँगा जा सकता है।`,
   },
   mr: {
     title: "परीक्षा आणि निकाल",
@@ -90,5 +120,15 @@ export const MARKS_STRINGS: Record<Language, MarksStrings> = {
     seatNo: "आसन क्रमांक",
     hallTicket: "हॉल तिकीट डाउनलोड करा",
     papers: "पेपर वेळापत्रक",
+    results: "निकाल",
+    cgpa: "CGPA",
+    sgpa: "SGPA",
+    backlogs: "बाकी बॅकलॉग",
+    noBacklogs: "कोणताही बॅकलॉग नाही.",
+    outcome: { pass: "उत्तीर्ण", atkt: "ATKT (बॅकलॉग)", absent: "गैरहजर" },
+    grade: "श्रेणी",
+    download: "निवेदन डाउनलोड करा (PDF)",
+    askReval: "पुनर्मूल्यांकन मागा",
+    revalUntil: (d) => `पुनर्मूल्यांकन ${d} पर्यंत मागता येईल.`,
   },
 };

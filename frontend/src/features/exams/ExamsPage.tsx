@@ -11,7 +11,9 @@ import { useLanguage } from "../../lib/language";
 import { STATUS_TONE, useMarksOverview, useMyClasses, useMyMarks, useSaveScheme, useSchemes, type ClassRow, type SchemeRow, type SheetStatus } from "../../lib/marks";
 import { useSetup } from "../../lib/setup";
 import ExamSessions from "./ExamSessions";
+import Revaluations from "./Revaluations";
 import StudentExamForms from "./StudentExamForms";
+import StudentResults from "./StudentResults";
 import UploadGuard from "./UploadGuard";
 import "./exams.css";
 
@@ -32,7 +34,7 @@ function StaffExams() {
     ...(oversees ? ([["department", hasPermission(me, "marks.approve") && !hasPermission(me, "exams.manage") ? "Department marks" : "All marks"]] as [string, string][]) : []),
     ...(schemes ? ([["schemes", "Assessment schemes"]] as [string, string][]) : []),
     ...(hasPermission(me, "exams.manage") || hasPermission(me, "marks.approve") ? ([["guard", "Upload Guard"]] as [string, string][]) : []),
-    ...(hasPermission(me, "exams.manage") || hasPermission(me, "results.read") ? ([["forms", "Exam forms"]] as [string, string][]) : []),
+    ...(hasPermission(me, "exams.manage") || hasPermission(me, "results.read") ? ([["forms", "Exams"], ["revals", "Revaluation"]] as [string, string][]) : []),
   ];
   const [tab, setTab] = useState(tabs[0]?.[0]);
   return (
@@ -55,6 +57,7 @@ function StaffExams() {
       {tab === "schemes" && <Schemes />}
       {tab === "guard" && <UploadGuard canExport={hasPermission(me, "exams.manage")} />}
       {tab === "forms" && <ExamSessions canManage={hasPermission(me, "exams.manage")} />}
+      {tab === "revals" && <Revaluations canManage={hasPermission(me, "exams.manage")} />}
     </>
   );
 }
@@ -251,6 +254,7 @@ function StudentMarks() {
         <h1>{T.title}</h1>
         <LanguageToggle value={language} onChange={setLanguage} />
       </div>
+      <StudentResults />
       <StudentExamForms />
       <h2 className="subhead">{T.internalMarks}</h2>
       {marks.error && <p className="form-error">{marks.error.message}</p>}

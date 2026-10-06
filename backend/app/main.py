@@ -18,6 +18,7 @@ from app.modules.marks import router as marks
 from app.modules.notices import router as notices
 from app.modules.onboarding import router as onboarding
 from app.modules.portal import router as portal
+from app.modules.results import router as results
 from app.modules.setup import router as setup
 from app.modules.students import router as students
 from app.modules.system import router as system
@@ -46,6 +47,7 @@ ROUTERS: list[APIRouter] = [
     attendance.router,
     marks.router,
     exams.router,
+    results.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

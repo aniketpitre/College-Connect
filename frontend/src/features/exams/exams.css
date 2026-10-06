@@ -69,3 +69,6 @@
   margin: 14px 0;
   flex-wrap: wrap;
 }
+.result-card {
+  margin-bottom: 14px;
+}
