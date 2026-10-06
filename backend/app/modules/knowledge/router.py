@@ -1,11 +1,13 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
+from pydantic import BaseModel, Field
 
 from app.core.auth import AuthContext, require
 from app.core.files import MAX_BYTES
 from app.core.rbac import P
 from app.core.requestinfo import client_ip
+from app.modules.helpdesk import analytics
 from app.modules.knowledge import service
 
 router = APIRouter(prefix="/kb", tags=["knowledge base"])
@@ -52,3 +54,33 @@ def remove(doc_id: str, request: Request, ctx: AuthContext = MANAGE) -> dict[str
 def reindex(request: Request, ctx: AuthContext = MANAGE) -> dict[str, Any]:
     """Indexes notices that changed while indexing failed and adds missing embeddings (a batch per call)."""
     return service.reindex(ctx, client_ip(request))
+
+
+class GapAnswerIn(BaseModel):
+    key: str = Field(..., min_length=1, max_length=500)
+    question: str = Field(..., min_length=1, max_length=500)
+    answer: str = Field(..., max_length=5000)
+    category: str = "notices"
+    audience: str = "public"
+
+
+class GapIn(BaseModel):
+    key: str = Field(..., min_length=1, max_length=500)
+
+
+@router.get("/gaps")
+def gaps(days: int = Query(30, ge=1, le=90), ctx: AuthContext = MANAGE) -> list[dict[str, Any]]:
+    """Questions the help desk couldn't answer, grouped, most asked first (what to publish next)."""
+    return analytics.gaps(days)
+
+
+@router.post("/gaps/answer", status_code=201)
+def answer_gap(body: GapAnswerIn, request: Request, ctx: AuthContext = MANAGE) -> dict[str, Any]:
+    return service.answer_gap(
+        ctx, body.key, body.question, body.answer, body.category, body.audience, client_ip(request)
+    )
+
+
+@router.post("/gaps/dismiss")
+def dismiss_gap(body: GapIn, request: Request, ctx: AuthContext = MANAGE) -> dict[str, Any]:
+    return service.dismiss_gap(ctx, body.key, client_ip(request))

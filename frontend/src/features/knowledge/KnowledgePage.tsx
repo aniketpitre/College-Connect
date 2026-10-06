@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useAddDocument, useKnowledge, useReindex, useRemoveDocument, type KbDocument } from "../../lib/knowledge";
+import { Gaps } from "./Gaps";
 import "../campus/campus.css";
 
 const OFFICES: Record<string, string> = {
@@ -74,6 +75,8 @@ export default function KnowledgePage() {
           {reindex.data.remaining ? `, ${reindex.data.remaining} left (run again)` : ""}.
         </p>
       )}
+
+      <Gaps />
 
       <form
         key={formKey}

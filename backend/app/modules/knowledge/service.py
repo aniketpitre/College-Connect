@@ -430,3 +430,35 @@ def reindex(ctx: AuthContext, ip: str) -> dict[str, Any]:
     result = catch_up()
     audit.record("kb.reindexed", actor_id=ctx.user_id, target_type="kb", ip=ip, details=result)
     return result
+
+
+# --- knowledge gaps (plan 5.7) ----------------------------------------------------------------
+
+
+def answer_gap(
+    ctx: AuthContext, key: str, question: str, answer: str, category: str, audience: str, ip: str
+) -> dict[str, Any]:
+    """Turns an unanswered question into an FAQ document the help desk answers from from now on."""
+    from app.modules.helpdesk import analytics
+
+    if len(answer.strip()) < 5:
+        raise AppError(422, "Write the answer.", field="answer")
+    question = question.strip()
+    doc = add_document(
+        ctx,
+        title=f"FAQ: {question}"[:200],
+        category=category,
+        audience=audience,
+        text=f"## {question}\n{answer.strip()}",
+        ip=ip,
+    )
+    closed = analytics.close_gap(key, "answered", ObjectId(doc["id"]))
+    return {**doc, "questions_closed": closed}
+
+
+def dismiss_gap(ctx: AuthContext, key: str, ip: str) -> dict[str, Any]:
+    from app.modules.helpdesk import analytics
+
+    closed = analytics.close_gap(key, "dismissed")
+    audit.record("kb.gap_dismissed", actor_id=ctx.user_id, target_type="kb", ip=ip, details={"questions": closed})
+    return {"questions_closed": closed}

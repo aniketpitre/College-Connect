@@ -33,7 +33,8 @@ ROUTES: dict[tuple[str, str], str | None] = {
     ("GET", "/notices/{notice_id}"): None,
     ("GET", "/notices/{notice_id}/attachment"): None,
     ("GET", "/files/{file_id}"): None,  # the child's photo only (checked in students.file_for)
-    ("POST", "/assistant/ask"): None,  # documents and the child's class notices
+    ("POST", "/assistant/ask"): None,
+    ("GET", "/me/deadlines"): None,  # deadlines of the child's notices  # documents and the child's class notices
 }
 # Account pages that aren't about a child.
 OWN = {

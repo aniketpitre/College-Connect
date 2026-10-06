@@ -7,7 +7,9 @@ import { NOTICE_STRINGS } from "../../i18n/notices";
 import { hasPermission, useMe } from "../../lib/auth";
 import { useLanguage } from "../../lib/language";
 import { attachmentUrl, localized, useEmailNotice, useNotice, useUpdateNotice, type EmailProgress, type Notice } from "../../lib/notices";
+import { NoticeDeadlines } from "./NoticeDeadlines";
 import "./notices.css";
+import "../campus/campus.css";
 
 export default function NoticeDetailPage() {
   const { id = "" } = useParams();
@@ -56,6 +58,7 @@ export default function NoticeDetailPage() {
           machine={Boolean(n.hi?.machine || n.mr?.machine)}
         />
       )}
+      {canPublish && n.state !== "withdrawn" && <NoticeDeadlines noticeId={n.id} />}
       {canPublish && n.state !== "withdrawn" && <EditTranslations key={`${n.hi?.title}|${n.mr?.title}`} notice={n} />}
     </div>
   );

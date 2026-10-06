@@ -45,6 +45,10 @@ export default function StudentHome() {
         return { body: t.results(c.title!), to: "/app/exams" };
       case "certificate_ready":
         return { body: t.certificateReady(CERT_STRINGS[language].types[c.type!] ?? c.type!), to: "/app/certificates" };
+      case "deadline": {
+        const what = (language === "hi" ? c.what_hi : language === "mr" ? c.what_mr : null) || c.title!;
+        return { body: t.deadline(what, day(c.due_date!), c.days_left ?? 0), to: `/app/notices/${c.notice_id}` };
+      }
       case "notice":
         return { body: `${t.newNotice}: ${(language !== "en" && c[language]?.title) || c.title}`, to: `/app/notices/${c.notice_id}` };
     }

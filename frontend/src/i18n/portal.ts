@@ -27,6 +27,7 @@ export interface PortalStrings {
   hallTicket: (exam: string) => string;
   results: (exam: string) => string;
   certificateReady: (kind: string) => string;
+  deadline: (what: string, date: string, daysLeft: number) => string;
   // My fees
   feesTitle: string;
   payOnline: string;
@@ -88,6 +89,7 @@ const EN: PortalStrings = {
   hallTicket: (exam) => `Your hall ticket for ${exam} is ready to download.`,
   results: (exam) => `Results for ${exam} are out.`,
   certificateReady: (kind) => `Your ${kind} is ready. Download it or collect it from the office.`,
+  deadline: (what, date, n) => `${what}: by ${date} (${n === 0 ? "today" : n === 1 ? "tomorrow" : `${n} days left`}).`,
   feesTitle: "My fees",
   payOnline: "Pay online",
   payTitle: "Pay fees online",
@@ -158,6 +160,7 @@ const HI: PortalStrings = {
   hallTicket: (exam) => `${exam} का हॉल टिकट डाउनलोड के लिए तैयार है।`,
   results: (exam) => `${exam} का परिणाम आ गया है।`,
   certificateReady: (kind) => `आपका ${kind} तैयार है। डाउनलोड करें या कार्यालय से लें।`,
+  deadline: (what, date, n) => `${what}: ${date} तक (${n === 0 ? "आज" : n === 1 ? "कल" : `${n} दिन बाकी`})।`,
   feesTitle: "मेरी फ़ीस",
   payOnline: "ऑनलाइन भुगतान करें",
   payTitle: "फ़ीस का ऑनलाइन भुगतान",
@@ -228,6 +231,7 @@ const MR: PortalStrings = {
   hallTicket: (exam) => `${exam} चे हॉल तिकीट डाउनलोडसाठी तयार आहे.`,
   results: (exam) => `${exam} चा निकाल लागला आहे.`,
   certificateReady: (kind) => `तुमचे ${kind} तयार आहे. डाउनलोड करा किंवा कार्यालयातून घ्या.`,
+  deadline: (what, date, n) => `${what}: ${date} पर्यंत (${n === 0 ? "आज" : n === 1 ? "उद्या" : `${n} दिवस बाकी`}).`,
   feesTitle: "माझे शुल्क",
   payOnline: "ऑनलाइन भरा",
   payTitle: "शुल्क ऑनलाइन भरा",

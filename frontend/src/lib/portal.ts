@@ -15,7 +15,8 @@ export interface HomeCard {
     | "exam_form"
     | "hall_ticket"
     | "results"
-    | "certificate_ready";
+    | "certificate_ready"
+    | "deadline";
   severity: "danger" | "warning" | "info";
   amount?: number;
   since?: string;
@@ -32,6 +33,10 @@ export interface HomeCard {
   percent?: number;
   must_attend?: number;
   can_miss?: number;
+  /** A deadline from a notice, in Hindi/Marathi when known. */
+  what_hi?: string | null;
+  what_mr?: string | null;
+  days_left?: number;
 }
 export interface StudentHome {
   name: string;

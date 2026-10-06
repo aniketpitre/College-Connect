@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.errors import AppError
 from app.modules.attendance import stats
 from app.modules.certificates import service as certificates
+from app.modules.deadlines import service as deadlines
 from app.modules.grievance import service as grievance
 from app.modules.knowledge import service as knowledge
 from app.modules.library import service as library
@@ -41,6 +42,7 @@ def daily(authorization: str | None = Header(None)) -> dict[str, Any]:
         "early_warning": mentoring.daily(),
         "notice_translations": notices.translate_pending(),
         "knowledge_base": knowledge.catch_up(),
+        "deadlines": deadlines.daily(),
     }
     out["messages"] = messaging.process_queue()  # what's left waits for tomorrow or "Send now"
     return out

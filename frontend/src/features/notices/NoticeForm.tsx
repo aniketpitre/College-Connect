@@ -6,13 +6,13 @@ import { useCreateNotice, useTranslateNotice } from "../../lib/notices";
 import { useSetup } from "../../lib/setup";
 
 /** Staff form (English): a new notice, with optional Hindi/Marathi versions and a PDF. */
-export function NoticeForm({ onClose }: { onClose: () => void }) {
+export function NoticeForm({ onClose, initialTitle = "" }: { onClose: () => void; initialTitle?: string }) {
   const setup = useSetup();
   const create = useCreateNotice();
   const translate = useTranslateNotice();
   const [isPublic, setIsPublic] = useState(false);
   const navigate = useNavigate();
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initialTitle);
   const [body, setBody] = useState("");
   const [hi, setHi] = useState({ title: "", body: "" });
   const [mr, setMr] = useState({ title: "", body: "" });
