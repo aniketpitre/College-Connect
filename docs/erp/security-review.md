@@ -2,7 +2,7 @@
 
 Reviewed against the OWASP Top 10 (2021) on the code as of Phase 4C, October 2026. Each item
 says what protects the system today, what this review changed, and what remains for the
-college to do. Fixes are in the "Phase 4D" pull request.
+college to do. Fixes are in the "Phase 4D" pull request. Load test and restore drill: see the plan (4.7) and [runbooks/backup-restore.md](runbooks/backup-restore.md).
 
 ## Summary of changes made in this review
 
