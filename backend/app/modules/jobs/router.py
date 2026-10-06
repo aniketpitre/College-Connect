@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.errors import AppError
 from app.modules.attendance import stats
 from app.modules.certificates import service as certificates
+from app.modules.library import service as library
 from app.modules.messaging import reminders
 from app.modules.messaging import service as messaging
 from app.modules.payments import service as payments
@@ -31,6 +32,7 @@ def daily(authorization: str | None = Header(None)) -> dict[str, Any]:
         "attendance_alerts": stats.send_alerts(),
         "fee_reminders": reminders.queue_fee_reminders(),
         "certificates": certificates.escalate_overdue(),
+        "library": library.daily(),
     }
     out["messages"] = messaging.process_queue()  # what's left waits for tomorrow or "Send now"
     return out

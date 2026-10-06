@@ -15,6 +15,7 @@ def test_permission_matrix():
         P.MESSAGES_READ,  # the delivery log names students and parents
         P.ADMISSIONS_READ,  # applicants' personal data
         P.ADMISSIONS_MANAGE,
+        *(P.LIBRARY_MANAGE, P.LIBRARY_READ, P.HOSTEL_MANAGE, P.HOSTEL_READ, P.PLACEMENT_MANAGE, P.PLACEMENT_READ),
     }
     # Nor does it run the academic side (timetable, attendance).
     academics = {
@@ -56,6 +57,9 @@ def test_permission_matrix():
         P.CERT_SIGN_PRINCIPAL,
         P.MESSAGES_READ,
         P.ADMISSIONS_READ,
+        P.LIBRARY_READ,
+        P.HOSTEL_READ,
+        P.PLACEMENT_READ,
     }
     assert P.USERS_CREATE_STAFF not in permissions_for(["office"])
     assert P.USERS_CREATE_STUDENT in permissions_for(["office"])
@@ -81,6 +85,8 @@ def test_permission_matrix():
     assert P.EXAMS_MANAGE in permissions_for(["exam_cell"]) and P.MARKS_ENTER not in permissions_for(["exam_cell"])
     assert P.TIMETABLE_MANAGE_DEPT in permissions_for(["hod"]) and P.TIMETABLE_MANAGE not in permissions_for(["hod"])
     assert P.ADMISSIONS_MANAGE in permissions_for(["admission"])
+    assert P.LIBRARY_MANAGE in permissions_for(["librarian"]) and P.STUDENTS_READ not in permissions_for(["librarian"])
+    assert P.HOSTEL_MANAGE in permissions_for(["warden"]) and P.PLACEMENT_MANAGE in permissions_for(["placement"])
     for role in (Role.STUDENT, Role.PARENT, Role.APPLICANT):
         assert permissions_for([role.value]) == frozenset(), role
 
