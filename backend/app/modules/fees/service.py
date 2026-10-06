@@ -445,6 +445,48 @@ def add_charge(ctx: AuthContext, student_id: str, body: ChargeIn, ip: str) -> di
     return account(student["_id"], year["_id"])
 
 
+def head_for(code: str, name: str, session: ClientSession | None = None) -> ObjectId:
+    """The fee head with this code, created the first time (e.g. LIBRARY fines, HOSTEL fees)."""
+    db = get_db()
+    head = db.fee_heads.find_one({"code": code}, session=session)
+    if head:
+        return head["_id"]
+    return db.fee_heads.insert_one(
+        {"code": code, "name": name, "status": "active", "created_at": datetime.now(UTC)}, session=session
+    ).inserted_id
+
+
+def post_charge(
+    student_id: ObjectId,
+    *,
+    head_code: str,
+    head_name: str,
+    amount: int,
+    reason: str,
+    by: ObjectId | None,
+    session: ClientSession,
+    year_id: ObjectId | None = None,
+    **extra: Any,
+) -> dict[str, Any]:
+    """Charges a student (library fine, hostel fee…) in the current academic year's fee account."""
+    db = get_db()
+    if year_id is None:
+        year = db.academic_years.find_one({"is_current": True}, session=session)
+        if not year:
+            raise AppError(409, "Set the current academic year first.", "no_year")
+        year_id = year["_id"]
+    return ledger.post(
+        student_id=student_id,
+        academic_year_id=year_id,
+        type="charge",
+        lines=[{"head_id": head_for(head_code, head_name, session), "amount": amount}],
+        created_by=by,
+        session=session,
+        reason=reason,
+        **extra,
+    )
+
+
 def apply_late_fees(ctx: AuthContext, student_id: str, academic_year_id: str, ip: str) -> dict[str, Any]:
     """Charges the structure's late fee once for each overdue installment not yet charged."""
     student = students.get_student(oid(student_id, "Student"))

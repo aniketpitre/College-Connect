@@ -22,6 +22,10 @@ VARS: dict[str, tuple[str, ...]] = {
     "application_returned": ("student", "reason"),
     "admission_offer": ("student", "programme", "date"),
     "admission_confirmed": ("student", "programme", "prn"),
+    "library_overdue": ("student", "title", "date"),
+    "library_ready": ("student", "title", "date"),
+    "outpass_approved": ("student", "place", "from", "to"),
+    "placement_selected": ("student", "company", "role"),
 }
 
 # Which part of the student's record each message is about: parents get it only if shared.
@@ -36,6 +40,10 @@ AREA: dict[str, str | None] = {
     "application_returned": None,
     "admission_offer": None,
     "admission_confirmed": None,
+    "library_overdue": None,
+    "library_ready": None,
+    "outpass_approved": None,
+    "placement_selected": None,
 }
 
 LABELS = {
@@ -49,6 +57,10 @@ LABELS = {
     "application_returned": "Application returned",
     "admission_offer": "Admission offered",
     "admission_confirmed": "Admission confirmed",
+    "library_overdue": "Library book overdue",
+    "library_ready": "Reserved book ready",
+    "outpass_approved": "Hostel out-pass approved",
+    "placement_selected": "Placement offer",
 }
 
 TEXT: dict[str, dict[str, tuple[str, str]]] = {
@@ -199,6 +211,61 @@ TEXT.update(
         },
     }
 )
+
+
+TEXT.update(
+    {
+        "library_overdue": {
+            "en": (
+                "Library book overdue: {title}",
+                "{title}, borrowed by {student}, was due back on {date}. A fine is charged for every day late; please return it to the library.",
+            ),
+            "hi": (
+                "पुस्तक लौटाने में देर: {title}",
+                "{student} द्वारा ली गई पुस्तक {title} {date} को लौटानी थी। हर दिन की देरी पर जुर्माना लगता है; कृपया इसे पुस्तकालय में लौटाएँ।",
+            ),
+            "mr": (
+                "पुस्तक परत करण्यास उशीर: {title}",
+                "{student} यांनी घेतलेले {title} पुस्तक {date} रोजी परत करायचे होते. प्रत्येक दिवसाच्या उशिराला दंड लागतो; कृपया ते ग्रंथालयात परत करा.",
+            ),
+        },
+        "library_ready": {
+            "en": (
+                "Your reserved book is ready: {title}",
+                "{title}, reserved by {student}, is kept at the library counter until {date}.",
+            ),
+            "hi": (
+                "आरक्षित पुस्तक तैयार: {title}",
+                "{student} द्वारा आरक्षित पुस्तक {title} {date} तक पुस्तकालय काउंटर पर रखी है।",
+            ),
+            "mr": (
+                "राखीव पुस्तक तयार: {title}",
+                "{student} यांनी राखीव केलेले {title} पुस्तक {date} पर्यंत ग्रंथालय काउंटरवर ठेवले आहे.",
+            ),
+        },
+    }
+)
+
+TEXT["outpass_approved"] = {
+    "en": ("Hostel out-pass approved", "Out-pass approved for {student}: to {place}, leaving {from}, back by {to}."),
+    "hi": ("हॉस्टल आउट-पास स्वीकृत", "{student} का आउट-पास स्वीकृत: {place} के लिए, {from} को जाना, {to} तक लौटना।"),
+    "mr": ("वसतिगृह आउट-पास मंजूर", "{student} यांचा आउट-पास मंजूर: {place} साठी, {from} ला जाणे, {to} पर्यंत परत येणे."),
+}
+
+TEXT["placement_selected"] = {
+    "en": (
+        "Selected by {company}",
+        "Congratulations! {student} has been selected by {company} as {role}. The placement cell will share the offer details.",
+    ),
+    "hi": (
+        "{company} द्वारा चयन",
+        "बधाई! {student} का {company} में {role} पद के लिए चयन हुआ है। प्लेसमेंट सेल ऑफ़र का विवरण देगा।",
+    ),
+    "mr": (
+        "{company} कडून निवड",
+        "अभिनंदन! {student} यांची {company} मध्ये {role} पदासाठी निवड झाली आहे. प्लेसमेंट सेल ऑफरचा तपशील देईल.",
+    ),
+}
 
 
 def render(key: str, language: str | None, params: dict[str, Any]) -> tuple[str, str]:

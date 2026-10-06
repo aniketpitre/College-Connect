@@ -94,6 +94,12 @@ class P(StrEnum):
     CERT_READ = "certificates.read"  # accounts (no-dues), principal
     ADMISSIONS_READ = "admissions.read"
     ADMISSIONS_MANAGE = "admissions.manage"  # cycles, scrutiny, merit rounds, confirm and cancel admissions
+    LIBRARY_MANAGE = "library.manage"  # catalogue, issue/return, fines, settings
+    LIBRARY_READ = "library.read"
+    HOSTEL_MANAGE = "hostel.manage"  # rooms, allotment, out-passes, complaints, mess menu
+    HOSTEL_READ = "hostel.read"
+    PLACEMENT_MANAGE = "placement.manage"  # drives, registrations, rounds, offers
+    PLACEMENT_READ = "placement.read"
     MESSAGES_READ = "messages.read"  # the delivery log and the outgoing message queue
     EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
 
@@ -136,6 +142,9 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.CERT_SIGN_PRINCIPAL,
         P.MESSAGES_READ,
         P.ADMISSIONS_READ,
+        P.LIBRARY_READ,
+        P.HOSTEL_READ,
+        P.PLACEMENT_READ,
     }
     | _PUBLISH,
     Role.OFFICE: _STAFF_BASE
@@ -186,7 +195,9 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
     **{
         role: _STAFF_BASE | {P.TIMETABLE_READ, P.ATTENDANCE_TAKE, P.MARKS_ENTER} for role in (Role.FACULTY, Role.MENTOR)
     },
-    **{role: _STAFF_BASE for role in (Role.LIBRARIAN, Role.WARDEN, Role.PLACEMENT)},
+    Role.LIBRARIAN: _STAFF_BASE | {P.LIBRARY_MANAGE, P.LIBRARY_READ} | _PUBLISH,
+    Role.WARDEN: _STAFF_BASE | {P.HOSTEL_MANAGE, P.HOSTEL_READ} | _PUBLISH,
+    Role.PLACEMENT: _STAFF_BASE | {P.PLACEMENT_MANAGE, P.PLACEMENT_READ, P.RESULTS_READ} | _PUBLISH,
 }
 
 

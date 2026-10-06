@@ -28,6 +28,9 @@ STAFF = [
     ("hod", "Dr. Sunita Rane", "hod@demo.college"),
     ("exam_cell", "Kiran Pathak", "exam@demo.college"),
     ("admission", "Nilesh Gawde", "admission@demo.college"),
+    ("librarian", "Suvarna Kale", "librarian@demo.college"),
+    ("warden", "Mahesh Shinde", "warden@demo.college"),
+    ("placement", "Ritu Agarwal", "placement@demo.college"),
 ]
 # Other Computer Science teachers (they can sign in too, with the demo password).
 TEACHERS = [
@@ -41,16 +44,28 @@ TEACHERS = [
     "Ajay Naik",
 ]
 SUBJECTS = {
-    1: [("BCA101", "Programming in C", "theory"), ("BCA102", "Mathematics I", "theory"),
-        ("BCA103", "Digital Electronics", "theory"), ("BCA104", "Communication Skills", "theory"),
-        ("BCA105", "C Programming Lab", "practical")],
-    3: [("BCA301", "Database Management Systems", "theory"), ("BCA302", "Data Structures", "theory"),
-        ("BCA303", "Object-Oriented Programming", "theory"), ("BCA304", "Financial Accounting", "theory"),
-        ("BCA305", "DBMS Lab", "practical")],
-    5: [("BCA501", "Java Programming", "theory"), ("BCA502", "Web Technologies", "theory"),
-        ("BCA503", "Software Engineering", "theory"), ("BCA504", "Python Programming", "theory"),
-        ("BCA505", "Java Lab", "practical")],
-}  # fmt: skip
+    1: [
+        ("BCA101", "Programming in C", "theory"),
+        ("BCA102", "Mathematics I", "theory"),
+        ("BCA103", "Digital Electronics", "theory"),
+        ("BCA104", "Communication Skills", "theory"),
+        ("BCA105", "C Programming Lab", "practical"),
+    ],
+    3: [
+        ("BCA301", "Database Management Systems", "theory"),
+        ("BCA302", "Data Structures", "theory"),
+        ("BCA303", "Object-Oriented Programming", "theory"),
+        ("BCA304", "Financial Accounting", "theory"),
+        ("BCA305", "DBMS Lab", "practical"),
+    ],
+    5: [
+        ("BCA501", "Java Programming", "theory"),
+        ("BCA502", "Web Technologies", "theory"),
+        ("BCA503", "Software Engineering", "theory"),
+        ("BCA504", "Python Programming", "theory"),
+        ("BCA505", "Java Lab", "practical"),
+    ],
+}
 PERIODS = [("09:00", "10:00"), ("10:00", "11:00"), ("11:15", "12:15"), ("12:15", "13:15")]
 # day → subject index per period (4 = the practical, two hours, one batch at a time)
 WEEK: dict[int, list[int | str]] = {
@@ -255,6 +270,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
     certificates = _seed_certificates(app, db, api, divisions)
     parents = _seed_parents(db, api, divisions)
     applications = _seed_admissions(app, db, api, bca, year)
+    campus = _seed_campus(app, db, api, divisions)
 
     for one in api.values():
         db.sessions.delete_one({"_id": one.token_id})
@@ -272,6 +288,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         "certificate requests": certificates,
         "parent accounts": parents,
         "applications": applications,
+        **campus,
     }
 
 
@@ -454,10 +471,15 @@ def _seed_exams(
     last = exam.call(
         "POST",
         "/exams/sessions",
-        json={"name": "Oct-Nov exams (last year, FY sem 1)", "term": 1, "kind": "university",
-              "classes": [{"programme_id": bca["id"], "year_of_study": 2}],
-              "form_deadline": (today - timedelta(days=300)).isoformat(), "fee_head_code": None},
-    )  # fmt: skip
+        json={
+            "name": "Oct-Nov exams (last year, FY sem 1)",
+            "term": 1,
+            "kind": "university",
+            "classes": [{"programme_id": bca["id"], "year_of_study": 2}],
+            "form_deadline": (today - timedelta(days=300)).isoformat(),
+            "fee_head_code": None,
+        },
+    )
     grades = ["O", "A+", "A", "B+", "B", "C", "P", "F"]
     rows = ["PRN,Subject code,Internal,External,Total,Grade,Credits"]
     for st in db.students.find({"division_id": ObjectId(divisions[2])}, {"prn": 1}).sort("prn", 1):
@@ -475,10 +497,16 @@ def _seed_exams(
     now = exam.call(
         "POST",
         "/exams/sessions",
-        json={"name": "Oct-Nov university exams", "term": 1, "kind": "university",
-              "classes": [{"programme_id": bca["id"], "year_of_study": y} for y in (1, 2, 3)],
-              "form_deadline": (today + timedelta(days=10)).isoformat(), "fee_head_code": "EXAM", "seat_prefix": "C"},
-    )  # fmt: skip
+        json={
+            "name": "Oct-Nov university exams",
+            "term": 1,
+            "kind": "university",
+            "classes": [{"programme_id": bca["id"], "year_of_study": y} for y in (1, 2, 3)],
+            "form_deadline": (today + timedelta(days=10)).isoformat(),
+            "fee_head_code": "EXAM",
+            "seat_prefix": "C",
+        },
+    )
     first = today + timedelta(days=35)
     papers = [
         {
@@ -547,9 +575,14 @@ def _seed_parents(db: Database[dict[str, Any]], api: dict[str, "_Api"], division
         api["office"].call(
             "POST",
             f"/students/{st['_id']}/parents",
-            json={"name": "Demo Parent", "phone": PARENT_PHONE, "email": "parent@demo.college", "relation": "Father",
-                  "consent": True},
-        )  # fmt: skip
+            json={
+                "name": "Demo Parent",
+                "phone": PARENT_PHONE,
+                "email": "parent@demo.college",
+                "relation": "Father",
+                "consent": True,
+            },
+        )
     db.users.update_one(
         {"phone": PARENT_PHONE, "kind": "parent"}, {"$set": {"password_hash": hash_password(DEMO_PASSWORD)}}
     )
@@ -637,3 +670,155 @@ def _seed_admissions(
             json={"name": name, "phone": phone, "programme_id": bca["id"], "message": note, "source": "phone"},
         )
     return len(APPLICANTS)
+
+
+BOOKS = [
+    ("9780132350884", "Clean Code", ["Robert C. Martin"], "Prentice Hall", 2008, "Programming", 3),
+    ("9788183331630", "Let Us C", ["Yashavant Kanetkar"], "BPB Publications", 2016, "Programming", 4),
+    (
+        "9780262033848",
+        "Introduction to Algorithms",
+        ["Thomas H. Cormen", "Charles E. Leiserson"],
+        "MIT Press",
+        2009,
+        "Algorithms",
+        2,
+    ),
+    (
+        "9780073523323",
+        "Database System Concepts",
+        ["Abraham Silberschatz", "Henry F. Korth"],
+        "McGraw-Hill",
+        2010,
+        "Databases",
+        2,
+    ),
+    ("9789332585027", "Computer Networks", ["Andrew S. Tanenbaum"], "Pearson", 2013, "Networks", 2),
+    ("9788121903677", "Higher Engineering Mathematics", ["B. S. Grewal"], "Khanna Publishers", 2017, "Mathematics", 3),
+]
+
+
+def _seed_campus(
+    app: Any, db: Database[dict[str, Any]], api: dict[str, "_Api"], divisions: dict[int, str]
+) -> dict[str, int]:
+    """Library loans (one overdue), a hostel block with residents and requests, two placement drives."""
+    from bson import ObjectId
+
+    lib, warden, cell = api["librarian"], api["warden"], api["placement"]
+    for isbn, title, authors, publisher, year, subject, copies in BOOKS:
+        lib.call(
+            "POST",
+            "/library/books",
+            json={
+                "isbn": isbn,
+                "title": title,
+                "authors": authors,
+                "publisher": publisher,
+                "year": year,
+                "subject": subject,
+                "copies": copies,
+            },
+        )
+    by_year = {y: list(db.students.find({"division_id": ObjectId(d)}).sort("prn", 1)) for y, d in divisions.items()}
+    fy, sy, ty = by_year[1], by_year[2], by_year[3]
+    for i, barcode in enumerate(("LIB000001", "LIB000004", "LIB000008", "LIB000010")):
+        lib.call("POST", "/library/issue", json={"barcode": barcode, "prn": fy[i]["prn"]})
+    # The first loan is a week overdue (a fine is building up).
+    db.loans.update_one(
+        {"barcode": "LIB000001"}, {"$set": {"due_date": (date.today() - timedelta(days=7)).isoformat()}}
+    )
+
+    block = warden.call(
+        "POST", "/hostel/blocks", json={"name": "Shivneri", "gender": "any", "annual_fee": 25_000 * 100}
+    )["blocks"][0]
+    rooms = warden.call(
+        "POST", f"/hostel/blocks/{block['id']}/rooms", json={"numbers": ["101", "102", "103", "104"], "beds": 2}
+    )
+    room_ids = [r["id"] for r in rooms["blocks"][0]["rooms"]]
+    residents = ty[:4]
+    for i, st in enumerate(residents):
+        warden.call("POST", "/hostel/allotments", json={"prn": st["prn"], "room_id": room_ids[i // 2]})
+    warden.call(
+        "PUT",
+        "/hostel/mess-menu",
+        json={"days": {"mon": "Poha · Dal rice, chapati, bhaji · Khichdi", "tue": "Upma · Rajma rice · Pav bhaji"}},
+    )
+    user = db.users.find_one({"_id": residents[0]["user_id"]})
+    assert user is not None
+    me = _Api(app, db, user)
+    db.users.update_one({"_id": user["_id"]}, {"$set": {"onboarded_at": datetime.now(UTC)}})
+    leave = datetime.combine(date.today() + timedelta(days=2), datetime.min.time()).replace(hour=9)
+    me.call(
+        "POST",
+        "/me/hostel/outpasses",
+        json={
+            "leave_at": leave.isoformat() + "+05:30",
+            "return_by": (leave + timedelta(days=1, hours=9)).isoformat() + "+05:30",
+            "destination": "Home, Satara",
+            "reason": "Family function",
+        },
+    )
+    me.call(
+        "POST",
+        "/me/hostel/complaints",
+        json={"category": "water", "text": "No hot water on the first floor in the morning"},
+    )
+    db.sessions.delete_one({"_id": me.token_id})
+    db.users.update_one({"_id": user["_id"]}, {"$unset": {"onboarded_at": ""}})
+
+    register_by = (date.today() + timedelta(days=14)).isoformat()
+    drives = [
+        cell.call(
+            "POST",
+            "/placement/drives",
+            json={
+                "company": "Infosys",
+                "role": "Systems Engineer",
+                "ctc_lpa": 3.6,
+                "location": "Pune",
+                "register_by": register_by,
+                "rounds": ["Aptitude test", "Technical interview", "HR interview"],
+                "eligibility": {"years": [2, 3], "min_cgpa": 6.0, "max_backlogs": 0},
+            },
+        ),
+        cell.call(
+            "POST",
+            "/placement/drives",
+            json={
+                "company": "Persistent Systems",
+                "role": "Trainee Developer",
+                "ctc_lpa": 4.2,
+                "location": "Pune",
+                "register_by": register_by,
+                "rounds": ["Coding test", "Interview"],
+                "eligibility": {"years": [2, 3]},
+            },
+        ),
+    ]
+    registered = 0
+    for st in sy[:5]:
+        user = db.users.find_one({"_id": st["user_id"]})
+        assert user is not None
+        me = _Api(app, db, user)
+        db.users.update_one({"_id": user["_id"]}, {"$set": {"onboarded_at": datetime.now(UTC)}})
+        me.call("POST", "/me/placement/resume", files={"file": ("resume.pdf", PDF, "application/pdf")})
+        for d in drives:
+            mine = me.call("GET", "/me/placement")
+            if any(x["id"] == d["id"] and x["eligible"] for x in mine["drives"]):
+                me.call("POST", f"/me/placement/drives/{d['id']}/register")
+                registered += 1
+        db.sessions.delete_one({"_id": me.token_id})
+        db.users.update_one({"_id": user["_id"]}, {"$unset": {"onboarded_at": ""}})
+    regs = cell.call("GET", f"/placement/drives/{drives[1]['id']}/registrations")["registrations"]
+    if regs:
+        cell.call(
+            "POST",
+            f"/placement/drives/{drives[1]['id']}/results",
+            json={"registration_ids": [r["id"] for r in regs[:3]], "action": "next"},
+        )
+        cell.call(
+            "POST",
+            f"/placement/drives/{drives[1]['id']}/results",
+            json={"registration_ids": [regs[0]["id"]], "action": "select"},
+        )
+    return {"library books": len(BOOKS), "hostel residents": len(residents), "placement registrations": registered}

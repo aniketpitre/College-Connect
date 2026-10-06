@@ -17,13 +17,16 @@ from app.modules.exports import router as exports
 from app.modules.fees import router as fees
 from app.modules.helpdesk import admin as helpdesk_admin
 from app.modules.helpdesk import router as helpdesk
+from app.modules.hostel import router as hostel
 from app.modules.jobs import router as jobs
+from app.modules.library import router as library
 from app.modules.marks import router as marks
 from app.modules.messaging import router as messaging
 from app.modules.notices import router as notices
 from app.modules.onboarding import router as onboarding
 from app.modules.parents import router as parents
 from app.modules.payments import router as payments
+from app.modules.placement import router as placement
 from app.modules.portal import router as portal
 from app.modules.results import router as results
 from app.modules.setup import router as setup
@@ -62,6 +65,9 @@ ROUTERS: list[APIRouter] = [
     payments.router,
     messaging.router,
     admissions.router,
+    library.router,
+    hostel.router,
+    placement.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

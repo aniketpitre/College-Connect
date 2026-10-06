@@ -18,6 +18,9 @@ import FeesHome from "../features/fees/FeesHome";
 import OpeningPage from "../features/fees/OpeningPage";
 import OnlinePaymentsPage from "../features/fees/OnlinePaymentsPage";
 import MessagesPage from "../features/messages/MessagesPage";
+import HostelPage from "../features/campus/HostelPage";
+import LibraryPage from "../features/campus/LibraryPage";
+import PlacementPage from "../features/campus/PlacementPage";
 import AdmissionsPage from "../features/admissions/AdmissionsPage";
 import ApplicationDetailPage from "../features/admissions/ApplicationDetailPage";
 import MyApplicationPage from "../features/admissions/MyApplicationPage";
@@ -105,6 +108,9 @@ export default function App() {
         <Route path="fees/reports" element={<ReportsPage />} />
         <Route path="fees/online" element={<OnlinePaymentsPage />} />
         <Route path="messages" element={<MessagesPage />} />
+        <Route path="library" element={<LibraryPage />} />
+        <Route path="hostel" element={<HostelPage />} />
+        <Route path="placement" element={<PlacementPage />} />
         <Route path="application" element={<MyApplicationPage />} />
         <Route path="admissions" element={<AdmissionsPage />} />
         <Route path="admissions/applications/:id" element={<ApplicationDetailPage />} />

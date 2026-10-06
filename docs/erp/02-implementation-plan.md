@@ -604,6 +604,30 @@ grievance, staff and leave, no-dues).
 - Demo data: Admission Cell login `admission@demo.college`; an open BCA admission with five
   applicants at different stages and two enquiries.
 
+**Delivered in the "Phase 3C" PR (3.6–3.8):**
+- Library (`library/`, Librarian): catalogue of titles and numbered copies (`LIB000001`…),
+  title details filled in from the ISBN (Open Library). Issue and return by barcode and PRN;
+  limits (books per student, loan days, renewals, fine per late day) are settings. A student
+  with an overdue book cannot borrow more. Late fines go into the student's fee ledger (head
+  `LIBRARY`), lost books are charged too. Students reserve a title from `/app/library`; a
+  returned copy is held for the first reservation and the student is told. The daily job sends
+  overdue reminders (day 1, then weekly) and lapses expired holds.
+- Hostel (`hostel/`, Warden): blocks (gender, annual fee), rooms and beds, allotment and
+  vacating; the hostel fee is charged once per student per year into the fee ledger (head
+  `HOSTEL`). Out-pass: the resident asks, the warden approves (the student and parents are
+  told) or rejects, then marks out and back (late return flagged). Complaints with status, and
+  the weekly mess menu. Residents see their room, out-passes, complaints and menu.
+- Placement (`placement/`, Placement Officer): drives with eligibility (programmes, years,
+  minimum CGPA, maximum backlogs, computed from results), last date and rounds. Students keep
+  a profile and PDF resume, see only the drives they are eligible for and register; the
+  officer moves registrations round by round, rejects or selects (the student is told), and
+  downloads the list with resumes. Statistics for NAAC/NIRF: placed students, highest, average
+  and median package, by programme. Principal can read all three modules.
+- `library.dues` and `hostel.dues` are ready for the no-dues certificate (3.11).
+- Demo data: `librarian@demo.college`, `warden@demo.college`, `placement@demo.college`; books
+  with an overdue loan, a hostel block with residents, an out-pass and a complaint, and two
+  drives with registrations and one selection.
+
 ### 7.3 Acceptance criteria
 - A parent signs in with OTP and sees both of their children; an 18+ student turning off "marks" hides marks from the parent.
 - A student pays online by UPI; the receipt appears automatically and the day book reconciles to the gateway report.
