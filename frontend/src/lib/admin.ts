@@ -85,3 +85,39 @@ export function useDecideExport() {
 }
 
 export const exportDownloadUrl = (id: string) => `${API_V1}/export/requests/${id}/download`;
+
+export interface FullManifest {
+  collections: { collection: string; count: number; description: string; fields: { name: string; types: string[] }[] }[];
+  dictionary_md: string;
+}
+
+/** Builds the full export in the browser: the manifest, then each collection page by page (each
+ * response stays small for the free hosting tier), saved as one ZIP. */
+export async function downloadFullExport(id: string, onProgress: (done: number, total: number, name: string) => void): Promise<Blob> {
+  const { makeZip } = await import("./zip");
+  const manifest = await apiFetch<FullManifest>(`/export/requests/${id}/full`);
+  const enc = new TextEncoder();
+  const files = [
+    { name: "manifest.json", data: enc.encode(JSON.stringify({ exported_at: new Date().toISOString(), collections: manifest.collections }, null, 2)) },
+    { name: "data-dictionary.md", data: enc.encode(manifest.dictionary_md) },
+  ];
+  let done = 0;
+  for (const c of manifest.collections) {
+    onProgress(done, manifest.collections.length, c.collection);
+    const chunks: string[] = [];
+    let after: string | null = null;
+    do {
+      const url: string = `${API_V1}/export/requests/${id}/full/${c.collection}${after ? `?after=${encodeURIComponent(after)}` : ""}`;
+      const res = await fetch(url, { credentials: "include", headers: { "X-Requested-With": "XMLHttpRequest" } });
+      if (!res.ok) throw new Error(`Could not read ${c.collection} (${res.status}). Try again.`);
+      chunks.push(await res.text());
+      after = res.headers.get("X-Next-After");
+    } while (after);
+    files.push({ name: `collections/${c.collection}.jsonl`, data: enc.encode(chunks.join("")) });
+    done += 1;
+  }
+  onProgress(done, manifest.collections.length, "");
+  return makeZip(files);
+}
+
+export const fullExportName = () => `collegeconnect-full-${new Date().toISOString().slice(0, 10)}.zip`;

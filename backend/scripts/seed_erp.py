@@ -277,6 +277,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
     people = _seed_people(app, db, api, divisions)
     reports = _seed_reports(db, api, bca)
     mentoring = _seed_mentoring(app, db, api, divisions)
+    scholarships = _seed_scholarship_facts(db, rng)
 
     for one in api.values():
         db.sessions.delete_one({"_id": one.token_id})
@@ -298,6 +299,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         **people,
         **reports,
         **mentoring,
+        **scholarships,
     }
 
 
@@ -993,3 +995,21 @@ def _seed_mentoring(
         )
         db.sessions.delete_one({"_id": mentor.token_id})
     return {"students at risk": counts["high"] + counts["medium"], "mentees": len(fy)}
+
+
+def _seed_scholarship_facts(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
+    """State, HSC percentage and (for most) a declared family income, so the scholarship checker
+    has something to say. The first student of each year leaves the income blank."""
+    declared = 0
+    for s in db.students.find({}, {"prn": 1, "address": 1, "previous_education": 1}).sort("prn", 1):
+        changes: dict[str, Any] = {}
+        if not (s.get("address") or {}).get("state"):
+            changes["address"] = {**(s.get("address") or {}), "state": "Maharashtra"}
+        if not (s.get("previous_education") or {}).get("percentage"):
+            changes["previous_education"] = {"exam": "HSC", "percentage": float(rng.randint(52, 93))}
+        if not s["prn"].endswith("001"):
+            changes["family_income"] = rng.choice([90_000, 140_000, 240_000, 380_000, 650_000, 1_200_000])
+            declared += 1
+        if changes:
+            db.students.update_one({"_id": s["_id"]}, {"$set": changes})
+    return {"students with declared income": declared}

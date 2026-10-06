@@ -121,6 +121,7 @@ class P(StrEnum):
     RISK_READ = "risk.read"  # early-warning list for the whole college (Principal)
     RISK_READ_DEPT = "risk.read.dept"  # early-warning list for their department (HOD)
     RISK_MANAGE = "risk.manage"  # early-warning rules, recompute now
+    API_KEYS_MANAGE = "api_keys.manage"  # keys for the open read-only API (other systems)
     MESSAGES_READ = "messages.read"  # the delivery log and the outgoing message queue
     EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
 
@@ -172,6 +173,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.REPORTS_READ,
         P.RISK_READ,
         P.RISK_MANAGE,
+        P.API_KEYS_MANAGE,
     }
     | _PUBLISH,
     Role.OFFICE: _STAFF_BASE

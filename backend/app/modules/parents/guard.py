@@ -26,6 +26,7 @@ ROUTES: dict[tuple[str, str], str | None] = {
     ("GET", "/me/results"): "results",
     ("GET", "/me/results/{result_id}.pdf"): "results",
     ("GET", "/me/certificates"): None,
+    ("GET", "/me/scholarship-check"): "fees",  # which scholarships the child may qualify for
     ("POST", "/me/certificates"): None,  # a parent may ask for a certificate for their child
     ("GET", "/me/certificates/{request_id}/pdf"): None,
     ("GET", "/notices"): None,

@@ -38,6 +38,7 @@ DATASETS = {
     "students": "Students (all records)",
     "fees": "Fee balances (per student, per year)",
     "receipts": "Receipts (all)",
+    "full": "Everything (all records and files, with a data dictionary; restores into a fresh database)",
 }
 VALID_FOR = timedelta(hours=24)
 
@@ -148,15 +149,23 @@ def decide(ctx: AuthContext, request_id: str, approve: bool, reason: str | None,
     return view(doc)
 
 
-def download(ctx: AuthContext, request_id: str, ip: str) -> tuple[str, bytes]:
-    db = get_db()
-    r = db.export_requests.find_one({"_id": _oid(request_id)})
+def approved_request(ctx: AuthContext, request_id: str) -> dict[str, Any]:
+    """The asker's own approved, unexpired export request."""
+    r = get_db().export_requests.find_one({"_id": _oid(request_id)})
     if not r or r["requested_by"] != ctx.user_id:
         raise AppError(404, "Request not found.")
     if r["status"] != "approved":
         raise AppError(409, "This export hasn't been approved.", "not_approved")
     if r["expires_at"] <= datetime.now(UTC):
         raise AppError(410, "This export has expired. Ask again.", "expired")
+    return r
+
+
+def download(ctx: AuthContext, request_id: str, ip: str) -> tuple[str, bytes]:
+    db = get_db()
+    r = approved_request(ctx, request_id)
+    if r["dataset"] == "full":
+        raise AppError(409, "Download the full export from the Data export page.", "use_full_export")
     data = BUILDERS[r["dataset"]]()
     db.export_requests.update_one({"_id": r["_id"]}, {"$inc": {"downloads": 1}})
     audit.record(

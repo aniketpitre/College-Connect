@@ -61,3 +61,21 @@
   opacity: 0;
   cursor: pointer;
 }
+.key-scopes {
+  border: 0;
+  padding: 0;
+  margin: 8px 0 12px;
+  display: grid;
+  gap: 4px;
+}
+.key-secret {
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: var(--paper);
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+.scheme-card {
+  margin-bottom: 12px;
+}

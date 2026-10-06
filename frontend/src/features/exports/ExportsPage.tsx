@@ -3,7 +3,7 @@ import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { EmptyState } from "../../components/EmptyState";
 import { StatusBadge } from "../../components/StatusBadge";
 import { hasPermission, useMe } from "../../lib/auth";
-import { exportDownloadUrl, useDecideExport, useExports, useRequestExport, type ExportRequest } from "../../lib/admin";
+import { downloadFullExport, exportDownloadUrl, fullExportName, useDecideExport, useExports, useRequestExport, type ExportRequest } from "../../lib/admin";
 import "../fees/fees.css";
 
 const when = (iso: string) => new Date(iso).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
@@ -21,6 +21,25 @@ export default function ExportsPage() {
   const canAsk = hasPermission(me, "export.request");
   const canDecide = hasPermission(me, "approvals.decide");
   const datasets = list.data?.datasets ?? {};
+  const [progress, setProgress] = useState<{ id: string; text: string; error?: boolean } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const saveFull = async (r: ExportRequest) => {
+    setBusy(true);
+    setProgress({ id: r.id, text: "Starting…" });
+    try {
+      const blob = await downloadFullExport(r.id, (done, total, name) => setProgress({ id: r.id, text: name ? `Reading ${name} (${done + 1} of ${total})…` : "Saving…" }));
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = fullExportName();
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setProgress({ id: r.id, text: "Saved. Keep the file somewhere safe: it holds everyone's records." });
+    } catch (e) {
+      setProgress({ id: r.id, text: e instanceof Error ? e.message : "The export failed.", error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <>
@@ -31,7 +50,8 @@ export default function ExportsPage() {
         </div>
       </div>
       <p className="muted">
-        The college's data can be exported as CSV files that open in Excel. Each export needs the Principal's approval and can be downloaded for 24 hours.
+        The college's data can be exported as CSV files that open in Excel, or everything at once as a ZIP that loads into a fresh database (no passwords are
+        included). Each export needs the Principal's approval and can be downloaded for 24 hours.
       </p>
       {canAsk && (
         <form
@@ -92,11 +112,23 @@ export default function ExportsPage() {
                   </button>
                 </>
               )}
-              {canAsk && r.downloadable && r.requested_by_id === me?.id && (
+              {canAsk && r.downloadable && r.requested_by_id === me?.id && r.dataset !== "full" && (
                 <a className="btn btn-primary btn-sm" href={exportDownloadUrl(r.id)} download>
                   Download CSV
                 </a>
               )}
+              {canAsk && r.downloadable && r.requested_by_id === me?.id && r.dataset === "full" && (
+                <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void saveFull(r)}>
+                  Download everything (ZIP)
+                </button>
+              )}
+            </div>
+            {progress?.id === r.id && (
+              <p className={progress.error ? "form-error" : "small muted"} role="status">
+                {progress.text}
+              </p>
+            )}
+            <div>
             </div>
           </div>
         ))}

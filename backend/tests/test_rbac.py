@@ -20,6 +20,7 @@ def test_permission_matrix():
         *(P.STAFF_READ, P.STAFF_READ_DEPT, P.STAFF_MANAGE, P.LEAVE_APPROVE),  # staff records are HR's
         *(P.REPORTS_READ, P.NAAC_MANAGE),  # reports carry student and staff data
         *(P.MENTEES, P.MENTOR_ASSIGN, P.RISK_READ, P.RISK_READ_DEPT, P.RISK_MANAGE),  # early warning
+        P.API_KEYS_MANAGE,  # API keys read student data; the Principal issues them
     }
     # Nor does it run the academic side (timetable, attendance).
     academics = {
@@ -71,6 +72,7 @@ def test_permission_matrix():
         P.REPORTS_READ,
         P.RISK_READ,
         P.RISK_MANAGE,
+        P.API_KEYS_MANAGE,
     }
     assert P.USERS_CREATE_STAFF not in permissions_for(["office"])
     assert P.USERS_CREATE_STUDENT in permissions_for(["office"])

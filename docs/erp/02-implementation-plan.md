@@ -749,6 +749,35 @@ grievance, staff and leave, no-dues).
 - Demo data: Prakash More (`faculty@demo.college`) also has the mentor role and mentors the first
   year; the rules have run (students at high risk and to watch, with reasons) and one note exists.
 
+**Delivered in the "Phase 4C" PR (4.5–4.6):**
+- Scholarship eligibility checker (`eligibility/`): schemes are settings kept by Accounts
+  (category codes, family income limit, state, minimum attendance, previous exam %, girls only,
+  years, documents the portal asks for). Six common schemes are there to start (GoI Post-Matric
+  SC; Post-Matric ST, OBC, VJNT/SBC; EBC Shahu Maharaj; Central Sector Scheme on NSP); their
+  limits change every year and must be checked against the portals. Each student (and parent,
+  with fee access) sees, in en/hi/mr, for every scheme: "you may qualify", "upload documents
+  first" (which ones), "need more information" (what), "not for you" (which rule) or "applied"
+  (from the scholarships Accounts already record). The family income is the student's own
+  declaration, used only for this guide. Accounts see, per scheme, the students who may
+  qualify and haven't applied.
+- Full export (`exports/full.py`): a new "Everything" export through the same approval (System
+  Admin asks, Principal approves, 24 hours). Vercel limits a response to about 4.5 MB, so the
+  browser reads each collection in pages (MongoDB Extended JSON, one document per line) and saves
+  one ZIP with `manifest.json` and `data-dictionary.md` (each collection: what it holds, its
+  fields and their types). Left out: sessions, one-time codes, reset links, rate-limit counters,
+  the message queue, API keys, and every password hash and 2-step secret.
+  `python -m scripts.restore_export <zip> --db <new>` loads it into an empty database with the
+  same ids, dates and files, and creates the indexes; people then set new passwords with "Forgot
+  password". A test exports, restores and compares every collection.
+- Open API (`integrations/`): the Principal creates API keys for other systems with read-only
+  scopes (`setup:read`, `students:read`, `fees:read`, `attendance:read`, `results:read`,
+  `timetable:read`, `notices:read`), valid up to two years; the key is shown once and only its
+  hash is kept; keys can be revoked; 1,000 calls an hour per key; last use and call counts are
+  recorded. Endpoints under `/api/v1/open/*` (paged with `limit` and `after`); their own OpenAPI
+  document and docs page at `/api/v1/open/openapi.json` and `/api/v1/open/docs`.
+- Demo data: state and HSC percentage for every student and a declared family income for most
+  (the first student of each year leaves it blank to try the checker).
+
 ### 8.3 Acceptance criteria
 - The AQAR tables for a year are generated in minutes, with a list of missing evidence.
 - A mentor sees each at-risk mentee with the specific reasons, and the student never sees the risk label.
