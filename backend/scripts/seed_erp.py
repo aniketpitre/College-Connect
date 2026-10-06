@@ -31,6 +31,8 @@ STAFF = [
     ("librarian", "Suvarna Kale", "librarian@demo.college"),
     ("warden", "Mahesh Shinde", "warden@demo.college"),
     ("placement", "Ritu Agarwal", "placement@demo.college"),
+    ("grievance", "Pooja Kulkarni", "grievance@demo.college"),
+    ("icc", "Dr. Leena Patil", "icc@demo.college"),
 ]
 # Other Computer Science teachers (they can sign in too, with the demo password).
 TEACHERS = [
@@ -271,6 +273,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
     parents = _seed_parents(db, api, divisions)
     applications = _seed_admissions(app, db, api, bca, year)
     campus = _seed_campus(app, db, api, divisions)
+    people = _seed_people(app, db, api, divisions)
 
     for one in api.values():
         db.sessions.delete_one({"_id": one.token_id})
@@ -289,6 +292,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         "parent accounts": parents,
         "applications": applications,
         **campus,
+        **people,
     }
 
 
@@ -822,3 +826,121 @@ def _seed_campus(
             json={"registration_ids": [regs[0]["id"]], "action": "select"},
         )
     return {"library books": len(BOOKS), "hostel residents": len(residents), "placement registrations": registered}
+
+
+def _seed_people(
+    app: Any, db: Database[dict[str, Any]], api: dict[str, "_Api"], divisions: dict[int, str]
+) -> dict[str, int]:
+    """Staff records, leave (one request waiting for the HOD, one teacher on leave today) and
+    grievances (one anonymous, one resolved waiting for feedback, one past its time limit)."""
+    from bson import ObjectId
+
+    office, hod, cell = api["office"], api["hod"], api["grievance"]
+    phd = {"level": "phd", "degree": "Ph.D. Computer Science", "university": "Savitribai Phule Pune University"}
+    teachers = list(db.users.find({"kind": "staff", "roles": {"$in": ["faculty", "hod", "principal"]}}).sort("name", 1))
+    for i, u in enumerate(teachers):
+        roles = set(u["roles"])
+        quals = [{"level": "pg", "degree": "M.Sc. Computer Science", "university": "SPPU", "year": 2008 + i}]
+        if roles & {"hod", "principal"} or i % 3 == 0:
+            quals.append({**phd, "year": 2015 + i % 5})
+        if i % 2 == 0:
+            quals.append({"level": "net", "degree": "UGC NET", "university": None, "year": 2010 + i})
+        designation = (
+            "Principal"
+            if "principal" in roles
+            else "Associate Professor and Head"
+            if "hod" in roles
+            else "Assistant Professor"
+        )
+        office.call(
+            "PUT",
+            f"/staff/{u['_id']}",
+            json={
+                "employee_code": f"T-{101 + i}",
+                "designation": designation,
+                "employment": "contract" if i % 4 == 3 else "permanent",
+                "joined_on": f"{2012 + i % 8}-06-15",
+                "experience_years": i % 4,
+                "qualifications": quals,
+                "university_approved": i % 4 != 3,
+            },
+        )
+    for u in db.users.find({"kind": "staff", "roles": {"$in": ["office", "accounts", "librarian", "warden"]}}):
+        office.call(
+            "PUT", f"/staff/{u['_id']}", json={"designation": u["roles"][0].title() + " staff", "teaching": False}
+        )
+
+    def as_user(user: dict[str, Any]) -> "_Api":
+        return _Api(app, db, user)
+
+    today = date.today()
+    faculty = as_user(db.users.find_one({"email": "faculty@demo.college"}) or {})
+    faculty.call(
+        "POST",
+        "/me/leave",
+        json={
+            "code": "CL",
+            "from_date": (today + timedelta(days=7)).isoformat(),
+            "to_date": (today + timedelta(days=8)).isoformat(),
+            "reason": "Sister's wedding in Kolhapur",
+        },
+    )
+    anita = as_user(db.users.find_one({"email": "anita@demo.college"}) or {})
+    away = anita.call(
+        "POST",
+        "/me/leave",
+        json={
+            "code": "ML",
+            "from_date": today.isoformat(),
+            "to_date": (today + timedelta(days=2)).isoformat(),
+            "reason": "Fever, doctor's advice",
+        },
+    )
+    hod.call("POST", f"/leave/requests/{away['id']}/decide", json={"approve": True, "note": "Get well soon"})
+    for one in (faculty, anita):
+        db.sessions.delete_one({"_id": one.token_id})
+
+    sy = list(db.students.find({"division_id": ObjectId(divisions[2])}).sort("prn", 1))
+    raised = []
+    for st, body in zip(
+        sy[5:8],
+        (
+            {
+                "category": "fees",
+                "subject": "Scholarship amount not adjusted",
+                "text": "My MahaDBT scholarship was credited in August but my fee account still shows it as due.",
+                "anonymous": True,
+            },
+            {
+                "category": "infrastructure",
+                "subject": "Projector in lab 2 not working",
+                "text": "The projector in computer lab 2 has not worked for two weeks; practicals are affected.",
+                "anonymous": False,
+            },
+            {
+                "category": "library",
+                "subject": "Reading room closes early",
+                "text": "The reading room closes at 5 pm, before our last lecture ends. Please keep it open till 7.",
+                "anonymous": False,
+            },
+        ),
+        strict=True,
+    ):
+        user = db.users.find_one({"_id": st["user_id"]})
+        assert user is not None
+        db.users.update_one({"_id": user["_id"]}, {"$set": {"onboarded_at": datetime.now(UTC)}})
+        me = as_user(user)
+        raised.append(me.call("POST", "/me/grievances", json=body))
+        db.sessions.delete_one({"_id": me.token_id})
+        db.users.update_one({"_id": user["_id"]}, {"$unset": {"onboarded_at": ""}})
+    projector, reading = raised[1], raised[2]
+    cell.call("POST", f"/grievances/{projector['id']}/action", json={"action": "take"})
+    cell.call(
+        "POST",
+        f"/grievances/{projector['id']}/action",
+        json={"action": "resolve", "text": "A new projector was installed in lab 2 on Monday."},
+    )
+    db.grievances.update_one(
+        {"_id": ObjectId(reading["id"])}, {"$set": {"due_date": (today - timedelta(days=2)).isoformat()}}
+    )
+    return {"staff records": len(teachers), "leave requests": 2, "grievances": len(raised)}

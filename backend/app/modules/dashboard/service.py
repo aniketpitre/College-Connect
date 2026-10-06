@@ -176,6 +176,37 @@ def _principal(ctx: AuthContext) -> dict[str, Any]:
     }
 
 
+def _leave(ctx: AuthContext) -> dict[str, Any] | None:
+    from app.modules.staff import service as staff
+
+    try:
+        query = staff.approver_query(ctx)
+    except Exception:  # noqa: BLE001 - approves nobody's leave
+        return None
+    db = get_db()
+    today = clock.today().isoformat()
+    away = db.leave_requests.find(
+        {**query, "status": "approved", "from_date": {"$lte": today}, "to_date": {"$gte": today}}, {"user_id": 1}
+    )
+    names = [u["name"] for u in db.users.find({"_id": {"$in": [r["user_id"] for r in away]}}, {"name": 1})]
+    return {
+        "to_approve": db.leave_requests.count_documents({**query, "status": "pending"}),
+        "on_leave_today": sorted(names),
+    }
+
+
+def _grievances(ctx: AuthContext) -> dict[str, Any]:
+    from app.modules.grievance import service as grievance
+
+    db = get_db()
+    scope = grievance.scope(ctx)
+    open_q = {**scope, "status": {"$in": list(grievance.OPEN)}}
+    return {
+        "open": db.grievances.count_documents(open_q),
+        "overdue": db.grievances.count_documents({**open_q, "due_date": {"$lt": clock.today().isoformat()}}),
+    }
+
+
 def dashboard(ctx: AuthContext) -> dict[str, Any]:
     perms = ctx.permissions
     out: dict[str, Any] = {}
@@ -189,4 +220,8 @@ def dashboard(ctx: AuthContext) -> dict[str, Any]:
         out["office"] = _office()
     if P.CERT_SIGN_PRINCIPAL in perms or P.APPROVALS_DECIDE in perms:
         out["principal"] = _principal(ctx)
+    if P.LEAVE_APPROVE in perms and (leave := _leave(ctx)) is not None:
+        out["leave"] = leave
+    if perms & {P.GRIEVANCE_MANAGE, P.GRIEVANCE_READ, P.GRIEVANCE_SENSITIVE}:
+        out["grievances"] = _grievances(ctx)
     return out

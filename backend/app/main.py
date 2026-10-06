@@ -15,6 +15,7 @@ from app.modules.dashboard import router as dashboard
 from app.modules.exams import router as exams
 from app.modules.exports import router as exports
 from app.modules.fees import router as fees
+from app.modules.grievance import router as grievance
 from app.modules.helpdesk import admin as helpdesk_admin
 from app.modules.helpdesk import router as helpdesk
 from app.modules.hostel import router as hostel
@@ -30,6 +31,7 @@ from app.modules.placement import router as placement
 from app.modules.portal import router as portal
 from app.modules.results import router as results
 from app.modules.setup import router as setup
+from app.modules.staff import router as staff
 from app.modules.students import router as students
 from app.modules.system import router as system
 from app.modules.timetable import router as timetable
@@ -68,6 +70,8 @@ ROUTERS: list[APIRouter] = [
     library.router,
     hostel.router,
     placement.router,
+    grievance.router,
+    staff.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

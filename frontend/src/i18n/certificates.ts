@@ -21,6 +21,12 @@ export interface CertStrings {
   sent: string;
   readOnly: string;
   types: Record<string, string>;
+  noDues: string;
+  noDuesClear: string;
+  noDuesIntro: string;
+  duesFees: (year: string, amount: string) => string;
+  duesBook: (title: string, due: string) => string;
+  duesHostel: string;
 }
 
 export const CERT_STRINGS: Record<Language, CertStrings> = {
@@ -51,6 +57,12 @@ export const CERT_STRINGS: Record<Language, CertStrings> = {
       migration: "Migration certificate",
       noc: "No-objection certificate (internship)",
     },
+    noDues: "No-dues check",
+    noDuesClear: "Nothing pending: fees, library and hostel are clear.",
+    noDuesIntro: "Clear these before a TC or migration certificate:",
+    duesFees: (year, amount) => `Fees ${year}: ${amount} to pay`,
+    duesBook: (title, due) => `Library book “${title}” to return (due ${due})`,
+    duesHostel: "Hostel bed to vacate (tell the warden)",
   },
   hi: {
     title: "मेरे प्रमाणपत्र",
@@ -79,6 +91,12 @@ export const CERT_STRINGS: Record<Language, CertStrings> = {
       migration: "माइग्रेशन प्रमाणपत्र",
       noc: "अनापत्ति प्रमाणपत्र (इंटर्नशिप)",
     },
+    noDues: "बकाया जाँच",
+    noDuesClear: "कुछ भी बकाया नहीं: शुल्क, पुस्तकालय और हॉस्टल साफ़ हैं।",
+    noDuesIntro: "टीसी या माइग्रेशन प्रमाणपत्र से पहले ये पूरे करें:",
+    duesFees: (year, amount) => `शुल्क ${year}: ${amount} भरना है`,
+    duesBook: (title, due) => `पुस्तकालय की किताब “${title}” लौटानी है (नियत तारीख ${due})`,
+    duesHostel: "हॉस्टल का बिस्तर खाली करना है (वार्डन को बताएँ)",
   },
   mr: {
     title: "माझी प्रमाणपत्रे",
@@ -107,5 +125,11 @@ export const CERT_STRINGS: Record<Language, CertStrings> = {
       migration: "स्थलांतर प्रमाणपत्र",
       noc: "ना-हरकत प्रमाणपत्र (इंटर्नशिप)",
     },
+    noDues: "थकबाकी तपासणी",
+    noDuesClear: "काहीही बाकी नाही: शुल्क, ग्रंथालय आणि वसतिगृह स्वच्छ आहेत.",
+    noDuesIntro: "टीसी किंवा मायग्रेशन प्रमाणपत्रापूर्वी हे पूर्ण करा:",
+    duesFees: (year, amount) => `शुल्क ${year}: ${amount} भरायचे आहेत`,
+    duesBook: (title, due) => `ग्रंथालयाचे पुस्तक “${title}” परत करायचे आहे (मुदत ${due})`,
+    duesHostel: "वसतिगृहातील बेड रिकामा करायचा आहे (वॉर्डनला कळवा)",
   },
 };

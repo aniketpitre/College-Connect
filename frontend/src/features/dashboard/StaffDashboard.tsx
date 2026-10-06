@@ -174,6 +174,19 @@ function Principal({ d }: { d: NonNullable<Dashboard["principal"]> }) {
   );
 }
 
+function People({ leave, grievances }: { leave?: Dashboard["leave"]; grievances?: Dashboard["grievances"] }) {
+  return (
+    <Section title="People">
+      <div className="tiles dash-tiles">
+        {leave && <Count to="/app/leave" label="Leave to approve" n={leave.to_approve} warn />}
+        {grievances && <Count to="/app/grievances" label="Open grievances" n={grievances.open} />}
+        {grievances && <Count to="/app/grievances" label="Grievances past the time limit" n={grievances.overdue} warn />}
+      </div>
+      {leave && leave.on_leave_today.length > 0 && <p className="muted small">On leave today: {leave.on_leave_today.join(", ")}</p>}
+    </Section>
+  );
+}
+
 /** Staff home widgets (plan 2.11): only the sections the person's roles allow come back from the API. */
 export default function StaffDashboard() {
   const { data } = useDashboard(true);
@@ -185,6 +198,7 @@ export default function StaffDashboard() {
       {data.hod && <Hod d={data.hod} />}
       {data.exam_cell && <ExamCell d={data.exam_cell} />}
       {data.office && <Office d={data.office} />}
+      {(data.leave || data.grievances) && <People leave={data.leave} grievances={data.grievances} />}
     </div>
   );
 }

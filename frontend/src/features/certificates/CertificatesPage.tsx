@@ -9,6 +9,7 @@ import { ApiError } from "../../lib/api";
 import { hasPermission, isLearner, useMe } from "../../lib/auth";
 import {
   myCertificatePdf,
+  noDuesFor,
   staffCertificatePdf,
   useCertAction,
   useCertQueue,
@@ -21,12 +22,14 @@ import {
   type CertStatus,
   type CertType,
   type CertTypeInfo,
+  type Due,
   type NewRequest,
 } from "../../lib/certificates";
 import { useLanguage } from "../../lib/language";
 import { formatPaise } from "../../lib/money";
 import { useStudents } from "../../lib/students";
 import "../attendance/attendance.css";
+import "../students/students.css";
 
 const TONE: Record<CertStatus, "neutral" | "info" | "success" | "warning" | "danger"> = {
   requested: "info",
@@ -125,6 +128,7 @@ function StudentCertificates() {
             </div>
           )}
           <RequestFields T={T} types={data.data.types} value={form} onChange={(v) => (setSent(false), setForm(v))} />
+          {(form.type === "tc" || form.type === "migration") && <NoDues T={T} dues={data.data.no_dues} day={day} />}
           <button type="submit" className="btn btn-primary" disabled={ask.isPending}>
             {T.submit}
           </button>
@@ -158,6 +162,62 @@ function StudentCertificates() {
   );
 }
 
+function NoDues({ T, dues, day }: { T: CertStrings; dues: Due[]; day: (iso: string) => string }) {
+  return (
+    <div className={`no-dues ${dues.length ? "no-dues-owed" : "no-dues-clear"}`} role="status">
+      <b>{T.noDues}</b>
+      {dues.length === 0 ? (
+        <p className="small">{T.noDuesClear}</p>
+      ) : (
+        <>
+          <p className="small">{T.noDuesIntro}</p>
+          <ul className="small">
+            {dues.map((d, i) => (
+              <li key={i}>
+                {d.area === "fees" ? T.duesFees(d.year ?? "", formatPaise(d.amount)) : d.area === "library" ? T.duesBook(d.title ?? "", day(d.due_date ?? "")) : T.duesHostel}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
+const dueText = (d: Due) => (d.amount ? `${d.what} ${formatPaise(d.amount)}` : d.what);
+
+/** Office and Accounts: check a student's dues (fees, library, hostel) before a TC. */
+function NoDuesLookup() {
+  const [prn, setPrn] = useState("");
+  const [result, setResult] = useState<Awaited<ReturnType<typeof noDuesFor>> | null>(null);
+  const [error, setError] = useState("");
+  return (
+    <form
+      className="row-actions no-dues-lookup"
+      onSubmit={(e) => {
+        e.preventDefault();
+        setError("");
+        noDuesFor(prn)
+          .then(setResult)
+          .catch((err: Error) => (setResult(null), setError(err.message)));
+      }}
+    >
+      <label>
+        No-dues check for PRN <input value={prn} onChange={(e) => setPrn(e.target.value)} required aria-label="PRN for the no-dues check" />
+      </label>
+      <button type="submit" className="btn btn-ghost btn-sm">
+        Check
+      </button>
+      {error && <span className="form-error">{error}</span>}
+      {result && (
+        <span className={result.clear ? "small" : "small att-critical"} role="status">
+          {result.student.name}: {result.clear ? "no dues" : result.dues.map(dueText).join("; ")}
+        </span>
+      )}
+    </form>
+  );
+}
+
 /** Office / Principal / HOD / Accounts: the queue, with what each person may do. */
 function StaffCertificates() {
   const { data: me } = useMe();
@@ -187,6 +247,7 @@ function StaffCertificates() {
           </div>
         )}
       </div>
+      {(isOffice || hasPermission(me, "certificates.read")) && <NoDuesLookup />}
       <div className="day-pick" role="group" aria-label="Status">
         {[
           ["open", "In progress"],
@@ -219,7 +280,7 @@ function StaffCertificates() {
               Promised {r.due_date} · signed by the {r.signer_label}
               {r.number && ` · ${r.number}`}
             </p>
-            {r.dues && r.dues.length > 0 && <p className="small att-critical">Dues: {r.dues.map((d) => `${d.what} ${formatPaise(d.amount)}`).join(", ")}</p>}
+            {r.dues && r.dues.length > 0 && <p className="small att-critical">Dues: {r.dues.map(dueText).join(", ")}</p>}
             {r.reason && <p className="small att-critical">Rejected: {r.reason}</p>}
             <div className="row-actions">
               {r.can?.verify && (

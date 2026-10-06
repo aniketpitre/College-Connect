@@ -16,6 +16,8 @@ def test_permission_matrix():
         P.ADMISSIONS_READ,  # applicants' personal data
         P.ADMISSIONS_MANAGE,
         *(P.LIBRARY_MANAGE, P.LIBRARY_READ, P.HOSTEL_MANAGE, P.HOSTEL_READ, P.PLACEMENT_MANAGE, P.PLACEMENT_READ),
+        *(P.GRIEVANCE_MANAGE, P.GRIEVANCE_READ, P.GRIEVANCE_SENSITIVE),  # complaints name students
+        *(P.STAFF_READ, P.STAFF_READ_DEPT, P.STAFF_MANAGE, P.LEAVE_APPROVE),  # staff records are HR's
     }
     # Nor does it run the academic side (timetable, attendance).
     academics = {
@@ -60,6 +62,10 @@ def test_permission_matrix():
         P.LIBRARY_READ,
         P.HOSTEL_READ,
         P.PLACEMENT_READ,
+        P.GRIEVANCE_READ,
+        P.STAFF_READ,
+        P.LEAVE_APPLY,
+        P.LEAVE_APPROVE,
     }
     assert P.USERS_CREATE_STAFF not in permissions_for(["office"])
     assert P.USERS_CREATE_STUDENT in permissions_for(["office"])
@@ -74,10 +80,12 @@ def test_permission_matrix():
         P.FEES_COLLECT,
         P.MESSAGES_READ,
         P.ADMISSIONS_READ,
+        P.LEAVE_APPLY,
     }
     assert permissions_for(["faculty"]) == {
         P.SETUP_READ,
         P.NOTICES_READ,
+        P.LEAVE_APPLY,
         P.TIMETABLE_READ,
         P.ATTENDANCE_TAKE,
         P.MARKS_ENTER,
@@ -87,6 +95,12 @@ def test_permission_matrix():
     assert P.ADMISSIONS_MANAGE in permissions_for(["admission"])
     assert P.LIBRARY_MANAGE in permissions_for(["librarian"]) and P.STUDENTS_READ not in permissions_for(["librarian"])
     assert P.HOSTEL_MANAGE in permissions_for(["warden"]) and P.PLACEMENT_MANAGE in permissions_for(["placement"])
+    # Sensitive grievances (ragging, harassment) only reach the ICC, not even the Principal.
+    sensitive = {role for role, perms in ROLE_PERMISSIONS.items() if P.GRIEVANCE_SENSITIVE in perms}
+    assert sensitive == {Role.ICC}
+    assert P.GRIEVANCE_MANAGE in permissions_for(["grievance"]) and P.STUDENTS_READ not in permissions_for(["icc"])
+    assert {P.STAFF_MANAGE, P.STAFF_READ} <= permissions_for(["office"])
+    assert {P.STAFF_READ_DEPT, P.LEAVE_APPROVE} <= permissions_for(["hod"])
     for role in (Role.STUDENT, Role.PARENT, Role.APPLICANT):
         assert permissions_for([role.value]) == frozenset(), role
 

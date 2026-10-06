@@ -1,0 +1,30 @@
+.staff-wide {
+  grid-column: 1 / -1;
+}
+.staff-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.leave-card {
+  margin-bottom: 12px;
+}
+.qual-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 1fr 90px auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 6px;
+}
+@media (max-width: 640px) {
+  .qual-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.staff-tags {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}

@@ -26,9 +26,12 @@ VARS: dict[str, tuple[str, ...]] = {
     "library_ready": ("student", "title", "date"),
     "outpass_approved": ("student", "place", "from", "to"),
     "placement_selected": ("student", "company", "role"),
+    "grievance_replied": ("student", "number"),
+    "grievance_resolved": ("student", "number"),
 }
 
 # Which part of the student's record each message is about: parents get it only if shared.
+# "private": only the student, never their parents (grievances).
 AREA: dict[str, str | None] = {
     "otp": None,
     "attendance_critical": "attendance",
@@ -44,6 +47,8 @@ AREA: dict[str, str | None] = {
     "library_ready": None,
     "outpass_approved": None,
     "placement_selected": None,
+    "grievance_replied": "private",
+    "grievance_resolved": "private",
 }
 
 LABELS = {
@@ -61,6 +66,8 @@ LABELS = {
     "library_ready": "Reserved book ready",
     "outpass_approved": "Hostel out-pass approved",
     "placement_selected": "Placement offer",
+    "grievance_replied": "Reply to your grievance",
+    "grievance_resolved": "Grievance resolved",
 }
 
 TEXT: dict[str, dict[str, tuple[str, str]]] = {
@@ -264,6 +271,36 @@ TEXT["placement_selected"] = {
     "mr": (
         "{company} कडून निवड",
         "अभिनंदन! {student} यांची {company} मध्ये {role} पदासाठी निवड झाली आहे. प्लेसमेंट सेल ऑफरचा तपशील देईल.",
+    ),
+}
+
+TEXT["grievance_replied"] = {
+    "en": (
+        "Reply to grievance {number}",
+        "The college has replied to your grievance {number}. Open CollegeConnect → Grievances to read it.",
+    ),
+    "hi": (
+        "शिकायत {number} पर उत्तर",
+        "कॉलेज ने आपकी शिकायत {number} पर उत्तर दिया है। पढ़ने के लिए CollegeConnect → शिकायतें खोलें।",
+    ),
+    "mr": (
+        "तक्रार {number} वर उत्तर",
+        "कॉलेजने तुमच्या तक्रार {number} वर उत्तर दिले आहे. वाचण्यासाठी CollegeConnect → तक्रारी उघडा.",
+    ),
+}
+
+TEXT["grievance_resolved"] = {
+    "en": (
+        "Grievance {number} resolved",
+        "Your grievance {number} has been resolved. Please open CollegeConnect → Grievances and tell us if you are satisfied.",
+    ),
+    "hi": (
+        "शिकायत {number} का समाधान",
+        "आपकी शिकायत {number} का समाधान कर दिया गया है। कृपया CollegeConnect → शिकायतें खोलकर बताएँ कि आप संतुष्ट हैं या नहीं।",
+    ),
+    "mr": (
+        "तक्रार {number} चे निवारण",
+        "तुमच्या तक्रार {number} चे निवारण झाले आहे. कृपया CollegeConnect → तक्रारी उघडून तुम्ही समाधानी आहात का ते सांगा.",
     ),
 }
 

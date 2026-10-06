@@ -117,15 +117,54 @@ def add_working_days(start: date, days: int) -> date:
 
 
 def dues(student_id: ObjectId) -> list[dict[str, Any]]:
-    """Every academic year in which the student still owes fees (library and hostel join in Phase 3)."""
+    """Everything the student must clear before a TC or migration certificate (the no-dues
+    check): fees owed in any academic year (library fines and hostel fees are in the fee
+    account), library books not returned, and a hostel bed not vacated."""
+    from app.modules.hostel import service as hostel
+    from app.modules.library import service as library
+
     db = get_db()
-    out = []
+    out: list[dict[str, Any]] = []
     for year_id in db.ledger_entries.distinct("academic_year_id", {"student_id": student_id}):
         balance = ledger.summary(ledger.entries(student_id, year_id))["balance"]
         if balance > 0:
             year = db.academic_years.find_one({"_id": year_id}, {"name": 1}) or {}
-            out.append({"what": f"Fees {year.get('name', '')}".strip(), "amount": balance})
+            name = year.get("name", "")
+            out.append({"area": "fees", "what": f"Fees {name}".strip(), "amount": balance, "year": name})
+    for loan in library.dues(student_id):
+        out.append(
+            {
+                "area": "library",
+                "what": f"Library book not returned: {loan['title']} (due {loan['due_date']})",
+                "amount": 0,
+                "title": loan["title"],
+                "due_date": loan["due_date"],
+            }
+        )
+    for item in hostel.dues(student_id):
+        out.append({"area": "hostel", "what": item, "amount": 0})
     return out
+
+
+def dues_message(owed: list[dict[str, Any]]) -> str:
+    total = sum(d["amount"] for d in owed) / 100
+    parts = [f"fees of Rs. {total:,.2f}"] if total else []
+    books = sum(1 for d in owed if d["area"] == "library")
+    if books:
+        parts.append(f"{books} library book(s) to return")
+    if any(d["area"] == "hostel" for d in owed):
+        parts.append("a hostel bed to vacate")
+    return "The student still has " + " and ".join(parts) + "."
+
+
+def no_dues(ctx: AuthContext, prn: str) -> dict[str, Any]:
+    if not ctx.permissions & {P.CERT_READ, P.CERT_MANAGE}:
+        raise AppError(403, "You don't have permission to do this.", "forbidden")
+    s = get_db().students.find_one({"prn": prn.strip().upper()}, {"name": 1, "prn": 1})
+    if not s:
+        raise AppError(404, "No student with this PRN.", field="prn")
+    owed = dues(s["_id"])
+    return {"student": {"name": s["name"], "prn": s["prn"]}, "clear": not owed, "dues": owed}
 
 
 # --- requests -------------------------------------------------------------------------------
@@ -223,7 +262,11 @@ def mine(ctx: AuthContext) -> dict[str, Any]:
 
     student = students.my_student(ctx)
     rows = get_db().certificate_requests.find({"student_id": student["_id"]}).sort("requested_at", DESCENDING)
-    return {"types": [t for t in types() if t["enabled"]], "requests": [view(r) for r in rows]}
+    return {
+        "types": [t for t in types() if t["enabled"]],
+        "requests": [view(r) for r in rows],
+        "no_dues": dues(student["_id"]),
+    }
 
 
 def _can_sign(ctx: AuthContext, r: dict[str, Any]) -> bool:
@@ -286,12 +329,7 @@ def act(ctx: AuthContext, request_id: str, action: str, reason: str | None, ip: 
             owed = dues(r["student_id"])
             if owed:
                 db.certificate_requests.update_one({"_id": r["_id"]}, {"$set": {"dues": owed}})
-                total = sum(d["amount"] for d in owed) / 100
-                raise AppError(
-                    409,
-                    f"The student still owes Rs. {total:,.2f}. Clear the dues before a {t['name']}.",
-                    "dues_pending",
-                )
+                raise AppError(409, f"{dues_message(owed)} Clear the dues before a {t['name']}.", "dues_pending")
         changes = {"status": "verified", "dues": []}
     elif action == "sign":
         if r["status"] != "verified" or not _can_sign(ctx, r):

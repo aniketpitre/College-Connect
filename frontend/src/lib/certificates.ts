@@ -32,7 +32,7 @@ export interface CertRequest {
   overdue: boolean;
   escalated: boolean;
   reason: string | null;
-  dues: { what: string; amount: number }[] | null;
+  dues: Due[] | null;
   certificate_id: string | null;
   number: string | null;
   can?: { verify: boolean; sign: boolean; issue: boolean; reject: boolean };
@@ -49,8 +49,18 @@ export interface NewRequest {
 
 const KEY = ["certificates"] as const;
 
+export interface Due {
+  area: "fees" | "library" | "hostel";
+  what: string;
+  amount: number;
+  year?: string;
+  title?: string;
+  due_date?: string;
+}
 export const useMyCertificates = () =>
-  useQuery({ queryKey: [...KEY, "me"], queryFn: () => apiFetch<{ types: CertTypeInfo[]; requests: CertRequest[] }>("/me/certificates") });
+  useQuery({ queryKey: [...KEY, "me"], queryFn: () => apiFetch<{ types: CertTypeInfo[]; requests: CertRequest[]; no_dues: Due[] }>("/me/certificates") });
+export const noDuesFor = (prn: string) =>
+  apiFetch<{ student: { name: string; prn: string }; clear: boolean; dues: Due[] }>(`/certificates/no-dues?prn=${encodeURIComponent(prn)}`);
 export const useCertQueue = (status: string) =>
   useQuery({ queryKey: [...KEY, "queue", status], queryFn: () => apiFetch<CertRequest[]>(`/certificates/requests${status ? `?status=${status}` : ""}`) });
 export const useCertTypes = () => useQuery({ queryKey: [...KEY, "types"], queryFn: () => apiFetch<CertTypeInfo[]>("/certificates/types") });

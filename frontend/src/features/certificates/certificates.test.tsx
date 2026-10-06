@@ -54,6 +54,27 @@ describe("certificates", () => {
     expect((await screen.findByRole("link", { name: "Download (PDF)" })).getAttribute("href")).toBe("/api/v1/me/certificates/r1/pdf");
   });
 
+  it("choosing a TC shows the no-dues check: a library book and a hostel bed, in Marathi", async () => {
+    localStorage.setItem("cc-lang", "mr");
+    const student = makeMe({ kind: "student", prn: "2026BCA003", roles: ["student"], role_labels: ["Student"] });
+    const no_dues = [
+      { area: "library", what: "Library book not returned", amount: 0, title: "Let Us C", due_date: "2026-09-15" },
+      { area: "hostel", what: "Hostel bed not vacated", amount: 0 },
+    ];
+    mockApi((_m, path) => {
+      if (path === "/auth/me") return { status: 200, body: student };
+      if (path === "/me/certificates") return { status: 200, body: { types, requests: [], no_dues } };
+      return { status: 404 };
+    });
+    renderApp("/app/certificates");
+    expect(await screen.findByText("साधारणपणे 2 कामकाजाच्या दिवसांत तयार.")).toBeTruthy();
+    expect(screen.queryByText("थकबाकी तपासणी")).toBeNull(); // only for a TC or migration
+    fireEvent.change(screen.getByLabelText("प्रमाणपत्र"), { target: { value: "tc" } });
+    expect(await screen.findByText("थकबाकी तपासणी")).toBeTruthy();
+    expect(screen.getByText(/“Let Us C” परत करायचे आहे/)).toBeTruthy();
+    expect(screen.getByText(/बेड रिकामा करायचा आहे/)).toBeTruthy();
+  });
+
   it("the office verifies; an overdue request is marked", async () => {
     const office = makeMe({ roles: ["office"], permissions: ["certificates.manage", "certificates.read", "students.read"] });
     const calls = mockApi((_m, path) => {
