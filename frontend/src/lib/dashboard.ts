@@ -23,7 +23,26 @@ export interface Dashboard {
   principal?: { approvals: number; exports: number; certificates_to_sign: number; certificates_overdue: number; attendance_minimum: number };
   leave?: { to_approve: number; on_leave_today: string[] };
   grievances?: { open: number; overdue: number };
+  risk?: { high: number; medium: number };
+  overview?: {
+    year: string | null;
+    admissions?: { seats: number; applied: number; admitted: number };
+    fees?: { demand: number; waived: number; collected: number; outstanding: number; percent: number | null };
+    marks?: { sheets: number; done: number; percent: number | null };
+    attendance: { average: number | null; below_minimum: number; minimum: number; as_of: string | null };
+    certificates: { issued_90_days: number; average_days: number | null; overdue: number };
+    risk: { high: number; medium: number };
+    pending: { approvals: number; leave: number; grievances_overdue: number };
+  };
+  accounts?: {
+    today: Collected;
+    month: Collected;
+    year?: Collected;
+    receivables?: { total: number; overdue: number; overdue_students: number; by_year: { year_of_study: number; amount: number }[] };
+    pending_approvals?: number;
+  };
 }
+type Collected = { total: number; by_mode: Record<string, number> };
 
 export const useDashboard = (enabled: boolean) =>
   useQuery({ queryKey: ["dashboard"], queryFn: () => apiFetch<Dashboard>("/dashboard"), enabled });
