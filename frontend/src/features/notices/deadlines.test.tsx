@@ -95,7 +95,7 @@ describe("knowledge gaps", () => {
       categories: ["notices", "hostel"],
       status: { retrieval: "bm25", generation: "extractive", chunks: 0, documents: 0, embeddings_configured: false, chunks_total: 0, chunks_embedded: 0 },
     };
-    const calls = mockApi((method, path) => {
+    const calls = mockApi((_method, path) => {
       if (path === "/auth/me") return { status: 200, body: office };
       if (path === "/dashboard") return { status: 200, body: { help_desk: { unanswered: 1, asked: 3, top: gaps } } };
       if (path === "/kb/documents") return { status: 200, body: kb };
