@@ -100,12 +100,46 @@ def _extractive(language: str, hits: list[tuple[dict, float]], confidence: float
     }
 
 
-def answer_question(question: str, language: str, category: str | None = None, allowed: Allowed | None = None) -> dict:
-    """`allowed` limits the documents to those the asker may see (None: every chunk in the index;
-    the public help desk passes the public-only filter)."""
-    hits, confidence = _retrieve(question, language, category, allowed)
+def _record_answer(record: list[dict], hits: list[tuple[dict, float]], allowed: Allowed | None) -> dict:
+    """The asker's own record, quoted (no AI needed: the excerpts are written in their language),
+    with the document that explains it: from the search, or (a Hindi/Marathi question the keyword
+    search can't match) found with the record's own English search hint."""
+    related = {cat for r in record for cat in r.get("related", [])}
+    doc = next((c for c, _ in hits if c["category"] in related), None)
+    if doc is None:
+        for r in record:
+            found = get_index().bm25_search(r.get("hint", ""), 3, None, allowed)
+            doc = next((c for c, _ in found if c["category"] in related), None)
+            if doc:
+                break
+    return {
+        "answer": "\n\n".join(r["text"] for r in record),
+        "category": record[0]["category"],
+        "sources": [_source(r) for r in record] + ([_source(doc)] if doc else []),
+        "confidence": 0.9,
+        "grounded": True,
+    }
 
-    if not hits:
+
+def answer_question(
+    question: str,
+    language: str,
+    category: str | None = None,
+    allowed: Allowed | None = None,
+    record: list[dict] | None = None,
+    personal: bool = False,
+) -> dict:
+    """`allowed` limits the documents to those the asker may see (None: every chunk in the index;
+    the public help desk passes the public-only filter). `record`: excerpts of the asker's own
+    record (Ask my record), cited like documents; `personal`: the question is about the asker
+    ("my fees"), so without an AI the record itself is the answer."""
+    hits, confidence = _retrieve(question, language, category, allowed)
+    record = record or []
+
+    if record and not generator.llm_available() and (personal or not hits):
+        return _record_answer(record, hits, allowed)
+
+    if not hits and not record:
         return {
             "answer": NOT_FOUND[language],
             "category": category or "notices",
@@ -126,18 +160,23 @@ def answer_question(question: str, language: str, category: str | None = None, a
             }
         return _extractive(language, hits, confidence)
 
-    chunks = [c for c, _ in hits]
+    def fallback() -> dict:
+        if record and (personal or not hits):
+            return _record_answer(record, hits, allowed)
+        return _extractive(language, hits, confidence)
+
+    chunks = record + [c for c, _ in hits]
     try:
         result = generator.generate_answer(question, language, chunks)
     except anthropic.RateLimitError:
         log.warning("Claude rate limited; returning extractive answer")
-        return _extractive(language, hits, confidence)
+        return fallback()
     except anthropic.APIStatusError as e:
         log.error("Claude API error %s: %s", e.status_code, e.message)
-        return _extractive(language, hits, confidence)
+        return fallback()
     except anthropic.APIConnectionError:
         log.exception("Could not reach Claude; returning extractive answer")
-        return _extractive(language, hits, confidence)
+        return fallback()
 
     if result is None or not result.answerable:
         return {
@@ -154,6 +193,6 @@ def answer_question(question: str, language: str, category: str | None = None, a
         "answer": result.answer,
         "category": cited[0]["category"],
         "sources": _dedupe_sources(cited),
-        "confidence": round(confidence, 2),
+        "confidence": 0.9 if any(c.get("record") for c in cited) else round(confidence, 2),
         "grounded": True,
     }

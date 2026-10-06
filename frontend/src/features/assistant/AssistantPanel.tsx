@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { ASSISTANT_STRINGS } from "../../i18n/assistant";
 import { useAskAssistant } from "../../lib/assistant";
+import { useMe } from "../../lib/auth";
 import { useLanguage } from "../../lib/language";
 import type { ChatMessage } from "../../lib/types";
 import "./assistant.css";
@@ -13,6 +14,8 @@ const uid = () => `m${++next}`;
 export function AssistantPanel() {
   const [language] = useLanguage();
   const t = ASSISTANT_STRINGS[language];
+  const { data: me } = useMe();
+  const mine = me?.kind === "student" || me?.kind === "parent";
   const ask = useAskAssistant();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -66,8 +69,8 @@ export function AssistantPanel() {
       <div className="assistant-list" ref={listRef} aria-live="polite">
         {messages.length === 0 && (
           <div className="assistant-intro">
-            <p className="small">{t.intro}</p>
-            {t.examples.map((q) => (
+            <p className="small">{mine ? t.introMine : t.intro}</p>
+            {(mine ? t.examplesMine : t.examples).map((q) => (
               <button key={q} type="button" className="assistant-chip" onClick={() => send(q)}>
                 {q}
               </button>

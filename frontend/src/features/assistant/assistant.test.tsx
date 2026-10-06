@@ -29,7 +29,8 @@ describe("assistant panel", () => {
     });
     renderApp("/app/notices");
     fireEvent.click(await screen.findByRole("button", { name: /विचारा/ }));
-    expect(screen.getByText(/उत्तरे फक्त महाविद्यालयाच्या/)).toBeTruthy();
+    expect(screen.getByText(/उत्तरे फक्त तुमची स्वतःची नोंद/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "मला अजून किती फी भरायची आहे?" })).toBeTruthy();
     fireEvent.change(screen.getByRole("textbox", { name: "तुमचा प्रश्न लिहा…" }), { target: { value: "सोमवारी कॉलेज बंद आहे का?" } });
     fireEvent.click(screen.getByRole("button", { name: "विचारा" }));
     expect(await screen.findByText("सोमवारी महाविद्यालय बंद आहे.")).toBeTruthy();

@@ -14,6 +14,7 @@ from typing import Any
 from fastapi.testclient import TestClient
 from pymongo.database import Database
 
+from app.core import clock
 from app.core.security import hash_password, new_token, token_hash
 from app.main import create_app
 from app.modules.users import repo
@@ -240,7 +241,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         },
     )
 
-    today = date.today()
+    today = clock.today()
     for title, body_text, audience, pinned in (
         (
             "Exam form deadline",
@@ -393,9 +394,9 @@ def _seed_academics(
                 if roll < 0.3
                 else rng.uniform(0.0, 0.1)
             )
-        first = max(start, date.today() - timedelta(days=21))
+        first = max(start, clock.today() - timedelta(days=21))
         day = first
-        while day < date.today():
+        while day < clock.today():
             if day.isoweekday() != 7:
                 week = hod.call("GET", "/timetable/week", params={"division_id": divisions[y], "day": day.isoformat()})
                 lectures = next(d for d in week["days"] if d["date"] == day.isoformat())["lectures"]
@@ -428,7 +429,7 @@ def _seed_exams(
     from bson import ObjectId
 
     exam, hod = api["exam_cell"], api["hod"]
-    today = date.today()
+    today = clock.today()
     subjects = list(db.subjects.find({"programme_id": ObjectId(bca["id"])}).sort("code", 1))
     for s in subjects:
         parts = (
@@ -568,7 +569,7 @@ def _seed_certificates(
             office.call("POST", f"/certificates/requests/{req['id']}/action", json={"action": step})
     # One request is past its promised date, as the Principal's dashboard would show it.
     db.certificate_requests.update_one(
-        {"purpose": "Passport application"}, {"$set": {"due_date": (date.today() - timedelta(days=1)).isoformat()}}
+        {"purpose": "Passport application"}, {"$set": {"due_date": (clock.today() - timedelta(days=1)).isoformat()}}
     )
     return len(plan)
 
@@ -616,7 +617,7 @@ def _seed_admissions(
     """An open admission for BCA with applicants at every stage, and two call-back enquiries."""
     cell = api["admission"]
     cats = {c["code"]: str(c["_id"]) for c in db.categories.find({})}
-    today = date.today()
+    today = clock.today()
     body = {
         "name": f"Admissions {year['name']}",
         "academic_year_id": year["id"],
@@ -736,7 +737,7 @@ def _seed_campus(
         lib.call("POST", "/library/issue", json={"barcode": barcode, "prn": fy[i]["prn"]})
     # The first loan is a week overdue (a fine is building up).
     db.loans.update_one(
-        {"barcode": "LIB000001"}, {"$set": {"due_date": (date.today() - timedelta(days=7)).isoformat()}}
+        {"barcode": "LIB000001"}, {"$set": {"due_date": (clock.today() - timedelta(days=7)).isoformat()}}
     )
 
     block = warden.call(
@@ -758,7 +759,7 @@ def _seed_campus(
     assert user is not None
     me = _Api(app, db, user)
     db.users.update_one({"_id": user["_id"]}, {"$set": {"onboarded_at": datetime.now(UTC)}})
-    leave = datetime.combine(date.today() + timedelta(days=2), datetime.min.time()).replace(hour=9)
+    leave = datetime.combine(clock.today() + timedelta(days=2), datetime.min.time()).replace(hour=9)
     me.call(
         "POST",
         "/me/hostel/outpasses",
@@ -777,7 +778,7 @@ def _seed_campus(
     db.sessions.delete_one({"_id": me.token_id})
     db.users.update_one({"_id": user["_id"]}, {"$unset": {"onboarded_at": ""}})
 
-    register_by = (date.today() + timedelta(days=14)).isoformat()
+    register_by = (clock.today() + timedelta(days=14)).isoformat()
     drives = [
         cell.call(
             "POST",
@@ -883,7 +884,7 @@ def _seed_people(
     def as_user(user: dict[str, Any]) -> "_Api":
         return _Api(app, db, user)
 
-    today = date.today()
+    today = clock.today()
     faculty = as_user(db.users.find_one({"email": "faculty@demo.college"}) or {})
     faculty.call(
         "POST",

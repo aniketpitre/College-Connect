@@ -861,6 +861,24 @@ Shipped as four PRs: **5A** (5.1–5.3), **5B** (5.4–5.5), **5C** (5.6–5.7),
   questions an hour per person. Logged like the public help desk (question, language, source,
   `channel: portal`), never with who asked.
 
+**Delivered in the "Phase 5B" PR (5.4–5.5):**
+- Ask my record (`app/modules/assistant/record.py`): for a signed-in student, or a parent for the
+  chosen child, the question's areas (fees, certificates, attendance, marks/results; keywords in
+  English, Hindi and Marathi) become short excerpts of their own record, built through the same
+  service functions as their own pages (nothing takes a student id from the request). Parents get
+  only what the student shares (certificates always). The excerpts are written by templates in
+  the asker's language with exact amounts, percentages and dates, and cited like documents ("Your
+  fee account, as of 06-10-2026", linking to the page), next to the document that explains the
+  rule (the fee notice, found with an English search hint when the question is in Hindi/Marathi).
+- With an AI key the model gets the record and the document excerpts together and cites both;
+  without one, a personal question ("my fees", "मला किती फी") is answered with the record excerpt
+  itself, so the answer is exact either way.
+- Never logged: the help-desk log keeps the question, language and the source's name only.
+  Tests: a student's balance never appears in another student's answers, even when asked by name;
+  a parent loses the fee answer when the student stops sharing fees.
+- Demo data uses India's date (`clock.today()`), so the seeded overdue book is exactly 7 days late
+  at any hour.
+
 ### 9.3 Acceptance criteria
 - A student asks in Marathi "मला अजून किती फी भरायची आहे?" and gets the exact balance from their ledger, citing their fee account and the fee notice.
 - No question, however phrased, returns another student's data (automated red-team tests).
