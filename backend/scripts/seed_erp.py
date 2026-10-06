@@ -33,6 +33,7 @@ STAFF = [
     ("placement", "Ritu Agarwal", "placement@demo.college"),
     ("grievance", "Pooja Kulkarni", "grievance@demo.college"),
     ("icc", "Dr. Leena Patil", "icc@demo.college"),
+    ("iqac", "Dr. Smita Joshi", "iqac@demo.college"),
 ]
 # Other Computer Science teachers (they can sign in too, with the demo password).
 TEACHERS = [
@@ -274,6 +275,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
     applications = _seed_admissions(app, db, api, bca, year)
     campus = _seed_campus(app, db, api, divisions)
     people = _seed_people(app, db, api, divisions)
+    reports = _seed_reports(db, api, bca)
 
     for one in api.values():
         db.sessions.delete_one({"_id": one.token_id})
@@ -293,6 +295,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         "applications": applications,
         **campus,
         **people,
+        **reports,
     }
 
 
@@ -858,6 +861,9 @@ def _seed_people(
             json={
                 "employee_code": f"T-{101 + i}",
                 "designation": designation,
+                "gender": "female" if i % 2 else "male",
+                "social_category": ("general", "obc", "sc", "general", "st")[i % 5],
+                "appointment_order": None if i == 1 else f"SPPU/APPT/{2012 + i % 8}/{301 + i}",
                 "employment": "contract" if i % 4 == 3 else "permanent",
                 "joined_on": f"{2012 + i % 8}-06-15",
                 "experience_years": i % 4,
@@ -944,3 +950,20 @@ def _seed_people(
         {"_id": ObjectId(reading["id"])}, {"$set": {"due_date": (today - timedelta(days=2)).isoformat()}}
     )
     return {"staff records": len(teachers), "leave requests": 2, "grievances": len(raised)}
+
+
+def _seed_reports(db: Database[dict[str, Any]], api: dict[str, "_Api"], bca: dict[str, Any]) -> dict[str, int]:
+    """NAAC settings, APAAR IDs for most students (one shared by mistake) and one evidence file."""
+    iqac = api["iqac"]
+    iqac.call("PUT", "/reports/naac/settings", json={"sanctioned_posts": 14, "intake": {bca["id"]: 60}})
+    students = list(db.students.find({}, {"_id": 1}).sort("prn", 1))
+    for i, st in enumerate(students[:50]):
+        db.students.update_one({"_id": st["_id"]}, {"$set": {"apaar_id": f"{700000000000 + 7919 * (i + 1)}"}})
+    db.students.update_one({"_id": students[50]["_id"]}, {"$set": {"apaar_id": f"{700000000000 + 7919}"}})
+    iqac.call(
+        "POST",
+        "/reports/naac/1.2.1/evidence",
+        files={"file": ("affiliation.pdf", PDF, "application/pdf")},
+        data={"title": "University affiliation letter (BCA)"},
+    )
+    return {"students with APAAR IDs": 51}

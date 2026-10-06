@@ -696,6 +696,32 @@ grievance, staff and leave, no-dues).
 | 4.6 | Full export + data dictionary; API keys + OpenAPI docs |
 | 4.7 | Load test, restore drill, security review fixes |
 
+**Delivered in the "Phase 4A" PR (4.1–4.2):**
+- NAAC (`reports/naac.py`, new role `iqac` "IQAC Coordinator"; Principal and Office can read):
+  14 metrics of the affiliated-college framework (1.2.1, 2.1.1, 2.1.2, 2.2.2, 2.4.1, 2.4.2,
+  2.6.3, 4.2.4, 5.1.1, 5.1.5, 5.2.1, and 5.2.2, 3.3.1, 7.1.1 as manual) computed for a chosen
+  academic year from the records: the value, the AQAR table (CSV per metric) and the gaps that
+  weaken it ("1 full-time teacher has no appointment order recorded", "No sanctioned intake for
+  BCA"). Each metric lists the evidence NAAC expects; the IQAC uploads files per metric and year,
+  and a metric without evidence is a gap. Settings: sanctioned teaching posts and first-year
+  intake (used when admissions aren't run in CollegeConnect). The whole AQAR with its gaps
+  report is one call.
+- AISHE: students by programme and year, by gender and social group (the Maharashtra
+  categories grouped into General, EWS, SC, ST, OBC), and staff by designation, gender and
+  social group (staff records now carry gender and social category); CSV for each. PwD and
+  minority status are not recorded yet and are listed as a gap.
+- NIRF: the data points CollegeConnect can fill (intake, strength, female and out-of-state
+  students, socially challenged, scholarships, final-year passes, placements and median
+  salary, full-time teachers, Ph.D.s, experience); the rest are entered on the portal.
+- APAAR / ABC: missing, malformed and duplicate APAAR IDs; import from a CSV with PRN and APAAR
+  ID columns (bad rows reported, never half-applied to the wrong student); credits earned in
+  the year's published results exported as a CSV for the ABC portal (passed courses only;
+  students without a valid ID are left out and counted; each export is audited).
+- DigiLocker / NAD issuing needs the college's registration as an issuer; certificates already
+  carry a QR verify link, and pushing them to DigiLocker is left until that registration exists.
+- Demo data: `iqac@demo.college`; sanctioned posts and intake, APAAR IDs for 51 students (one
+  shared by mistake), one evidence file.
+
 ### 8.3 Acceptance criteria
 - The AQAR tables for a year are generated in minutes, with a list of missing evidence.
 - A mentor sees each at-risk mentee with the specific reasons, and the student never sees the risk label.

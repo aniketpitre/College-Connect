@@ -106,14 +106,32 @@ def test_aishe_nirf_apaar_and_abc_credits(client, sign_in, db, fees):  # noqa: F
          "classes": [], "created_at": datetime.now(UTC)}
     ).inserted_id  # fmt: skip
     subjects = [
-        {"code": "BCA101", "name": "Programming in C", "semester": 1, "credits": 4.0, "grade": "A", "grade_point": 8, "passed": True},
-        {"code": "BCA102", "name": "Mathematics I", "semester": 1, "credits": 4.0, "grade": "F", "grade_point": 0, "passed": False},
-    ]  # fmt: skip
+        {
+            "code": "BCA101",
+            "name": "Programming in C",
+            "semester": 1,
+            "credits": 4.0,
+            "grade": "A",
+            "grade_point": 8,
+            "passed": True,
+        },
+        {
+            "code": "BCA102",
+            "name": "Mathematics I",
+            "semester": 1,
+            "credits": 4.0,
+            "grade": "F",
+            "grade_point": 0,
+            "passed": False,
+        },
+    ]
     for prn in ("2026BCA001", "2026BCA003"):
         sid = db.students.find_one({"prn": prn})["_id"]
         db.results.insert_one({"session_id": session, "student_id": sid, "subjects": subjects, "outcome": "fail"})
     preview = office.get(f"{API}/reports/apaar/credits").json()
     assert (preview["rows"], preview["credits"], preview["skipped_without_apaar"]) == (1, 4.0, 1)
     lines = office.get(f"{API}/reports/apaar/credits.csv").text.splitlines()
-    assert lines[0].startswith("APAAR ID,PRN,Name") and lines[1].startswith("123456789012,2026BCA001,Rohan Patil,BCA,1,BCA101")
+    assert lines[0].startswith("APAAR ID,PRN,Name") and lines[1].startswith(
+        "123456789012,2026BCA001,Rohan Patil,BCA,1,BCA101"
+    )
     assert db.audit_log.find_one({"action": "reports.abc_credits_exported"})["details"]["rows"] == 1
