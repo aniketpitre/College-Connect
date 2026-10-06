@@ -18,13 +18,17 @@ type VerifyStrings = Record<
     issuedBy: string;
     cancelledOn: string;
     back: string;
+    genuineCert: string;
+    revokedCert: string;
+    certNo: string;
+    document: string;
   }
 >;
 
 /** Public Verify page (scanned from a receipt's QR code). */
 export const VERIFY: VerifyStrings = {
   en: {
-    title: "Verify a receipt",
+    title: "Check a receipt or certificate",
     checking: "Checking…",
     genuine: "Genuine receipt",
     cancelled: "This receipt was cancelled",
@@ -37,9 +41,13 @@ export const VERIFY: VerifyStrings = {
     issuedBy: "Issued by",
     cancelledOn: "Cancelled on",
     back: "Back to the help desk",
+    genuineCert: "Genuine certificate",
+    revokedCert: "This certificate was withdrawn",
+    certNo: "Certificate no.",
+    document: "Document",
   },
   hi: {
-    title: "रसीद सत्यापित करें",
+    title: "रसीद या प्रमाणपत्र जांचें",
     checking: "जांच हो रही है…",
     genuine: "असली रसीद",
     cancelled: "यह रसीद रद्द कर दी गई है",
@@ -52,9 +60,13 @@ export const VERIFY: VerifyStrings = {
     issuedBy: "जारीकर्ता",
     cancelledOn: "रद्द करने की तिथि",
     back: "हेल्प डेस्क पर वापस जाएं",
+    genuineCert: "असली प्रमाणपत्र",
+    revokedCert: "यह प्रमाणपत्र वापस ले लिया गया है",
+    certNo: "प्रमाणपत्र क्रमांक",
+    document: "दस्तावेज़",
   },
   mr: {
-    title: "पावती पडताळा",
+    title: "पावती किंवा प्रमाणपत्र पडताळा",
     checking: "तपासत आहे…",
     genuine: "खरी पावती",
     cancelled: "ही पावती रद्द केली आहे",
@@ -67,6 +79,10 @@ export const VERIFY: VerifyStrings = {
     issuedBy: "देणारे",
     cancelledOn: "रद्द केल्याचा दिनांक",
     back: "हेल्प डेस्कवर परत जा",
+    genuineCert: "खरे प्रमाणपत्र",
+    revokedCert: "हे प्रमाणपत्र मागे घेतले आहे",
+    certNo: "प्रमाणपत्र क्रमांक",
+    document: "दस्तऐवज",
   },
 };
 

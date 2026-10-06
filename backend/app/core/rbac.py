@@ -86,6 +86,10 @@ class P(StrEnum):
     MARKS_READ = "marks.read"  # every class
     EXAMS_MANAGE = "exams.manage"  # Exam Cell: schemes, deadlines, lock, Upload Guard, forms, hall tickets, results
     RESULTS_READ = "results.read"
+    CERT_MANAGE = "certificates.manage"  # office: verify, sign office certificates, issue, reject
+    CERT_SIGN_PRINCIPAL = "certificates.sign.principal"  # TC, migration
+    CERT_SIGN_HOD = "certificates.sign.hod"  # department-level certificates (internship NOC)
+    CERT_READ = "certificates.read"  # accounts (no-dues), principal
     EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
 
 
@@ -123,6 +127,8 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.ATTENDANCE_READ,
         P.MARKS_READ,
         P.RESULTS_READ,
+        P.CERT_READ,
+        P.CERT_SIGN_PRINCIPAL,
     }
     | _PUBLISH,
     Role.OFFICE: _STAFF_BASE
@@ -141,9 +147,11 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.ATTENDANCE_READ,
         P.ATTENDANCE_EXEMPT,
         P.RESULTS_READ,
+        P.CERT_MANAGE,
+        P.CERT_READ,
     }
     | _PUBLISH,
-    Role.ACCOUNTS: _STAFF_BASE | {P.STUDENTS_READ, P.FEES_READ, P.FEES_MANAGE, P.FEES_COLLECT} | _PUBLISH,
+    Role.ACCOUNTS: _STAFF_BASE | {P.STUDENTS_READ, P.FEES_READ, P.FEES_MANAGE, P.FEES_COLLECT, P.CERT_READ} | _PUBLISH,
     # Read the student master (spec §2.3). HOD/faculty/mentor get scoped access with class
     # assignments in Phase 2.
     Role.ADMISSION: _STAFF_BASE | {P.STUDENTS_READ} | _PUBLISH,
@@ -162,6 +170,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.MARKS_ENTER,
         P.MARKS_APPROVE,
         P.MARKS_SCHEME_DEPT,
+        P.CERT_SIGN_HOD,
     },
     **{
         role: _STAFF_BASE | {P.TIMETABLE_READ, P.ATTENDANCE_TAKE, P.MARKS_ENTER} for role in (Role.FACULTY, Role.MENTOR)

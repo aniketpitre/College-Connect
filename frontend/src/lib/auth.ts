@@ -21,6 +21,8 @@ export interface Me {
   session_state: SessionState;
   language?: Language | null;
   onboarding_required?: boolean;
+  /** A student who has left (TC issued): can read and download, not change. */
+  read_only?: boolean;
 }
 
 export const ME_KEY = ["auth", "me"] as const;

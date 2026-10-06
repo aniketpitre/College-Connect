@@ -143,9 +143,12 @@ def signed_in_allow_password_change(ctx: AuthContext = Depends(any_session)) -> 
     return ctx
 
 
-def signed_in(ctx: AuthContext = Depends(signed_in_allow_password_change)) -> AuthContext:
+def signed_in(request: Request, ctx: AuthContext = Depends(signed_in_allow_password_change)) -> AuthContext:
     if ctx.user.get("must_change_password"):
         raise AppError(403, "Set a new password to continue.", "password_change_required")
+    if ctx.user.get("read_only") and request.method not in {"GET", "HEAD", "OPTIONS"}:
+        # After a TC the former student can still sign in to read and download, but not change anything.
+        raise AppError(403, "Your account is read-only: you have left the college.", "read_only")
     return ctx
 
 

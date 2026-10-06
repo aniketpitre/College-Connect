@@ -229,3 +229,6 @@
   color: #b7791f;
   font-weight: 600;
 }
+.cert-overdue {
+  border-left: 4px solid var(--danger);
+}

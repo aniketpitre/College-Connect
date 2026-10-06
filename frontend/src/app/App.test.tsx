@@ -43,7 +43,7 @@ describe("portal access", () => {
     renderApp("/app");
     expect(await screen.findByRole("heading", { name: "Welcome, Asha" })).toBeTruthy();
     expect(screen.getAllByText("Faculty").length).toBeGreaterThan(0);
-    expect(screen.getByText("Certificates").closest("[aria-disabled]")).toBeTruthy();
+    expect(document.querySelector("[aria-disabled]")).toBeNull(); // every Phase 1–2 screen is built
     expect(screen.queryByText("Fees & receipts")).toBeNull(); // needs fees.read
     expect(screen.queryByText("Students")).toBeNull(); // needs students.read
     expect(screen.queryByRole("link", { name: "Users" })).toBeNull();
