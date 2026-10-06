@@ -14,7 +14,9 @@ export interface PaymentOrder {
 
 export interface OnlinePayment {
   id: string;
-  student_id: string;
+  purpose?: "fees" | "application";
+  application_id?: string | null;
+  student_id: string | null;
   student: { name: string; prn: string } | null;
   academic_year: string;
   amount: number;

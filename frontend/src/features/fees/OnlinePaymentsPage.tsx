@@ -81,10 +81,11 @@ export default function OnlinePaymentsPage() {
                 <tr key={p.id}>
                   <td>{new Date(p.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</td>
                   <td>
-                    <Link to={`/app/fees/students/${p.student_id}`}>{p.student?.name}</Link>
+                    {p.student_id ? <Link to={`/app/fees/students/${p.student_id}`}>{p.student?.name}</Link> : p.student?.name}
                     <div className="muted small">
                       {p.student?.prn}
                       {p.paid_by === "parent" ? " · paid by parent" : ""}
+                      {p.purpose === "application" ? " · application fee" : ""}
                     </div>
                   </td>
                   <td className="num">

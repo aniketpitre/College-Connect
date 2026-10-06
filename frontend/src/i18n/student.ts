@@ -81,7 +81,7 @@ const EN: StudentStrings = {
     other: "Other document",
   },
   docStatus: { pending: "Waiting for check", verified: "Verified", rejected: "Not accepted" },
-  studentStatus: { active: "Active", tc: "TC issued", graduated: "Graduated", dropped: "Left", detained: "Detained" },
+  studentStatus: { active: "Active", tc: "TC issued", graduated: "Graduated", dropped: "Left", detained: "Detained", cancelled: "Admission cancelled" },
   requestStatus: { pending: "Waiting for the office", approved: "Corrected", rejected: "Not changed" },
   genders: { female: "Female", male: "Male", other: "Other" },
   sections: {
@@ -169,7 +169,7 @@ const HI: StudentStrings = {
     other: "अन्य दस्तावेज़",
   },
   docStatus: { pending: "जांच बाकी", verified: "सत्यापित", rejected: "स्वीकार नहीं" },
-  studentStatus: { active: "सक्रिय", tc: "TC जारी", graduated: "उत्तीर्ण", dropped: "छोड़ दिया", detained: "रोका गया" },
+  studentStatus: { active: "सक्रिय", tc: "TC जारी", graduated: "उत्तीर्ण", dropped: "छोड़ दिया", detained: "रोका गया", cancelled: "प्रवेश रद्द" },
   requestStatus: { pending: "कार्यालय की प्रतीक्षा", approved: "सुधार हो गया", rejected: "बदलाव नहीं हुआ" },
   genders: { female: "महिला", male: "पुरुष", other: "अन्य" },
   sections: {
@@ -257,7 +257,7 @@ const MR: StudentStrings = {
     other: "इतर कागदपत्र",
   },
   docStatus: { pending: "तपासणी बाकी", verified: "पडताळले", rejected: "स्वीकारले नाही" },
-  studentStatus: { active: "सक्रिय", tc: "TC दिला", graduated: "उत्तीर्ण", dropped: "सोडले", detained: "अडवले" },
+  studentStatus: { active: "सक्रिय", tc: "TC दिला", graduated: "उत्तीर्ण", dropped: "सोडले", detained: "अडवले", cancelled: "प्रवेश रद्द" },
   requestStatus: { pending: "कार्यालयाची प्रतीक्षा", approved: "दुरुस्त केले", rejected: "बदल केला नाही" },
   genders: { female: "स्त्री", male: "पुरुष", other: "इतर" },
   sections: {
