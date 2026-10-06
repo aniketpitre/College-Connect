@@ -628,6 +628,42 @@ grievance, staff and leave, no-dues).
   with an overdue loan, a hostel block with residents, an out-pass and a complaint, and two
   drives with registrations and one selection.
 
+**Delivered in the "Phase 3D" PR (3.9–3.11):**
+- Grievances (`grievance/`): a student raises one in a category (academic, examination, fees,
+  infrastructure, library, hostel, ragging, harassment, other), optionally anonymously: then no
+  staff member sees the name, and the audit log doesn't record it either. It gets a number
+  (`GRV/<year>/00001`) and a date by which it should be resolved (working days per category,
+  set by the Grievance Cell). The cell takes it up, replies to the student (email/SMS, never to
+  parents), keeps internal notes and resolves it. The student says whether they are satisfied:
+  yes closes it, no reopens it once and sends it straight to the Principal. The daily job
+  escalates grievances past their date (emails the Principal, without names) and closes
+  resolved ones with no feedback after a week. Ragging and harassment cases go only to the
+  Internal Complaints Committee (new role `icc`); the cell and the Principal see only counts.
+  Report by category for NAAC (received, resolved, in time, satisfaction). New role
+  `grievance` (Grievance Cell).
+- Staff records (`staff/`, Office): designation, employment type, joining and appointment
+  details, university approval, qualifications (UG/PG/M.Phil./Ph.D./NET/SET). NAAC summary:
+  teaching and non-teaching staff, Ph.D. and NET/SET counts, by department and employment
+  type. HODs see their own department.
+- Leave: types with a yearly allowance are settings (casual 8, medical 10, earned 15, on duty
+  and without pay unlimited). Balances are computed, not stored: allowance plus adjustments the
+  office records with a reason (carried-forward leave), minus approved and pending days in the
+  academic year. Days skip Sundays and holidays; half days where the type allows. Faculty apply
+  to their HOD; HODs and staff outside a department to the Principal; the Principal's own leave
+  is recorded as approved. The approver is emailed and sees the person's balance and the
+  lectures they would miss, with a link to arrange substitutes. Leave can be cancelled before it
+  starts.
+- Workload: per teacher, lectures and hours a week from the timetable in force, subjects,
+  classes, leave taken, and who is on leave today. Dashboard tiles: leave to approve, who is
+  on leave today, open and overdue grievances.
+- No-dues (3.11): the check before a TC or migration certificate now covers fees in every year
+  (library fines and hostel fees included), library books not returned and a hostel bed not
+  vacated. Students see it on the certificate page when they choose a TC (en/hi/mr); the office
+  and accounts can check any PRN.
+- Demo data: `grievance@demo.college`, `icc@demo.college`; staff records for all teachers, a
+  leave request waiting for the HOD, a teacher on leave today, and three grievances (one
+  anonymous, one resolved waiting for feedback, one past its date).
+
 ### 7.3 Acceptance criteria
 - A parent signs in with OTP and sees both of their children; an 18+ student turning off "marks" hides marks from the parent.
 - A student pays online by UPI; the receipt appears automatically and the day book reconciles to the gateway report.
