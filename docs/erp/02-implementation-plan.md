@@ -532,6 +532,46 @@ address on record reset through the office (temporary password). Reset emails ne
 | 3.10 | Staff records and leave |
 | 3.11 | No-dues across modules; e2e tests |
 
+Phase 3 is delivered in four PRs: **3A** (3.1–3.3: parents, online payment, messaging), **3B**
+(3.4–3.5: admissions), **3C** (3.6–3.8: library, hostel, placement) and **3D** (3.9–3.11:
+grievance, staff and leave, no-dues).
+
+**Delivered in the "Phase 3A" PR (3.1–3.3):**
+- Parents (`parents/`): the office links a parent to a student from the student's record
+  (Parents tab), by mobile number; one account serves brothers and sisters. For a student under
+  18 the parent's consent must be recorded when linking (DPDP Act §9). Unlinking the last child
+  closes the account.
+- Parent sign-in: mobile number + a 6-digit code (10 minutes, 5 tries, rate-limited, same answer
+  for unknown numbers). The code goes by SMS/WhatsApp when those are set up, and to the parent's
+  email; "Forgot password" by mobile number lets a parent set a password instead. Departure from
+  the spec: until SMS is set up, the code is emailed, so a parent needs an email on record.
+- The parent portal reuses the student's pages through the same `/me/*` endpoints with an
+  `X-Child` header (child switcher in the header). `parents/guard.py` is a deny-by-default list
+  of the routes a parent may call and the consent area each needs; everything else (profile,
+  documents, exam form, revaluation, data export, staff pages) is refused. Parents can ask for a
+  certificate and pay online for their child.
+- Consent: a student aged 18+ chooses on My profile whether parents see fees, attendance and
+  marks/results (all on by default); under-18s can't restrict it.
+- Online payment (`payments/`): Razorpay Checkout (UPI, cards, net banking). The backend creates
+  the order, checks the signed result and the captured payment, then issues the receipt (mode
+  "Online payment") in the same transaction that marks the payment paid, so the checkout, the
+  signed webhook (`POST /api/v1/payments/razorpay/webhook`), the daily job and a manual "Check
+  with gateway" can never make two receipts. Money taken after the fee was paid elsewhere stays
+  as a ledger credit for a refund; a captured amount that differs from the order is never
+  receipted automatically. Accounts see a day view and can upload the gateway's payments CSV to
+  match it. Refunds of online payments are made in the gateway dashboard and recorded through
+  the existing refund approval. Needs `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`,
+  `RAZORPAY_WEBHOOK_SECRET` (test keys work without real money; turn on automatic capture).
+- Messaging (`messaging/`): one `notify()` reaches the student and, for what the student shares,
+  their parents, in each person's language (en/hi/mr templates that work as SMS, WhatsApp or
+  email) and on the channels they keep on (My account). Email works now; SMS (MSG91, each message
+  a DLT-approved template, `SMS_API_KEY` + `SMS_TEMPLATE_<NAME>`) and WhatsApp (Meta Cloud API,
+  `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_TEMPLATE_<NAME>`) start when their keys are set.
+  Results, fee reminders (3 days before an installment; 1, 7 and 30 days after) and attendance
+  alerts are queued; the daily job sends them within a time budget, and staff can "Send now" from
+  Messages. Every attempt is logged in `message_log` (deleted after 180 days).
+- Demo data: a parent (mobile 9876500001, demo password) with two children.
+
 ### 7.3 Acceptance criteria
 - A parent signs in with OTP and sees both of their children; an 18+ student turning off "marks" hides marks from the parent.
 - A student pays online by UPI; the receipt appears automatically and the day book reconciles to the gateway report.
