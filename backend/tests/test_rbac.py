@@ -19,6 +19,7 @@ def test_permission_matrix():
         *(P.GRIEVANCE_MANAGE, P.GRIEVANCE_READ, P.GRIEVANCE_SENSITIVE),  # complaints name students
         *(P.STAFF_READ, P.STAFF_READ_DEPT, P.STAFF_MANAGE, P.LEAVE_APPROVE),  # staff records are HR's
         *(P.REPORTS_READ, P.NAAC_MANAGE),  # reports carry student and staff data
+        *(P.MENTEES, P.MENTOR_ASSIGN, P.RISK_READ, P.RISK_READ_DEPT, P.RISK_MANAGE),  # early warning
     }
     # Nor does it run the academic side (timetable, attendance).
     academics = {
@@ -68,6 +69,8 @@ def test_permission_matrix():
         P.LEAVE_APPLY,
         P.LEAVE_APPROVE,
         P.REPORTS_READ,
+        P.RISK_READ,
+        P.RISK_MANAGE,
     }
     assert P.USERS_CREATE_STAFF not in permissions_for(["office"])
     assert P.USERS_CREATE_STUDENT in permissions_for(["office"])
@@ -103,6 +106,9 @@ def test_permission_matrix():
     assert P.GRIEVANCE_MANAGE in permissions_for(["grievance"]) and P.STUDENTS_READ not in permissions_for(["icc"])
     assert {P.STAFF_MANAGE, P.STAFF_READ} <= permissions_for(["office"])
     assert {P.STAFF_READ_DEPT, P.LEAVE_APPROVE} <= permissions_for(["hod"])
+    # Early warning: never students, parents or the office (which only assigns mentors).
+    readers = {r for r, perms in ROLE_PERMISSIONS.items() if perms & {P.RISK_READ, P.RISK_READ_DEPT, P.MENTEES}}
+    assert readers == {Role.PRINCIPAL, Role.HOD, Role.MENTOR}
     for role in (Role.STUDENT, Role.PARENT, Role.APPLICANT):
         assert permissions_for([role.value]) == frozenset(), role
 

@@ -47,7 +47,14 @@ def test_five_wrong_passwords_lock_the_account(client, make_user, db):
     assert login(client, "staff@college.test").status_code == 200
 
 
-def test_ip_rate_limit(client, make_user):
+def test_ip_rate_limit(monkeypatch, client, make_user):
+    from dataclasses import replace
+
+    from app.core import config
+    from app.modules.auth import service
+
+    assert config.settings.login_limit_per_ip == 300  # a lab full of students shares one address
+    monkeypatch.setattr(service, "settings", replace(config.settings, login_limit_per_ip=30))
     make_user()
     codes = [login(client, "nobody@college.test", "x").status_code for _ in range(31)]
     assert codes[-1] == 429 and set(codes[:30]) == {401}

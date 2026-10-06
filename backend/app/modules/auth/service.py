@@ -9,6 +9,7 @@ from fastapi import Request, Response
 
 from app.core import audit
 from app.core.auth import AuthContext, create_session, end_session, revoke_user_sessions
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.errors import AppError
 from app.core.ratelimit import hit
@@ -32,7 +33,7 @@ def _initial_state(user: dict[str, Any]) -> str:
 
 def login(request: Request, response: Response, identifier: str, password: str) -> dict[str, Any]:
     ip = client_ip(request)
-    hit(f"login:ip:{ip}", limit=30, window_seconds=15 * 60)
+    hit(f"login:ip:{ip}", limit=settings.login_limit_per_ip, window_seconds=15 * 60)
     db = get_db()
     user = repo.find_by_identifier(identifier)
 

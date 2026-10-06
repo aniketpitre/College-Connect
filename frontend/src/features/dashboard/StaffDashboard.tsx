@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
+import { MoneyText } from "../../components/MoneyText";
 import { useDashboard, type Dashboard } from "../../lib/dashboard";
 import "./dashboard.css";
 
@@ -187,13 +188,132 @@ function People({ leave, grievances }: { leave?: Dashboard["leave"]; grievances?
   );
 }
 
+function Tile({ label, children, warn }: { label: string; children: ReactNode; warn?: boolean }) {
+  return (
+    <div className={`tile dash-count${warn ? " tile-warn" : ""}`}>
+      <div className="tile-label">{label}</div>
+      <div className="tile-value">{children}</div>
+    </div>
+  );
+}
+
+const pct = (n: number | null | undefined) => (n === null || n === undefined ? "—" : `${n}%`);
+const MODES: Record<string, string> = { cash: "Cash", upi: "UPI", card: "Card", cheque: "Cheque", dd: "DD", neft: "NEFT", online: "Online" };
+
+function Overview({ d }: { d: NonNullable<Dashboard["overview"]> }) {
+  return (
+    <Section title={`College at a glance${d.year ? ` · ${d.year}` : ""}`}>
+      <div className="tiles dash-tiles">
+        {d.admissions && (
+          <Tile label="Admitted / seats">
+            {d.admissions.admitted}/{d.admissions.seats}
+            <div className="small muted">{d.admissions.applied} applied</div>
+          </Tile>
+        )}
+        {d.fees && (
+          <Tile label="Fees collected">
+            {pct(d.fees.percent)}
+            <div className="small muted">
+              <MoneyText paise={d.fees.collected} /> · <MoneyText paise={d.fees.outstanding} /> due
+            </div>
+          </Tile>
+        )}
+        <Tile label="Attendance (average)" warn={d.attendance.below_minimum > 0}>
+          {pct(d.attendance.average)}
+          <div className="small muted">
+            {d.attendance.below_minimum} below {d.attendance.minimum}%
+          </div>
+        </Tile>
+        {d.marks && (
+          <Tile label="Internal marks approved">
+            {pct(d.marks.percent)}
+            <div className="small muted">
+              {d.marks.done} of {d.marks.sheets} sheets
+            </div>
+          </Tile>
+        )}
+        <Tile label="Certificate turnaround" warn={d.certificates.overdue > 0}>
+          {d.certificates.average_days === null ? "—" : `${d.certificates.average_days} days`}
+          <div className="small muted">{d.certificates.overdue} late</div>
+        </Tile>
+      </div>
+      <div className="tiles dash-tiles">
+        <Count to="/app/mentoring" label="Students at high risk" n={d.risk.high} warn />
+        <Count to="/app/mentoring" label="Students to watch" n={d.risk.medium} />
+        <Count to="/app/leave" label="Leave to approve" n={d.pending.leave} warn />
+        <Count to="/app/grievances" label="Grievances past the time limit" n={d.pending.grievances_overdue} warn />
+      </div>
+    </Section>
+  );
+}
+
+function Accounts({ d }: { d: NonNullable<Dashboard["accounts"]> }) {
+  return (
+    <Section title="Collections and receivables">
+      <div className="tiles dash-tiles">
+        <Tile label="Collected today">
+          <MoneyText paise={d.today.total} />
+        </Tile>
+        <Tile label="This month">
+          <MoneyText paise={d.month.total} />
+          <div className="small muted">
+            {Object.entries(d.month.by_mode)
+              .map(([m, a]) => `${MODES[m] ?? m} ${Math.round(a / 100).toLocaleString("en-IN")}`)
+              .join(" · ")}
+          </div>
+        </Tile>
+        {d.year && (
+          <Tile label="This year">
+            <MoneyText paise={d.year.total} />
+          </Tile>
+        )}
+        {d.receivables && (
+          <>
+            <Tile label="Receivable">
+              <MoneyText paise={d.receivables.total} />
+            </Tile>
+            <Tile label="Overdue" warn={d.receivables.overdue > 0}>
+              <MoneyText paise={d.receivables.overdue} />
+              <div className="small muted">{d.receivables.overdue_students} students</div>
+            </Tile>
+          </>
+        )}
+      </div>
+      {d.receivables && d.receivables.by_year.length > 0 && (
+        <p className="muted small">
+          Receivable by year:{" "}
+          {d.receivables.by_year.map((y) => (
+            <span key={y.year_of_study}>
+              Year {y.year_of_study} <MoneyText paise={y.amount} />{" "}
+            </span>
+          ))}
+        </p>
+      )}
+    </Section>
+  );
+}
+
+function Risk({ d }: { d: NonNullable<Dashboard["risk"]> }) {
+  return (
+    <Section title="Students who may need help">
+      <div className="tiles dash-tiles">
+        <Count to="/app/mentoring" label="High risk" n={d.high} warn />
+        <Count to="/app/mentoring" label="To watch" n={d.medium} />
+      </div>
+    </Section>
+  );
+}
+
 /** Staff home widgets (plan 2.11): only the sections the person's roles allow come back from the API. */
 export default function StaffDashboard() {
   const { data } = useDashboard(true);
   if (!data) return null;
   return (
     <div className="dashboard">
+      {data.overview && <Overview d={data.overview} />}
       {data.principal && <Principal d={data.principal} />}
+      {data.accounts && <Accounts d={data.accounts} />}
+      {data.risk && !data.overview && <Risk d={data.risk} />}
       {data.teaching && <Teaching d={data.teaching} />}
       {data.hod && <Hod d={data.hod} />}
       {data.exam_cell && <ExamCell d={data.exam_cell} />}
