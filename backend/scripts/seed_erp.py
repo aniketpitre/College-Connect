@@ -27,6 +27,7 @@ STAFF = [
     ("faculty", "Prakash More", "faculty@demo.college"),
     ("hod", "Dr. Sunita Rane", "hod@demo.college"),
     ("exam_cell", "Kiran Pathak", "exam@demo.college"),
+    ("admission", "Nilesh Gawde", "admission@demo.college"),
 ]
 # Other Computer Science teachers (they can sign in too, with the demo password).
 TEACHERS = [
@@ -253,6 +254,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
     exams = _seed_exams(app, db, rng, users, api, bca, divisions)
     certificates = _seed_certificates(app, db, api, divisions)
     parents = _seed_parents(db, api, divisions)
+    applications = _seed_admissions(app, db, api, bca, year)
 
     for one in api.values():
         db.sessions.delete_one({"_id": one.token_id})
@@ -269,6 +271,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         "results": exams["results"],
         "certificate requests": certificates,
         "parent accounts": parents,
+        "applications": applications,
     }
 
 
@@ -551,3 +554,86 @@ def _seed_parents(db: Database[dict[str, Any]], api: dict[str, "_Api"], division
         {"phone": PARENT_PHONE, "kind": "parent"}, {"$set": {"password_hash": hash_password(DEMO_PASSWORD)}}
     )
     return 1
+
+
+APPLICANTS = [  # name, category, HSC %, how far they got
+    ("Ananya Kulkarni", "OPEN", 91.4, "verified"),
+    ("Rahul Jadhav", "OBC", 84.0, "verified"),
+    ("Mehul Shah", "OPEN", 78.6, "verified"),
+    ("Sana Shaikh", "OBC", 72.2, "submitted"),
+    ("Vikram Pawar", "OPEN", 65.0, "draft"),
+]
+PDF = b"%PDF-1.4\n% demo marksheet\n"
+
+
+def _seed_admissions(
+    app: Any, db: Database[dict[str, Any]], api: dict[str, "_Api"], bca: dict[str, Any], year: dict[str, Any]
+) -> int:
+    """An open admission for BCA with applicants at every stage, and two call-back enquiries."""
+    cell = api["admission"]
+    cats = {c["code"]: str(c["_id"]) for c in db.categories.find({})}
+    today = date.today()
+    body = {
+        "name": f"Admissions {year['name']}",
+        "academic_year_id": year["id"],
+        "apply_until": (today + timedelta(days=15)).isoformat(),
+        "course_start": (today + timedelta(days=30)).isoformat(),
+        "application_fee": 300 * 100,
+        "programmes": [{"programme_id": bca["id"], "year_of_study": 1, "seats": 10, "reserved": {cats["OBC"]: 2}}],
+    }
+    cycle = cell.call("POST", "/admissions/cycles", json=body)
+    cell.call("PUT", f"/admissions/cycles/{cycle['id']}", json={**body, "status": "open"})
+    public = TestClient(app, base_url="https://seed.local", headers={"X-Requested-With": "seed"})
+    for i, (name, cat, percent, stage) in enumerate(APPLICANTS):
+        phone = f"97000000{i:02d}"
+        email = name.split()[0].lower() + "@example.com"
+        r = public.post(
+            "/api/v1/apply/start", json={"cycle_id": cycle["id"], "name": name, "phone": phone, "email": email}
+        )
+        assert r.status_code == 200, r.text
+        user = db.users.find_one({"phone": phone, "kind": "applicant"})
+        assert user is not None
+        me = _Api(app, db, user)
+        born = int(year["name"][:4]) - 18
+        me.call(
+            "PUT",
+            "/me/application",
+            json={
+                "programme_id": bca["id"],
+                "dob": f"{born}-0{i + 1}-15",
+                "gender": "female" if i % 2 == 0 else "male",
+                "category_id": cats[cat],
+                "address": {"city": "Pune", "district": "Pune", "pincode": "411001"},
+                "previous_education": {
+                    "exam": "HSC",
+                    "board": "Maharashtra State Board",
+                    "year": born + 18,
+                    "percentage": percent,
+                },
+            },
+        )
+        for doc in ("ssc_marksheet", "hsc_marksheet"):
+            me.call(
+                "POST",
+                "/me/application/documents",
+                data={"type": doc},
+                files={"file": (f"{doc}.pdf", PDF, "application/pdf")},
+            )
+        if stage != "draft":
+            a = me.call("GET", "/me/application")
+            cell.call("POST", f"/admissions/applications/{a['id']}/fee", json={"mode": "cash"})
+            me.call("POST", "/me/application/submit")
+            if stage == "verified":
+                for d in a["documents"]:
+                    cell.call(
+                        "POST", f"/admissions/applications/{a['id']}/documents/{d['id']}/decide", json={"approve": True}
+                    )
+                cell.call("POST", f"/admissions/applications/{a['id']}/decide", json={"action": "verify"})
+        db.sessions.delete_one({"_id": me.token_id})
+    for name, phone, note in (("Farhan Khan", "9822000011", "Is there a hostel?"), ("Isha More", "9822000012", "")):
+        cell.call(
+            "POST",
+            "/admissions/enquiries",
+            json={"name": name, "phone": phone, "programme_id": bca["id"], "message": note, "source": "phone"},
+        )
+    return len(APPLICANTS)

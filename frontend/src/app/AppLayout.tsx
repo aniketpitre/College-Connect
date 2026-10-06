@@ -12,7 +12,7 @@ import "./layout.css";
 import "./portal.css";
 import "./auth.css";
 
-type Kind = "student" | "staff" | "parent";
+type Kind = "student" | "staff" | "parent" | "applicant";
 const LEARNER: Kind[] = ["student", "parent"];
 
 interface NavItem {
@@ -30,6 +30,7 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
+  { to: "/app/application", label: "application", kind: "applicant" },
   { to: "/app", label: "home" },
   { to: "/app/profile", label: "profile", kind: "student" },
   { to: "/app/my-fees", label: "fees", kind: LEARNER, area: "fees" },
@@ -49,6 +50,7 @@ const NAV: NavItem[] = [
   { to: "/app/exams", label: "exams", kind: LEARNER, area: "results" },
   { to: "/app/exams", label: "exams", kind: "staff", permission: ["marks.enter", "marks.approve", "marks.read", "exams.manage", "marks.scheme.dept", "results.read"] },
   { to: "/app/certificates", label: "certificates", kind: LEARNER },
+  { to: "/app/admissions", label: "admissions", permission: "admissions.read" },
   {
     to: "/app/certificates",
     label: "certificates",
@@ -89,7 +91,7 @@ export default function AppLayout() {
   const items = NAV.filter(
     (item) =>
       (!item.permission || [item.permission].flat().some((perm) => hasPermission(me, perm))) &&
-      (!item.kind || (me?.kind !== undefined && [item.kind].flat().includes(me.kind))) &&
+      (item.kind ? me?.kind !== undefined && [item.kind].flat().includes(me.kind) : me?.kind !== "applicant") &&
       (!isParent || !item.area || Boolean(child?.access[item.area])),
   );
 

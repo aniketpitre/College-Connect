@@ -572,6 +572,38 @@ grievance, staff and leave, no-dues).
   Messages. Every attempt is logged in `message_log` (deleted after 180 days).
 - Demo data: a parent (mobile 9876500001, demo password) with two children.
 
+**Delivered in the "Phase 3B" PR (3.4–3.5):**
+- Admission cycles (`admissions/`, Admission Cell): per academic year, the programmes with total
+  seats and seats reserved per category (the rest are open to all), last date, course start,
+  application fee, required documents, refund rules and processing fee. Draft → open → closed.
+- Enquiries: a "call me back" form on the public `/apply` page (rate-limited) and walk-in/phone
+  enquiries entered by staff, with status and notes. The public help desk itself is unchanged
+  until Phase 5.
+- Applicants (`kind: applicant`, no ERP access: `admissions/guard.py`): start on `/apply` with
+  name, mobile and email, then sign in with a one-time code (same mechanism as parents). They
+  fill in the form (en/hi/mr), upload the documents, pay the application fee (online through the
+  3.2 gateway, or at the counter; its own gap-free `APP/<year>/00001` series, not in the student
+  ledger) and submit; the application gets its number `A/<year>/00001`.
+- Scrutiny: each document verified or not; the application is verified for the merit list,
+  returned for correction (the applicant is told and resubmits, keeping the number) or rejected.
+- Merit rounds per programme, previewed then published: open seats go to the highest
+  percentages of any category, then each reserved category's seats to the best remaining
+  applicants of that category; the rest are on the waiting list with their rank. Offers not
+  confirmed by their date lapse and the seat goes back into the next round. Applicants are told
+  by email/SMS (3.3).
+- Confirmation (at the office, after checking originals): one transaction creates the student
+  record (all details and verified documents carried over), the student login with a temporary
+  password for the admission slip, and the year's fee demand from the fee structure. PRNs are
+  numbered `<year><programme><nnn>`, skipping numbers already used.
+- Cancellation: the cycle's refund rules (percentage by days before the course starts, minus
+  the processing fee) decide what is kept; the fee demand is reversed and the kept amount
+  charged, so the refundable amount stays as a credit that Accounts pay back through the
+  existing refund approval. The student's login becomes read-only (status "Admission cancelled").
+- Report: per programme, seats, applied, verified, offered, admitted, waiting, cancelled, and
+  admitted by category against the reserved seats. Principal, Office and Accounts can read.
+- Demo data: Admission Cell login `admission@demo.college`; an open BCA admission with five
+  applicants at different stages and two enquiries.
+
 ### 7.3 Acceptance criteria
 - A parent signs in with OTP and sees both of their children; an 18+ student turning off "marks" hides marks from the parent.
 - A student pays online by UPI; the receipt appears automatically and the day book reconciles to the gateway report.

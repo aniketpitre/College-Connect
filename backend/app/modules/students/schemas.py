@@ -8,7 +8,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 PRN_PATTERN = r"^[A-Z0-9/-]{4,20}$"
 Gender = Literal["female", "male", "other"]
-StudentStatus = Literal["active", "tc", "graduated", "dropped", "detained"]
+StudentStatus = Literal["active", "tc", "graduated", "dropped", "detained", "cancelled"]
 DOCUMENT_TYPES = (
     "ssc_marksheet",
     "hsc_marksheet",

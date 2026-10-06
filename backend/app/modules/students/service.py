@@ -226,48 +226,59 @@ def create(ctx: AuthContext, body: StudentCreate, ip: str) -> dict[str, Any]:
     fields.setdefault("status", "active")
     check_placement(fields)
     temp = temporary_password()
-    db = get_db()
-
-    def work(session: ClientSession) -> dict[str, Any]:
-        user = users_repo.create_user(
-            kind="student",
-            name=body.name,
-            roles=["student"],
-            password_hash=hash_password(temp),
-            must_change_password=True,
-            created_by=ctx.user_id,
-            prn=body.prn,
-            email=fields.get("email"),
-            phone=fields.get("phone"),
-            session=session,
-        )
-        now = datetime.now(UTC)
-        doc = {
-            **fields,
-            "prn": body.prn,
-            "user_id": user["_id"],
-            "documents": [],
-            "created_at": now,
-            "created_by": ctx.user_id,
-            "updated_at": now,
-        }
-        try:
-            doc["_id"] = db.students.insert_one(doc, session=session).inserted_id
-        except DuplicateKeyError as e:
-            raise AppError(409, "A student with this PRN already exists.", "conflict", "prn") from e
-        audit.record(
-            "students.created",
-            actor_id=ctx.user_id,
-            target_type="student",
-            target_id=doc["_id"],
-            ip=ip,
-            details={"after": jsonable(fields)},
-            session=session,
-        )
-        return doc
-
-    doc = run_in_transaction(work)
+    doc = run_in_transaction(lambda session: insert(ctx, body.prn, body.name, fields, temp, ip, session))
     return {"student": view(doc), "temporary_password": temp}
+
+
+def insert(
+    ctx: AuthContext,
+    prn: str,
+    name: str,
+    fields: dict[str, Any],
+    temp: str,
+    ip: str | None,
+    session: ClientSession,
+    *,
+    documents: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Inside a transaction: the student's login (temporary password) and their record."""
+    db = get_db()
+    user = users_repo.create_user(
+        kind="student",
+        name=name,
+        roles=["student"],
+        password_hash=hash_password(temp),
+        must_change_password=True,
+        created_by=ctx.user_id,
+        prn=prn,
+        email=fields.get("email"),
+        phone=fields.get("phone"),
+        session=session,
+    )
+    now = datetime.now(UTC)
+    doc = {
+        **fields,
+        "prn": prn,
+        "user_id": user["_id"],
+        "documents": documents or [],
+        "created_at": now,
+        "created_by": ctx.user_id,
+        "updated_at": now,
+    }
+    try:
+        doc["_id"] = db.students.insert_one(doc, session=session).inserted_id
+    except DuplicateKeyError as e:
+        raise AppError(409, "A student with this PRN already exists.", "conflict", "prn") from e
+    audit.record(
+        "students.created",
+        actor_id=ctx.user_id,
+        target_type="student",
+        target_id=doc["_id"],
+        ip=ip,
+        details={"after": jsonable(fields)},
+        session=session,
+    )
+    return doc
 
 
 def apply_changes(
@@ -598,6 +609,12 @@ def file_for(ctx: AuthContext, file_id: str) -> dict[str, Any]:
         mine = get_db().students.find_one({"user_id": ctx.user_id}, {"_id": 1})
         if mine and mine["_id"] == doc.get("student_id"):
             return doc
+    if (
+        ctx.user.get("kind") == "applicant"
+        and doc.get("purpose") == "application"
+        and doc.get("created_by") == ctx.user_id
+    ):
+        return doc  # an applicant's own upload
     if ctx.user.get("kind") == "parent":
         child = my_student(ctx)  # parents: only their child's photo
         if doc["_id"] == child.get("photo_file_id"):

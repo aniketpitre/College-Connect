@@ -62,7 +62,9 @@ GIVE_UP_AFTER = timedelta(days=3)
 def view(p: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": str(p["_id"]),
-        "student_id": str(p["student_id"]),
+        "purpose": p.get("purpose", "fees"),
+        "student_id": str(p["student_id"]) if p.get("student_id") else None,
+        "application_id": str(p["application_id"]) if p.get("application_id") else None,
         "student": p.get("student"),
         "academic_year": p.get("academic_year"),
         "amount": p["amount"],
@@ -110,10 +112,22 @@ def start(ctx: AuthContext, academic_year_id: str | None, amount: int) -> dict[s
         "created_by": ctx.user_id,
         "payer_kind": ctx.user.get("kind"),
     }
+    return _open_order(
+        doc,
+        notes={"prn": student["prn"], "year": year["name"]},
+        description=f"Fees {year['name']} · {student['prn']}",
+        prefill={"name": student["name"], "email": student.get("email") or "", "contact": student.get("phone") or ""},
+    )
+
+
+def _open_order(
+    doc: dict[str, Any], *, notes: dict[str, str], description: str, prefill: dict[str, str]
+) -> dict[str, Any]:
+    """Records the payment and creates the gateway order for exactly its amount."""
     db = get_db()
     doc["_id"] = db.online_payments.insert_one(doc).inserted_id
     try:
-        order = gateway.create_order(amount, str(doc["_id"]), {"prn": student["prn"], "year": year["name"]})
+        order = gateway.create_order(doc["amount"], str(doc["_id"]), notes)
     except AppError as e:
         db.online_payments.update_one({"_id": doc["_id"]}, {"$set": {"status": "failed", "last_error": e.message}})
         raise
@@ -123,16 +137,50 @@ def start(ctx: AuthContext, academic_year_id: str | None, amount: int) -> dict[s
         "id": str(doc["_id"]),
         "order_id": order["id"],
         "key_id": gateway.settings.razorpay_key_id,
-        "amount": amount,
+        "amount": doc["amount"],
         "currency": "INR",
         "name": college.get("name") or "CollegeConnect",
-        "description": f"Fees {year['name']} · {student['prn']}",
-        "prefill": {
-            "name": student["name"],
-            "email": student.get("email") or "",
-            "contact": student.get("phone") or "",
-        },
+        "description": description,
+        "prefill": prefill,
     }
+
+
+def start_application_fee(ctx: AuthContext, application: dict[str, Any]) -> dict[str, Any]:
+    """An admission applicant pays the application fee (no student record or ledger yet)."""
+    if not gateway.enabled():
+        raise AppError(503, "Online payment isn't set up yet. Please pay at the college office.", "payments_off")
+    hit(f"pay:{ctx.user_id}", limit=10, window_seconds=60 * 60)
+    p = application["personal"]
+    doc: dict[str, Any] = {
+        "purpose": "application",
+        "application_id": application["_id"],
+        "student_id": None,
+        "student": {"name": p.get("name"), "prn": application.get("number") or "applicant"},
+        "amount": application["fee"]["amount"],
+        "status": "created",
+        "created_at": datetime.now(UTC),
+        "created_by": ctx.user_id,
+        "payer_kind": "applicant",
+    }
+    return _open_order(
+        doc,
+        notes={"application": str(application["_id"])},
+        description="Application fee",
+        prefill={"name": p.get("name") or "", "email": p.get("email") or "", "contact": p.get("phone") or ""},
+    )
+
+
+def confirm_application_fee(
+    application: dict[str, Any], payment_id: str, gateway_payment_id: str, signature: str, ip: str
+) -> dict[str, Any]:
+    p = get_db().online_payments.find_one({"_id": oid(payment_id, "Payment"), "application_id": application["_id"]})
+    if not p:
+        raise AppError(404, "Payment not found.")
+    if p["status"] == "paid":
+        return view(p)
+    if not p.get("order_id") or not gateway.checkout_signature_ok(p["order_id"], gateway_payment_id, signature):
+        raise AppError(400, "The payment could not be verified.", "bad_signature")
+    return view(_check_gateway(p, source="checkout", ip=ip))
 
 
 def _mine(ctx: AuthContext, payment_id: str) -> dict[str, Any]:
@@ -183,7 +231,12 @@ def settle(p: dict[str, Any], payment: dict[str, Any], *, source: str, ip: str |
                 }
             },
         )
-        audit.record("payments.mismatch", target_type="student", target_id=p["student_id"], ip=ip)
+        audit.record(
+            "payments.mismatch",
+            target_type="student" if p.get("student_id") else "application",
+            target_id=p.get("student_id") or p.get("application_id"),
+            ip=ip,
+        )
         return db.online_payments.find_one({"_id": p["_id"]}) or p
 
     def work(session: ClientSession) -> dict[str, Any]:
@@ -191,6 +244,8 @@ def settle(p: dict[str, Any], payment: dict[str, Any], *, source: str, ip: str |
         assert current is not None
         if current["status"] == "paid":
             return current
+        if current.get("purpose") == "application":
+            return _settle_application(current, payment, source, ip, session)
         student = students.get_student(current["student_id"], session=session)
         year = db.academic_years.find_one({"_id": current["academic_year_id"]}, session=session)
         assert year is not None
@@ -234,6 +289,26 @@ def settle(p: dict[str, Any], payment: dict[str, Any], *, source: str, ip: str |
     return run_in_transaction(work)
 
 
+def _settle_application(
+    current: dict[str, Any], payment: dict[str, Any], source: str, ip: str | None, session: ClientSession
+) -> dict[str, Any]:
+    from app.modules.admissions import service as admissions
+
+    number = admissions.record_fee(
+        current["application_id"], mode="online", reference=str(payment.get("id")), by=None, session=session
+    )
+    update = {
+        "status": "paid",
+        "gateway_payment_id": payment.get("id"),
+        "method": payment.get("method"),
+        "paid_at": datetime.now(UTC),
+        "receipt_number": number,
+        "settled_by": source,
+    }
+    get_db().online_payments.update_one({"_id": current["_id"]}, {"$set": update}, session=session)
+    return {**current, **update}
+
+
 def webhook(body: bytes, signature: str | None) -> dict[str, Any]:
     if not gateway.webhook_signature_ok(body, signature or ""):
         raise AppError(400, "Bad signature.", "bad_signature")
@@ -260,7 +335,13 @@ def check(ctx: AuthContext, payment_id: str, ip: str) -> dict[str, Any]:
             get_db().online_payments.update_one({"_id": p["_id"]}, {"$set": {"status": "created"}})
             p["status"] = "created"
         p = _check_gateway(p, source="accounts", ip=ip)
-        audit.record("payments.checked", actor_id=ctx.user_id, target_type="student", target_id=p["student_id"], ip=ip)
+        audit.record(
+            "payments.checked",
+            actor_id=ctx.user_id,
+            target_type="student" if p.get("student_id") else "application",
+            target_id=p.get("student_id") or p.get("application_id"),
+            ip=ip,
+        )
     return view(p)
 
 

@@ -172,6 +172,7 @@ export default function LoginPage() {
         )}
         <div className="auth-links">
           <Link to="/forgot-password">{t.forgot}</Link>
+          <Link to="/apply">{language === "en" ? "Apply for admission" : language === "hi" ? "प्रवेश के लिए आवेदन" : "प्रवेशासाठी अर्ज"}</Link>
           <Link to="/">{t.backToHelpDesk}</Link>
         </div>
       </form>

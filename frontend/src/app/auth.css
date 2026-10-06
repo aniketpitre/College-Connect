@@ -334,3 +334,31 @@
   gap: 8px;
   cursor: pointer;
 }
+
+/* Public admission page */
+.apply-card {
+  max-width: 560px;
+}
+.apply-cycle {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.apply-programmes {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.apply-start,
+.apply-enquiry {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 6px;
+}
+.apply-enquiry textarea {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}

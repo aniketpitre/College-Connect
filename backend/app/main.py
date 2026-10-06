@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.auth import csrf_guard
 from app.core.config import settings
 from app.core.errors import install_error_handlers
+from app.modules.admissions import router as admissions
 from app.modules.attendance import router as attendance
 from app.modules.auditlog import router as auditlog
 from app.modules.auth import router as auth
@@ -60,6 +61,7 @@ ROUTERS: list[APIRouter] = [
     parents.router,
     payments.router,
     messaging.router,
+    admissions.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

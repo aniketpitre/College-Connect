@@ -18,6 +18,10 @@ import FeesHome from "../features/fees/FeesHome";
 import OpeningPage from "../features/fees/OpeningPage";
 import OnlinePaymentsPage from "../features/fees/OnlinePaymentsPage";
 import MessagesPage from "../features/messages/MessagesPage";
+import AdmissionsPage from "../features/admissions/AdmissionsPage";
+import ApplicationDetailPage from "../features/admissions/ApplicationDetailPage";
+import MyApplicationPage from "../features/admissions/MyApplicationPage";
+import ApplyPage from "./pages/ApplyPage";
 import ReportsPage from "../features/fees/ReportsPage";
 import StudentFeesPage from "../features/fees/StudentFeesPage";
 import NoticeDetailPage from "../features/notices/NoticeDetailPage";
@@ -56,6 +60,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<HomeOrLegacyRedirect />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/apply" element={<ApplyPage />} />
       <Route path="/login/2-step" element={<TwoStepPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -100,6 +105,9 @@ export default function App() {
         <Route path="fees/reports" element={<ReportsPage />} />
         <Route path="fees/online" element={<OnlinePaymentsPage />} />
         <Route path="messages" element={<MessagesPage />} />
+        <Route path="application" element={<MyApplicationPage />} />
+        <Route path="admissions" element={<AdmissionsPage />} />
+        <Route path="admissions/applications/:id" element={<ApplicationDetailPage />} />
         <Route path="fees/opening" element={<OpeningPage />} />
         <Route path="fees/students/:id" element={<StudentFeesPage />} />
         <Route path="approvals" element={<ApprovalsPage />} />

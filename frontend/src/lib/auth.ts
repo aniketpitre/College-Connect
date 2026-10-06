@@ -9,7 +9,7 @@ export type SessionState = "active" | "mfa_pending" | "mfa_setup";
 
 export interface Me {
   id: string;
-  kind: "staff" | "student" | "parent";
+  kind: "staff" | "student" | "parent" | "applicant";
   name: string;
   email: string | null;
   prn: string | null;

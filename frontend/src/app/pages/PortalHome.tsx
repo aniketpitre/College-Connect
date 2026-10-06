@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, Navigate } from "react-router";
 import StaffDashboard from "../../features/dashboard/StaffDashboard";
 import StudentHome from "../../features/portal/StudentHome";
 import { NAV_LABELS } from "../../i18n/nav";
@@ -26,6 +26,7 @@ const firstName = (name: string) => name.split(" ").find((w) => !/^(dr|prof|mr|m
 export default function PortalHome() {
   const { data: me } = useMe();
   const [language] = useLanguage();
+  if (me?.kind === "applicant") return <Navigate to="/app/application" replace />;
   if (isLearner(me)) return <StudentHome />;
   const t = NAV_LABELS[language];
   const links = STAFF_LINKS.filter(([, , perm]) => hasPermission(me, perm));
