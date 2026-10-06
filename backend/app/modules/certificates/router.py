@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.core.auth import AuthContext, signed_in
 from app.core.requestinfo import base_url, client_ip
@@ -52,6 +52,11 @@ def act(request_id: str, body: ActionIn, request: Request, ctx: AuthContext = ME
 def staff_pdf(request_id: str, request: Request, ctx: AuthContext = ME) -> Response:
     cert, _ = service.certificate_for_staff(ctx, request_id)
     return _pdf(cert, request)
+
+
+@router.get("/certificates/no-dues")
+def no_dues(prn: str = Query(..., min_length=1, max_length=40), ctx: AuthContext = ME) -> dict[str, Any]:
+    return service.no_dues(ctx, prn)
 
 
 @router.get("/me/certificates")

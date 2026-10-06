@@ -22,6 +22,8 @@ class Role(StrEnum):
     LIBRARIAN = "librarian"
     WARDEN = "warden"
     PLACEMENT = "placement"
+    GRIEVANCE = "grievance"  # Grievance Redressal Cell
+    ICC = "icc"  # Internal Complaints Committee / Anti-ragging: sensitive grievances only
     STUDENT = "student"
     PARENT = "parent"
     APPLICANT = "applicant"  # someone applying for admission (online application only)
@@ -45,6 +47,8 @@ ROLE_LABELS: dict[Role, str] = {
     Role.LIBRARIAN: "Librarian",
     Role.WARDEN: "Hostel Warden",
     Role.PLACEMENT: "Placement Officer",
+    Role.GRIEVANCE: "Grievance Cell",
+    Role.ICC: "ICC / Anti-ragging",
     Role.STUDENT: "Student",
     Role.PARENT: "Parent",
     Role.APPLICANT: "Applicant",
@@ -100,12 +104,20 @@ class P(StrEnum):
     HOSTEL_READ = "hostel.read"
     PLACEMENT_MANAGE = "placement.manage"  # drives, registrations, rounds, offers
     PLACEMENT_READ = "placement.read"
+    GRIEVANCE_MANAGE = "grievance.manage"  # ordinary grievances: take, reply, resolve; time limits
+    GRIEVANCE_READ = "grievance.read"  # ordinary grievances, read-only (sensitive ones only as counts)
+    GRIEVANCE_SENSITIVE = "grievance.sensitive"  # ragging / harassment cases (ICC members only)
+    STAFF_READ = "staff.read"  # staff records, workload, leave of everyone
+    STAFF_READ_DEPT = "staff.read.dept"  # HOD: their own department
+    STAFF_MANAGE = "staff.manage"  # staff records, qualifications, leave types and adjustments
+    LEAVE_APPLY = "leave.apply"  # every staff member
+    LEAVE_APPROVE = "leave.approve"  # HOD (their department's staff), Principal (HODs, others)
     MESSAGES_READ = "messages.read"  # the delivery log and the outgoing message queue
     EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
 
 
 # Every staff member can read the college structure (programmes, divisions, subjects…).
-_STAFF_BASE = frozenset({P.SETUP_READ, P.NOTICES_READ})
+_STAFF_BASE = frozenset({P.SETUP_READ, P.NOTICES_READ, P.LEAVE_APPLY})
 # Spec §2.3 "Notices": admin, principal and office publish; accounts, admission and exam cell publish
 # their own notices. HOD/faculty (department / own class) come with class assignments in Phase 2.
 _PUBLISH = frozenset({P.NOTICES_PUBLISH})
@@ -145,6 +157,9 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.LIBRARY_READ,
         P.HOSTEL_READ,
         P.PLACEMENT_READ,
+        P.GRIEVANCE_READ,
+        P.STAFF_READ,
+        P.LEAVE_APPROVE,
     }
     | _PUBLISH,
     Role.OFFICE: _STAFF_BASE
@@ -167,6 +182,8 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.CERT_READ,
         P.MESSAGES_READ,
         P.ADMISSIONS_READ,
+        P.STAFF_READ,
+        P.STAFF_MANAGE,
     }
     | _PUBLISH,
     Role.ACCOUNTS: _STAFF_BASE
@@ -191,6 +208,8 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.MARKS_APPROVE,
         P.MARKS_SCHEME_DEPT,
         P.CERT_SIGN_HOD,
+        P.STAFF_READ_DEPT,
+        P.LEAVE_APPROVE,
     },
     **{
         role: _STAFF_BASE | {P.TIMETABLE_READ, P.ATTENDANCE_TAKE, P.MARKS_ENTER} for role in (Role.FACULTY, Role.MENTOR)
@@ -198,6 +217,8 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
     Role.LIBRARIAN: _STAFF_BASE | {P.LIBRARY_MANAGE, P.LIBRARY_READ} | _PUBLISH,
     Role.WARDEN: _STAFF_BASE | {P.HOSTEL_MANAGE, P.HOSTEL_READ} | _PUBLISH,
     Role.PLACEMENT: _STAFF_BASE | {P.PLACEMENT_MANAGE, P.PLACEMENT_READ, P.RESULTS_READ} | _PUBLISH,
+    Role.GRIEVANCE: _STAFF_BASE | {P.GRIEVANCE_MANAGE, P.GRIEVANCE_READ},
+    Role.ICC: _STAFF_BASE | {P.GRIEVANCE_SENSITIVE},
 }
 
 

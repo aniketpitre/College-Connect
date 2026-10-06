@@ -173,6 +173,8 @@ def recipients(student: dict[str, Any], key: str) -> list[dict[str, Any]]:
     if user and not user.get("read_only"):
         people.append(user)
     area = templates.AREA[key]
+    if area == "private":
+        return people
     if area is None or parents.access(student)[area]:
         people += list(db.users.find({"kind": "parent", "status": "active", "children.student_id": student["_id"]}))
     return people
