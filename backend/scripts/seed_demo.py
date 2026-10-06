@@ -108,6 +108,7 @@ def main(argv: list[str] | None = None) -> int:
             + str(date.today().year if date.today().month >= 6 else date.today().year - 1)
             + "BCA001"
         )
+        print(f"  parent        mobile {seed_erp.PARENT_PHONE} (code by email, or the demo password)")
     print(f"Database: {settings.mongodb_db}")
     return 0
 

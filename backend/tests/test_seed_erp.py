@@ -31,6 +31,8 @@ def test_erp_seed_builds_a_consistent_demo(db):
     assert counts["certificate requests"] == 4
     by_status = sorted(r["status"] for r in db.certificate_requests.find({}))
     assert by_status == ["ready", "requested", "requested", "verified"]
+    # Parents: one account with two children.
+    assert [len(p["children"]) for p in db.users.find({"kind": "parent"})] == [2]
 
 
 def test_seed_refuses_production(monkeypatch, capsys):

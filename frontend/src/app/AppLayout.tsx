@@ -3,11 +3,17 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import { apiFetch } from "../lib/api";
 import { OfflineSync } from "../features/attendance/OfflineSync";
 import { NAV_LABELS } from "../i18n/nav";
+import { PARENT_STRINGS } from "../i18n/parent";
 import { hasPermission, useLogout, useMe } from "../lib/auth";
+import { useChildId } from "../lib/child";
 import { useLanguage } from "../lib/language";
+import { useChildren, useSwitchChild, type Area } from "../lib/parent";
 import "./layout.css";
 import "./portal.css";
 import "./auth.css";
+
+type Kind = "student" | "staff" | "parent";
+const LEARNER: Kind[] = ["student", "parent"];
 
 interface NavItem {
   to: string;
@@ -15,8 +21,10 @@ interface NavItem {
   label: string;
   /** Shown only to users with this permission (or any of these). */
   permission?: string | string[];
-  /** Shown only to this kind of account. */
-  kind?: "student" | "staff";
+  /** Shown only to these kinds of account. */
+  kind?: Kind | Kind[];
+  /** Parents: shown only if the child shares this. */
+  area?: Area;
   /** The plan phase that builds this screen; shown disabled until then. */
   phase?: number;
 }
@@ -24,23 +32,23 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/app", label: "home" },
   { to: "/app/profile", label: "profile", kind: "student" },
-  { to: "/app/my-fees", label: "fees", kind: "student" },
+  { to: "/app/my-fees", label: "fees", kind: LEARNER, area: "fees" },
   { to: "/app/students", label: "students", permission: "students.read" },
   { to: "/app/fees", label: "fees", permission: "fees.read", kind: "staff" },
   { to: "/app/approvals", label: "approvals", permission: "approvals.decide" },
-  { to: "/app/timetable", label: "timetable", kind: "student" },
+  { to: "/app/timetable", label: "timetable", kind: LEARNER },
   { to: "/app/timetable", label: "timetable", permission: "timetable.read", kind: "staff" },
   { to: "/app/notices", label: "notices" },
-  { to: "/app/attendance", label: "attendance", kind: "student" },
+  { to: "/app/attendance", label: "attendance", kind: LEARNER, area: "attendance" },
   {
     to: "/app/attendance",
     label: "attendance",
     kind: "staff",
     permission: ["attendance.take", "attendance.read", "attendance.read.dept", "attendance.approve", "attendance.exempt"],
   },
-  { to: "/app/exams", label: "exams", kind: "student" },
+  { to: "/app/exams", label: "exams", kind: LEARNER, area: "results" },
   { to: "/app/exams", label: "exams", kind: "staff", permission: ["marks.enter", "marks.approve", "marks.read", "exams.manage", "marks.scheme.dept", "results.read"] },
-  { to: "/app/certificates", label: "certificates", kind: "student" },
+  { to: "/app/certificates", label: "certificates", kind: LEARNER },
   {
     to: "/app/certificates",
     label: "certificates",
@@ -61,6 +69,16 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const [language] = useLanguage();
   const t = NAV_LABELS[language];
+  const p = PARENT_STRINGS[language];
+  const isParent = me?.kind === "parent";
+  const children = useChildren(isParent);
+  const childId = useChildId();
+  const switchChild = useSwitchChild();
+  const child = children.data?.find((c) => c.id === childId);
+  // A parent always looks at one child: keep the saved choice if it is still theirs, else the first.
+  useEffect(() => {
+    if (isParent && children.data?.length && !child) switchChild(children.data[0].id);
+  }, [isParent, children.data, child, switchChild]);
   // Keep the account's saved language in step with the one chosen on this device.
   useEffect(() => {
     if (me && me.language !== language && me.session_state === "active") {
@@ -69,7 +87,9 @@ export default function AppLayout() {
   }, [me, language]);
   const items = NAV.filter(
     (item) =>
-      (!item.permission || [item.permission].flat().some((p) => hasPermission(me, p))) && (!item.kind || item.kind === me?.kind),
+      (!item.permission || [item.permission].flat().some((perm) => hasPermission(me, perm))) &&
+      (!item.kind || (me?.kind !== undefined && [item.kind].flat().includes(me.kind))) &&
+      (!isParent || !item.area || Boolean(child?.access[item.area])),
   );
 
   return (
@@ -83,6 +103,17 @@ export default function AppLayout() {
             {me?.name}
             <span className="portal-user-role">{me?.kind === "student" ? me.prn : me?.role_labels.join(", ")}</span>
           </span>
+          {isParent && children.data && children.data.length > 1 && (
+            <label className="child-switch">
+              <select value={childId ?? ""} onChange={(e) => switchChild(e.target.value)} aria-label={p.viewing}>
+                {children.data.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <button
             type="button"
             className="btn btn-ghost btn-sm"
@@ -110,7 +141,15 @@ export default function AppLayout() {
         </nav>
         <main className="portal-main">
           {hasPermission(me, "attendance.take") && <OfflineSync />}
-          <Outlet />
+          {!isParent ? (
+            <Outlet />
+          ) : children.data?.length === 0 ? (
+            <p className="muted">{p.noChildren}</p>
+          ) : child ? (
+            <Outlet key={child.id} />
+          ) : (
+            <p className="muted">…</p>
+          )}
         </main>
       </div>
     </div>

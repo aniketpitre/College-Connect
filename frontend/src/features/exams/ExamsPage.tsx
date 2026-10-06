@@ -6,7 +6,7 @@ import { Modal } from "../../components/Modal";
 import { StatusBadge } from "../../components/StatusBadge";
 import { MARKS_STRINGS } from "../../i18n/marks";
 import { ApiError } from "../../lib/api";
-import { hasPermission, useMe } from "../../lib/auth";
+import { hasPermission, isLearner, useMe } from "../../lib/auth";
 import { useLanguage } from "../../lib/language";
 import { STATUS_TONE, useMarksOverview, useMyClasses, useMyMarks, useSaveScheme, useSchemes, type ClassRow, type SchemeRow, type SheetStatus } from "../../lib/marks";
 import { useSetup } from "../../lib/setup";
@@ -20,7 +20,7 @@ import "./exams.css";
 /** Exams & results: students see their marks; staff enter, approve and lock marks and set schemes. */
 export default function ExamsPage() {
   const { data: me } = useMe();
-  if (me?.kind === "student") return <StudentMarks />;
+  if (isLearner(me)) return <StudentMarks />;
   return <StaffExams />;
 }
 

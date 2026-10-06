@@ -105,6 +105,18 @@ def statement(ctx: AuthContext, academic_year_id: str | None) -> tuple[dict[str,
     return info, year["name"], fees.account(student["_id"], year_id)
 
 
+CARD_AREA = {
+    "fee_overdue": "fees",
+    "fee_due_soon": "fees",
+    "attendance_low": "attendance",
+    "attendance_warning": "attendance",
+    "exam_form": "results",
+    "hall_ticket": "results",
+    "results": "results",
+}
+STUDENT_ONLY = {"document_rejected", "correction_approved", "correction_rejected", "exam_form"}
+
+
 def home(ctx: AuthContext) -> dict[str, Any]:
     """Things that need the student's attention, most urgent first, plus a few figures."""
     student = students.my_student(ctx)
@@ -203,6 +215,15 @@ def home(ctx: AuthContext) -> dict[str, Any]:
             }
         )
     summary = students.summary(student)
+    attendance_pct = attendance["overall"]["percent"]
+    if ctx.user.get("kind") == "parent":
+        # Parents see only what the student shares, and not the student's own to-dos.
+        from app.modules.parents import service as parents
+
+        shared = parents.access(student)
+        cards = [c for c in cards if c["kind"] not in STUDENT_ONLY and shared.get(CARD_AREA.get(c["kind"], ""), True)]
+        balance = balance if shared["fees"] else None
+        attendance_pct = attendance_pct if shared["attendance"] else None
     return {
         "name": student["name"],
         "prn": student["prn"],
@@ -210,6 +231,6 @@ def home(ctx: AuthContext) -> dict[str, Any]:
         "academic_year": current["name"] if current else None,
         "photo_url": f"/files/{student['photo_file_id']}" if student.get("photo_file_id") else None,
         "balance": balance,
-        "attendance": attendance["overall"]["percent"],
+        "attendance": attendance_pct,
         "cards": cards,
     }

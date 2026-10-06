@@ -252,6 +252,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
     lectures = _seed_academics(app, db, rng, users, api, bca, year, divisions)
     exams = _seed_exams(app, db, rng, users, api, bca, divisions)
     certificates = _seed_certificates(app, db, api, divisions)
+    parents = _seed_parents(db, api, divisions)
 
     for one in api.values():
         db.sessions.delete_one({"_id": one.token_id})
@@ -267,6 +268,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         "exam forms": exams["forms"],
         "results": exams["results"],
         "certificate requests": certificates,
+        "parent accounts": parents,
     }
 
 
@@ -527,3 +529,25 @@ def _seed_certificates(
         {"purpose": "Passport application"}, {"$set": {"due_date": (date.today() - timedelta(days=1)).isoformat()}}
     )
     return len(plan)
+
+
+PARENT_PHONE = "9876500001"
+
+
+def _seed_parents(db: Database[dict[str, Any]], api: dict[str, "_Api"], divisions: dict[int, str]) -> int:
+    """One parent with two children (FY and SY roll 1), who can also sign in with the demo password."""
+    from bson import ObjectId
+
+    for year in (1, 2):
+        st = db.students.find_one({"division_id": ObjectId(divisions[year])}, sort=[("prn", 1)])
+        assert st is not None
+        api["office"].call(
+            "POST",
+            f"/students/{st['_id']}/parents",
+            json={"name": "Demo Parent", "phone": PARENT_PHONE, "email": "parent@demo.college", "relation": "Father",
+                  "consent": True},
+        )  # fmt: skip
+    db.users.update_one(
+        {"phone": PARENT_PHONE, "kind": "parent"}, {"$set": {"password_hash": hash_password(DEMO_PASSWORD)}}
+    )
+    return 1

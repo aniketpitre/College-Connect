@@ -36,7 +36,8 @@ def request_reset(request: Request, identifier: str) -> dict[str, Any]:
     hit(f"reset:ip:{ip}", limit=10, window_seconds=15 * 60)
     hit(f"reset:id:{identifier.strip().lower()}", limit=3, window_seconds=60 * 60)
     user = repo.find_by_identifier(identifier)
-    if user and user.get("status") != "disabled" and user.get("email"):
+    to = (user.get("email") or user.get("contact_email")) if user else None  # parents: their contact email
+    if user and user.get("status") != "disabled" and to:
         db = get_db()
         token = new_token()
         now = datetime.now(UTC)
@@ -52,7 +53,7 @@ def request_reset(request: Request, identifier: str) -> dict[str, Any]:
         )
         link = f"{base_url(request)}/reset-password#{token}"
         send_email(
-            user["email"],
+            to,
             "Reset your CollegeConnect password",
             f"Hello {user['name']},\n\n"
             "Someone (hopefully you) asked to reset your CollegeConnect password.\n"

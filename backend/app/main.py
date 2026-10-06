@@ -20,6 +20,7 @@ from app.modules.jobs import router as jobs
 from app.modules.marks import router as marks
 from app.modules.notices import router as notices
 from app.modules.onboarding import router as onboarding
+from app.modules.parents import router as parents
 from app.modules.portal import router as portal
 from app.modules.results import router as results
 from app.modules.setup import router as setup
@@ -54,6 +55,7 @@ ROUTERS: list[APIRouter] = [
     certificates.router,
     jobs.router,
     dashboard.router,
+    parents.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { PARENT_STRINGS } from "../../i18n/parent";
+import { ParentSharing } from "./ParentSharing";
 import LanguageToggle from "../../app/LanguageToggle";
 import { Modal } from "../../components/Modal";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -58,6 +60,9 @@ export default function ProfilePage() {
 
       <h2 className="subhead">{T.myRequests}</h2>
       <MyRequests T={T} language={language} />
+
+      <h2 className="subhead">{PARENT_STRINGS[language].sharingTitle}</h2>
+      <ParentSharing language={language} />
 
       <h2 className="subhead">{T.myData.title}</h2>
       <p className="muted">{T.myData.text}</p>

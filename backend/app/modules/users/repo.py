@@ -1,5 +1,6 @@
 """User accounts (staff, students, parents) in the `users` collection."""
 
+import re
 from datetime import UTC, datetime
 from typing import Any
 
@@ -45,8 +46,11 @@ def parse_id(value: str) -> ObjectId:
 
 
 def find_by_identifier(identifier: str) -> dict[str, Any] | None:
-    """Staff sign in with their email; students with their PRN."""
+    """Staff sign in with their email; students with their PRN; parents with their mobile number."""
     identifier = identifier.strip()
+    digits = re.sub(r"[\s+-]", "", identifier)
+    if re.fullmatch(r"(91|0)?[6-9]\d{9}", digits):
+        return get_db().users.find_one({"phone": digits[-10:], "kind": "parent"})
     if "@" in identifier:
         return get_db().users.find_one({"email": normalize_email(identifier)})
     return get_db().users.find_one({"prn": normalize_prn(identifier)})
@@ -64,7 +68,7 @@ def create_user(
     kind: str,
     name: str,
     roles: list[str],
-    password_hash: str,
+    password_hash: str | None,
     must_change_password: bool,
     created_by: ObjectId | None,
     email: str | None = None,

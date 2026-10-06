@@ -3,6 +3,7 @@ import { MoneyText } from "../../components/MoneyText";
 import { CERT_STRINGS } from "../../i18n/certificates";
 import { PORTAL_STRINGS } from "../../i18n/portal";
 import { STUDENT_STRINGS } from "../../i18n/student";
+import { useMe } from "../../lib/auth";
 import { useLanguage } from "../../lib/language";
 import { formatPaise } from "../../lib/money";
 import { useStudentHome, type HomeCard } from "../../lib/portal";
@@ -15,6 +16,7 @@ export default function StudentHome() {
   const t = PORTAL_STRINGS[language];
   const s = STUDENT_STRINGS[language];
   const home = useStudentHome();
+  const { data: me } = useMe();
   const h = home.data;
   const locale = language === "en" ? "en-IN" : `${language}-IN`;
   const day = (iso: string) => new Date(`${iso.slice(0, 10)}T00:00:00`).toLocaleDateString(locale, { day: "numeric", month: "long" });
@@ -58,9 +60,7 @@ export default function StudentHome() {
           <div className="eyebrow">
             {t.academicYear} {h.academic_year}
           </div>
-          <h1>
-            {t.greeting}, {h.name.split(" ")[0]}
-          </h1>
+          <h1>{me?.kind === "parent" ? h.name : `${t.greeting}, ${h.name.split(" ")[0]}`}</h1>
           <div className="muted">
             {h.class} · PRN {h.prn}
           </div>
