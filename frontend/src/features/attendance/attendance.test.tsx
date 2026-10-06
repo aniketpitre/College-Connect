@@ -124,7 +124,7 @@ describe("offline attendance", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save attendance" }));
     expect(await screen.findByText(/Saved on this phone; it will be sent when you're back online/)).toBeTruthy();
     expect(await screen.findByText(/1 attendance save waiting to be sent/)).toBeTruthy();
-    expect(screen.getByText("Waiting to sync")).toBeTruthy();
+    expect(await screen.findByText("Waiting to sync")).toBeTruthy();
     expect(delivered).toHaveLength(0);
 
     // Back online: it is sent once, with the device's id so a retry isn't doubled.
