@@ -51,6 +51,8 @@ const NAV: NavItem[] = [
   { to: "/app/exams", label: "exams", kind: "staff", permission: ["marks.enter", "marks.approve", "marks.read", "exams.manage", "marks.scheme.dept", "results.read"] },
   { to: "/app/certificates", label: "certificates", kind: LEARNER },
   { to: "/app/admissions", label: "admissions", permission: "admissions.read" },
+  { to: "/app/scholarships", label: "scholarships", kind: LEARNER, area: "fees" },
+  { to: "/app/scholarships", label: "scholarships", kind: "staff", permission: "fees.read" },
   { to: "/app/library", label: "library", kind: "student" },
   { to: "/app/library", label: "library", kind: "staff", permission: "library.read" },
   { to: "/app/hostel", label: "hostel", kind: "student" },
@@ -75,6 +77,7 @@ const NAV: NavItem[] = [
   { to: "/app/setup", label: "setup", permission: "setup.read" },
   { to: "/app/audit", label: "audit", permission: "audit.read" },
   { to: "/app/exports", label: "exports", permission: "export.request" },
+  { to: "/app/api-keys", label: "apiKeys", permission: "api_keys.manage" },
   { to: "/app/analytics", label: "analytics", permission: "analytics.view" },
 ];
 
