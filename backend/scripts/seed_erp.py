@@ -26,6 +26,7 @@ STAFF = [
     ("accounts", "Meera Joshi", "accounts@demo.college"),
     ("faculty", "Prakash More", "faculty@demo.college"),
     ("hod", "Dr. Sunita Rane", "hod@demo.college"),
+    ("exam_cell", "Kiran Pathak", "exam@demo.college"),
 ]
 # Other Computer Science teachers (they can sign in too, with the demo password).
 TEACHERS = [
@@ -73,7 +74,7 @@ class _Api:
         db.sessions.insert_one(
             {
                 "_id": token_hash(token),
-                "sid": f"seed-{user['_id']}",
+                "sid": f"seed-{user['_id']}-{token[:8]}",
                 "user_id": user["_id"],
                 "state": "active",
                 "created_at": now,
@@ -249,6 +250,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         )
 
     lectures = _seed_academics(app, db, rng, users, api, bca, year, divisions)
+    exams = _seed_exams(app, db, rng, users, api, bca, divisions)
 
     for one in api.values():
         db.sessions.delete_one({"_id": one.token_id})
@@ -260,6 +262,9 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         "notices": 3,
         "timetables": 3,
         "lectures marked": lectures,
+        "marks sheets": exams["sheets"],
+        "exam forms": exams["forms"],
+        "results": exams["results"],
     }
 
 
@@ -373,3 +378,119 @@ def _seed_academics(
             day += timedelta(days=1)
     _ = app
     return marked
+
+
+def _seed_exams(
+    app: Any,
+    db: Database[dict[str, Any]],
+    rng: random.Random,
+    users: dict[str, dict[str, Any]],
+    api: dict[str, "_Api"],
+    bca: dict[str, Any],
+    divisions: dict[int, str],
+) -> dict[str, int]:
+    """Schemes for every subject, marks in different states, an open exam and last year's results."""
+    from bson import ObjectId
+
+    exam, hod = api["exam_cell"], api["hod"]
+    today = date.today()
+    subjects = list(db.subjects.find({"programme_id": ObjectId(bca["id"])}).sort("code", 1))
+    for s in subjects:
+        parts = (
+            [{"name": "Unit test 1", "max": 15}, {"name": "Unit test 2", "max": 15}, {"name": "Assignment", "max": 10}]
+            if s["type"] == "theory"
+            else [{"name": "Journal", "max": 20}, {"name": "Practical exam", "max": 30}]
+        )
+        exam.call(
+            "PUT",
+            "/marks/schemes",
+            json={
+                "subject_id": str(s["_id"]),
+                "components": parts,
+                "deadline": (today + timedelta(days=20)).isoformat(),
+            },
+        )
+
+    # The first FY teacher enters marks: one subject approved, one published but incomplete.
+    teacher = api["faculty"]
+    fy = {x["code"]: str(x["_id"]) for x in subjects if x["semester"] == 1}
+    sheets = 0
+    for code, complete in (("BCA101", True), ("BCA105", False)):
+        sheet = teacher.call("GET", "/marks/sheet", params={"division_id": divisions[1], "subject_id": fy[code]})
+        marks: dict[str, dict[str, Any]] = {}
+        for n, st in enumerate(sheet["students"]):
+            if not complete and n % 7 == 3:
+                continue  # left blank: the Upload Guard lists these
+            entry: dict[str, Any] = {}
+            for c in sheet["scheme"]["components"]:
+                entry[c["key"]] = "AB" if rng.random() < 0.03 else round(rng.uniform(0.45, 0.95) * c["max"] * 2) / 2
+            marks[st["id"]] = entry
+        teacher.call(
+            "PUT",
+            "/marks/sheet",
+            json={"division_id": divisions[1], "subject_id": fy[code], "marks": marks, "base_version": 0},
+        )
+        teacher.call(
+            "POST",
+            "/marks/sheet/action",
+            json={"division_id": divisions[1], "subject_id": fy[code], "action": "publish"},
+        )
+        if complete:
+            hod.call(
+                "POST",
+                "/marks/sheet/action",
+                json={"division_id": divisions[1], "subject_id": fy[code], "action": "approve"},
+            )
+        sheets += 1
+
+    # Last year's results for SY (semester 1 papers), published, with a few backlogs.
+    last = exam.call(
+        "POST",
+        "/exams/sessions",
+        json={"name": "Oct-Nov exams (last year, FY sem 1)", "term": 1, "kind": "university",
+              "classes": [{"programme_id": bca["id"], "year_of_study": 2}],
+              "form_deadline": (today - timedelta(days=300)).isoformat(), "fee_head_code": None},
+    )  # fmt: skip
+    grades = ["O", "A+", "A", "B+", "B", "C", "P", "F"]
+    rows = ["PRN,Subject code,Internal,External,Total,Grade,Credits"]
+    for st in db.students.find({"division_id": ObjectId(divisions[2])}, {"prn": 1}).sort("prn", 1):
+        for code in sorted(fy):
+            grade = rng.choices(grades, weights=[8, 14, 20, 20, 16, 10, 6, 6])[0]
+            internal = rng.randint(22, 38)
+            external = rng.randint(12, 24) if grade == "F" else rng.randint(28, 58)
+            rows.append(f"{st['prn']},{code},{internal},{external},{internal + external},{grade},4")
+    files = {"file": ("results.csv", "\n".join(rows).encode(), "text/csv")}
+    exam.call("POST", f"/exams/sessions/{last['id']}/results/import", params={"dry_run": False}, files=files)
+    exam.call("POST", f"/exams/sessions/{last['id']}/results/publish", json={"publish": True, "revaluation_days": 15})
+    results = len(rows) - 1
+
+    # This term's university exam for FY: open, with half the class's forms in.
+    now = exam.call(
+        "POST",
+        "/exams/sessions",
+        json={"name": "Oct-Nov university exams", "term": 1, "kind": "university",
+              "classes": [{"programme_id": bca["id"], "year_of_study": y} for y in (1, 2, 3)],
+              "form_deadline": (today + timedelta(days=10)).isoformat(), "fee_head_code": "EXAM", "seat_prefix": "C"},
+    )  # fmt: skip
+    first = today + timedelta(days=35)
+    papers = [
+        {
+            "subject_id": str(s["_id"]),
+            "date": (first + timedelta(days=2 * i)).isoformat(),
+            "start": "10:00",
+            "end": "13:00",
+        }
+        for i, s in enumerate(x for x in subjects if x["semester"] == 1)
+    ]
+    exam.call("PATCH", f"/exams/sessions/{now['id']}", json={"papers": papers})
+    forms = 0
+    for st in db.students.find({"division_id": ObjectId(divisions[1])}).sort("prn", 1).limit(10):
+        user = db.users.find_one({"_id": st["user_id"]})
+        assert user is not None
+        student_api = _Api(app, db, user)
+        db.users.update_one({"_id": user["_id"]}, {"$set": {"onboarded_at": datetime.now(UTC)}})
+        student_api.call("POST", f"/me/exams/{now['id']}/form")
+        db.sessions.delete_one({"_id": student_api.token_id})
+        db.users.update_one({"_id": user["_id"]}, {"$unset": {"onboarded_at": ""}})
+        forms += 1
+    return {"sheets": sheets, "forms": forms, "results": results}

@@ -434,6 +434,37 @@ address on record reset through the office (temporary password). Reset emails ne
 - The ERP demo seed adds subjects, nine Computer Science teachers, an HOD, term-1 timetables for
   FY/SY/TY and three weeks of attendance.
 
+**Delivered in the "Phase 2B" PR (2.5–2.8):**
+- Built for the free tiers (MongoDB M0 512 MB, Vercel Hobby): one marks document per class and
+  subject (`marks_sheets`) and one result document per student and exam (`results`); hall
+  tickets and result statements are PDFs made on demand, nothing is stored; every request is
+  short (a result file is checked and imported in one request, up to 2 MB).
+- Assessment scheme per subject and year (`assessment_schemes`): parts that add up to the
+  subject's internal maximum, an optional test date per part, and the marks deadline (Exam Cell
+  only). The Exam Cell sets schemes for any subject, the HOD for their department.
+- Marks: draft → published to students → approved by the HOD (or returned with a reason) →
+  locked by the Exam Cell (unlock needs a reason). Teachers of the subject are the class's
+  timetable teachers; after the deadline they can't change marks. "AB" marks an absence; half
+  marks allowed.
+- University Upload Guard: per class and subject, missing marks, marks above the maximum,
+  marks for a test the attendance says the student missed (needs the test date), and students
+  not eligible (below the attendance minimum, or no verified exam form after the form
+  deadline). The university file (PRN, name, subject code, whole marks rounded up or AB,
+  maximum) downloads only when the subject is ready; any file can be checked against the class
+  list before it is uploaded. The real university portal formats differ by university: this is
+  the format to adapt per university once the college shares its template.
+- Exams (`exam_sessions`, `exam_forms`): the Exam Cell opens an exam for some classes and a term,
+  with a form deadline, the fee head that must be paid (EXAM) and the paper timetable. Students
+  submit the form (their semester's subjects plus backlogs); eligibility = attendance minimum in
+  every subject and the fee paid; verifying an ineligible form needs a reason (e.g. condonation).
+  Seat numbers, a CSV list for the university portal, and hall tickets released to students.
+  Uploading the university's own hall tickets is not in v1 (storage); the generated one is used.
+- Results: one row per student and paper; grade points on the UGC 10-point scale unless the file
+  gives them; SGPA per exam; CGPA over each subject's latest attempt; backlogs go onto the next
+  exam form. Publishing opens a revaluation window; the Exam Cell records the outcome and the
+  result is recomputed. Revaluation fees are not handled yet.
+- Exam Cell demo login: `exam@demo.college` (2-step verification required at first sign-in).
+
 ### 6.4 Acceptance criteria
 - A faculty member marks attendance for 60 students in under 10 seconds, including in airplane mode, and it syncs when back online.
 - A student sees exactly how many lectures they can miss in each subject.

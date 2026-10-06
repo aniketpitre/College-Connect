@@ -58,8 +58,9 @@ def test_transaction_commits(db):
 
 
 def test_transaction_rolls_back_everything_on_error(db):
-    db.create_collection("counters")
-    db.create_collection("ledger")
+    for name in ("counters", "ledger"):  # transactions need the collections to exist already
+        if name not in db.list_collection_names():
+            db.create_collection(name)
 
     def work(session):
         db.counters.insert_one({"_id": "receipt:2026-27", "seq": 1}, session=session)

@@ -56,12 +56,27 @@ def db():
         pytest.skip("MongoDB not reachable")
     from app.core import db as core_db
 
+    global _fresh
     mongo = core_db.get_client()
-    mongo.drop_database(TEST_DB)
-    core_db._indexes_ready = False
-    yield mongo[TEST_DB]
-    mongo.drop_database(TEST_DB)
-    core_db._indexes_ready = False
+    database = mongo[TEST_DB]
+    if not _fresh:  # once per run: start from nothing, then keep collections and indexes
+        mongo.drop_database(TEST_DB)
+        core_db._indexes_ready = False
+        _fresh = True
+    _empty(database)
+    yield database
+    _empty(database)
+
+
+def _empty(database) -> None:
+    # Emptying instead of dropping keeps the collections' files: dropping and re-creating ~60
+    # collections with their indexes for every test opens new files faster than WiredTiger closes
+    # them, and MongoDB stops with "Too many open files" under a low file limit.
+    for name in database.list_collection_names():
+        database[name].delete_many({})
+
+
+_fresh = False
 
 
 PASSWORD = "correct-horse-battery"
