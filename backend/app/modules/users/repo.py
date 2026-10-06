@@ -135,5 +135,8 @@ def me_payload(user: dict[str, Any], session_state: str) -> dict[str, Any]:
         "session_state": session_state,
         "language": user.get("language"),
         # Students finish the first-login steps (contact, privacy notice, language) once.
-        "onboarding_required": user.get("kind") == "student" and not user.get("onboarded_at"),
+        "onboarding_required": (
+            user.get("kind") == "student" and not user.get("onboarded_at") and not user.get("read_only")
+        ),
+        "read_only": bool(user.get("read_only")),
     }

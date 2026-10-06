@@ -251,6 +251,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
 
     lectures = _seed_academics(app, db, rng, users, api, bca, year, divisions)
     exams = _seed_exams(app, db, rng, users, api, bca, divisions)
+    certificates = _seed_certificates(app, db, api, divisions)
 
     for one in api.values():
         db.sessions.delete_one({"_id": one.token_id})
@@ -265,6 +266,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         "marks sheets": exams["sheets"],
         "exam forms": exams["forms"],
         "results": exams["results"],
+        "certificate requests": certificates,
     }
 
 
@@ -494,3 +496,34 @@ def _seed_exams(
         db.users.update_one({"_id": user["_id"]}, {"$unset": {"onboarded_at": ""}})
         forms += 1
     return {"sheets": sheets, "forms": forms, "results": results}
+
+
+def _seed_certificates(
+    app: Any, db: Database[dict[str, Any]], api: dict[str, "_Api"], divisions: dict[int, str]
+) -> int:
+    """A few certificate requests in every state, so the office queue and dashboards have something to show."""
+    from bson import ObjectId
+
+    office = api["office"]
+    plan = [
+        ("bonafide", "Bank education loan", ["verify", "sign", "issue"]),
+        ("character", "Scholarship application", []),
+        ("fee_paid", "Income tax return of parent", ["verify"]),
+        ("bonafide", "Passport application", []),
+    ]
+    students = list(db.students.find({"division_id": ObjectId(divisions[1])}).sort("prn", 1).skip(1).limit(len(plan)))
+    for st, (kind, purpose, steps) in zip(students, plan, strict=True):
+        user = db.users.find_one({"_id": st["user_id"]})
+        assert user is not None
+        student_api = _Api(app, db, user)
+        db.users.update_one({"_id": user["_id"]}, {"$set": {"onboarded_at": datetime.now(UTC)}})
+        req = student_api.call("POST", "/me/certificates", json={"type": kind, "purpose": purpose})
+        db.sessions.delete_one({"_id": student_api.token_id})
+        db.users.update_one({"_id": user["_id"]}, {"$unset": {"onboarded_at": ""}})
+        for step in steps:
+            office.call("POST", f"/certificates/requests/{req['id']}/action", json={"action": step})
+    # One request is past its promised date, as the Principal's dashboard would show it.
+    db.certificate_requests.update_one(
+        {"purpose": "Passport application"}, {"$set": {"due_date": (date.today() - timedelta(days=1)).isoformat()}}
+    )
+    return len(plan)

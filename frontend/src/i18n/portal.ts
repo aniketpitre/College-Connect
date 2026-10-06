@@ -23,6 +23,10 @@ export interface PortalStrings {
   attendanceLow: (code: string, pct: number, n: number) => string;
   attendanceWarning: (code: string, pct: number, n: number) => string;
   attendanceTile: string;
+  examForm: (exam: string, date: string) => string;
+  hallTicket: (exam: string) => string;
+  results: (exam: string) => string;
+  certificateReady: (kind: string) => string;
   // My fees
   feesTitle: string;
   year: string;
@@ -71,6 +75,10 @@ const EN: PortalStrings = {
   attendanceLow: (code, pct, n) => `Attendance in ${code} is ${pct}%. Attend the next ${n} lectures to reach the minimum.`,
   attendanceWarning: (code, pct, n) => `Attendance in ${code} is ${pct}%. You can miss only ${n} more.`,
   attendanceTile: "Attendance",
+  examForm: (exam, date) => `Fill in your exam form for ${exam} by ${date}.`,
+  hallTicket: (exam) => `Your hall ticket for ${exam} is ready to download.`,
+  results: (exam) => `Results for ${exam} are out.`,
+  certificateReady: (kind) => `Your ${kind} is ready. Download it or collect it from the office.`,
   feesTitle: "My fees",
   year: "Year",
   totalFee: "Total fee",
@@ -128,6 +136,10 @@ const HI: PortalStrings = {
   attendanceLow: (code, pct, n) => `${code} में उपस्थिति ${pct}% है। न्यूनतम तक पहुँचने के लिए अगले ${n} लेक्चर में आएँ।`,
   attendanceWarning: (code, pct, n) => `${code} में उपस्थिति ${pct}% है। आप केवल ${n} और छोड़ सकते हैं।`,
   attendanceTile: "उपस्थिति",
+  examForm: (exam, date) => `${exam} का परीक्षा फ़ॉर्म ${date} तक भरें।`,
+  hallTicket: (exam) => `${exam} का हॉल टिकट डाउनलोड के लिए तैयार है।`,
+  results: (exam) => `${exam} का परिणाम आ गया है।`,
+  certificateReady: (kind) => `आपका ${kind} तैयार है। डाउनलोड करें या कार्यालय से लें।`,
   feesTitle: "मेरी फ़ीस",
   year: "वर्ष",
   totalFee: "कुल फ़ीस",
@@ -185,6 +197,10 @@ const MR: PortalStrings = {
   attendanceLow: (code, pct, n) => `${code} मध्ये हजेरी ${pct}% आहे. किमान गाठण्यासाठी पुढील ${n} लेक्चर उपस्थित राहा.`,
   attendanceWarning: (code, pct, n) => `${code} मध्ये हजेरी ${pct}% आहे. तुम्ही फक्त आणखी ${n} चुकवू शकता.`,
   attendanceTile: "हजेरी",
+  examForm: (exam, date) => `${exam} चा परीक्षा अर्ज ${date} पर्यंत भरा.`,
+  hallTicket: (exam) => `${exam} चे हॉल तिकीट डाउनलोडसाठी तयार आहे.`,
+  results: (exam) => `${exam} चा निकाल लागला आहे.`,
+  certificateReady: (kind) => `तुमचे ${kind} तयार आहे. डाउनलोड करा किंवा कार्यालयातून घ्या.`,
   feesTitle: "माझे शुल्क",
   year: "वर्ष",
   totalFee: "एकूण शुल्क",

@@ -226,7 +226,14 @@ def refund_request(body: RefundRequest, request: Request, ctx: AuthContext = COL
 def verify(code: str, request: Request) -> dict[str, Any]:
     """Public: anyone holding a receipt (a bank, a scholarship office) can check it."""
     hit(f"verify:{client_ip(request)}", limit=60, window_seconds=3600)
-    return cancellations.verify(code)
+    try:
+        return cancellations.verify(code)
+    except AppError as e:
+        if e.status != 404:
+            raise
+        from app.modules.certificates import service as certificates
+
+        return certificates.verify(code)
 
 
 # --- opening balances and reports -----------------------------------------------------------

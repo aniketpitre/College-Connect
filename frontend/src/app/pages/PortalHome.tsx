@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import StaffDashboard from "../../features/dashboard/StaffDashboard";
 import StudentHome from "../../features/portal/StudentHome";
 import { NAV_LABELS } from "../../i18n/nav";
 import { hasPermission, useMe } from "../../lib/auth";
@@ -10,11 +11,16 @@ const STAFF_LINKS: [string, string, string][] = [
   ["/app/approvals", "approvals", "approvals.decide"],
   ["/app/students", "students", "students.read"],
   ["/app/notices", "notices", "notices.read"],
+  ["/app/exams", "exams", "marks.read"],
+  ["/app/certificates", "certificates", "certificates.manage"],
   ["/app/users", "users", "users.read"],
   ["/app/setup", "setup", "setup.read"],
   ["/app/audit", "audit", "audit.read"],
   ["/app/analytics", "analytics", "analytics.view"],
 ];
+
+/** "Dr. Sunita Rane" → "Sunita": titles aren't a first name. */
+const firstName = (name: string) => name.split(" ").find((w) => !/^(dr|prof|mr|mrs|ms|shri|smt)\.?$/i.test(w)) ?? name;
 
 /** Students get their own home; staff get shortcuts to what their roles allow. */
 export default function PortalHome() {
@@ -27,7 +33,7 @@ export default function PortalHome() {
     <div lang={language}>
       <div className="eyebrow">CollegeConnect</div>
       <h1>
-        {language === "en" ? "Welcome" : language === "hi" ? "स्वागत है" : "स्वागत आहे"}, {me?.name.split(" ")[0]}
+        {language === "en" ? "Welcome" : language === "hi" ? "स्वागत है" : "स्वागत आहे"}, {firstName(me?.name ?? "")}
       </h1>
       <p className="muted">{me?.role_labels.join(", ")}</p>
       <div className="staff-links">
@@ -40,6 +46,7 @@ export default function PortalHome() {
           {t.account} →
         </Link>
       </div>
+      <StaffDashboard />
     </div>
   );
 }

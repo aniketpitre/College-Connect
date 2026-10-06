@@ -265,7 +265,7 @@ def readable_divisions(ctx: AuthContext) -> list[dict[str, Any]]:
 
 def send_alerts(today: date | None = None) -> dict[str, int]:
     """Emails each student once per subject when they drop below the warning level, and again
-    below the minimum. Run daily by Vercel Cron (GET /cron/attendance-alerts)."""
+    below the minimum. Run daily by Vercel Cron (GET /cron/daily; /cron/attendance-alerts runs it alone)."""
     db = get_db()
     minimum, warn = thresholds()
     year = setup.current_year()

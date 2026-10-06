@@ -428,7 +428,7 @@ address on record reset through the office (temporary password). Reset emails ne
 - Percentages per subject; the college sets the minimum (75%) and warning level (80%) in College
   setup. Students see "you can miss N more" or "attend the next N" (en/hi/mr) and a home card
   when low; staff get a class report with defaulters. A daily Vercel Cron job
-  (`/api/v1/cron/attendance-alerts`, 9:00 IST, needs `CRON_SECRET`) emails a student once per
+  (now part of `/api/v1/cron/daily`, 9:00 IST, needs `CRON_SECRET`) emails a student once per
   subject per level (`attendance_alerts`). Parent and mentor alerts come with their portals
   (Phase 3); SMS/WhatsApp in Phase 3.
 - The ERP demo seed adds subjects, nine Computer Science teachers, an HOD, term-1 timetables for
@@ -464,6 +464,34 @@ address on record reset through the office (temporary password). Reset emails ne
   exam form. Publishing opens a revaluation window; the Exam Cell records the outcome and the
   result is recomputed. Revaluation fees are not handled yet.
 - Exam Cell demo login: `exam@demo.college` (2-step verification required at first sign-in).
+
+**Delivered in the "Phase 2C" PR (2.9–2.11):**
+- One daily job: Vercel Hobby allows one cron run a day, so `vercel.json` now calls
+  `GET /api/v1/cron/daily` (9:00 IST, `Authorization: Bearer $CRON_SECRET`), which sends the
+  attendance alerts and escalates late certificate requests. `/cron/attendance-alerts` still
+  works on its own.
+- Certificates (`certificate_requests`, `certificates`, `certificate_types`): bonafide,
+  character and fee-paid letter (signed by the office as Registrar), TC and migration (Principal,
+  after a no-dues check: fees, and open requests elsewhere), internship NOC (HOD). Each type has
+  a promised number of working days (Sundays and college holidays skipped), which the office can
+  change or switch a type off. A student asks from `/app/certificates`; the office can also ask
+  for a student. Requested → verified → signed → issued, or rejected with a reason at any step.
+- Issuing gives a gap-free number per year (`C/2026-27/00001`), a verify code and a snapshot of
+  the details; the PDF (with a QR code to `/verify/<code>`) is made on demand from the snapshot.
+  The public Verify page shows certificates as well as receipts.
+- Issuing a TC marks the student as left (`status: tc`) and makes their login read-only: they
+  can still sign in and download, but any change is refused (`read_only`).
+- Late requests: the daily job marks them escalated once and emails the Principal a list; the
+  student sees "Late: the Principal has been told."
+- Home dashboards (`GET /dashboard`, sections by role): teachers see today's lectures with a
+  Take attendance button and marks still to enter; the HOD sees each class's attendance and
+  students below the minimum, pending attendance edits and marks to approve, and teaching hours
+  per teacher; the Exam Cell sees exam sessions (forms to verify), marks sheet status,
+  revaluations and subjects with no scheme; the office sees certificate and record queues; the
+  Principal sees approvals, exports, certificates to sign and late certificates.
+- Student home gains cards for an open exam form, a released hall ticket, new results (14 days)
+  and a ready certificate (14 days), in English, Hindi and Marathi.
+- Demo data adds four certificate requests in different states (one late).
 
 ### 6.4 Acceptance criteria
 - A faculty member marks attendance for 60 students in under 10 seconds, including in airplane mode, and it syncs when back online.

@@ -171,6 +171,26 @@ def home(ctx: AuthContext) -> dict[str, Any]:
                     "reason": r.get("decision_reason"),
                 }
             )
+    from app.modules.exams import service as exams
+
+    for x in exams.my_exams(ctx):
+        if x["form_open"] and x["form_status"] in ("not_submitted", "rejected"):
+            cards.append(
+                {"kind": "exam_form", "severity": "warning", "title": x["name"], "due_date": x["form_deadline"]}
+            )
+        if x["hall_ticket"]:
+            cards.append({"kind": "hall_ticket", "severity": "info", "title": x["name"]})
+    recent_results = clock.today() - timedelta(days=14)
+    for s in db.exam_sessions.find(
+        {"results_published": True, "results_published_at": {"$exists": True}}, {"name": 1, "results_published_at": 1}
+    ):
+        if s["results_published_at"].date() >= recent_results and db.results.find_one(
+            {"session_id": s["_id"], "student_id": student["_id"]}, {"_id": 1}
+        ):
+            cards.append({"kind": "results", "severity": "info", "title": s["name"]})
+    for r in db.certificate_requests.find({"student_id": student["_id"], "status": "ready"}):
+        if r.get("issued_at") and r["issued_at"].date() >= recent_results:
+            cards.append({"kind": "certificate_ready", "severity": "info", "type": r["type"]})
     for n in notices.recent_for_student(ctx):
         cards.append(
             {

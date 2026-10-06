@@ -8,7 +8,7 @@ import LanguageToggle from "../LanguageToggle";
 import "../layout.css";
 import { VERIFY } from "./simplePages";
 
-interface Verification {
+interface ReceiptCheck {
   type: "receipt";
   valid: boolean;
   status: string;
@@ -22,7 +22,21 @@ interface Verification {
   cancelled_at: string | null;
 }
 
-/** Public: opened from the QR code on a receipt. Says whether it is genuine and still valid. */
+interface CertificateCheck {
+  type: "certificate";
+  valid: boolean;
+  status: string;
+  number: string;
+  date: string;
+  certificate: string;
+  student_name: string;
+  prn: string;
+  college: string;
+}
+
+type Verification = ReceiptCheck | CertificateCheck;
+
+/** Public: opened from the QR code on a receipt or certificate. Says whether it is genuine and still valid. */
 export default function VerifyPage() {
   const { code = "" } = useParams();
   const [language, setLanguage] = useLanguage();
@@ -49,7 +63,28 @@ export default function VerifyPage() {
         {result.isLoading && <p>{t.checking}</p>}
         {notFound && <p className="form-error">{t.notFound}</p>}
         {result.error && !notFound && <p className="form-error">{result.error.message}</p>}
-        {v && (
+        {v && v.type === "certificate" && (
+          <>
+            <div className={`verify-result ${v.valid ? "ok" : "bad"}`} role="status">
+              <StatusBadge tone={v.valid ? "success" : "danger"}>{v.valid ? `✓ ${t.genuineCert}` : `✕ ${t.revokedCert}`}</StatusBadge>
+            </div>
+            <dl className="verify-list">
+              <dt>{t.issuedBy}</dt>
+              <dd>{v.college}</dd>
+              <dt>{t.document}</dt>
+              <dd>{v.certificate}</dd>
+              <dt>{t.certNo}</dt>
+              <dd className="mono">{v.number}</dd>
+              <dt>{t.date}</dt>
+              <dd>{new Date(v.date).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" })}</dd>
+              <dt>{t.student}</dt>
+              <dd>
+                {v.student_name} · {v.prn}
+              </dd>
+            </dl>
+          </>
+        )}
+        {v && v.type === "receipt" && (
           <>
             <div className={`verify-result ${v.valid ? "ok" : "bad"}`} role="status">
               <StatusBadge tone={v.valid ? "success" : "danger"}>{v.valid ? `✓ ${t.genuine}` : `✕ ${t.cancelled}`}</StatusBadge>
