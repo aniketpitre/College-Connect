@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, apiFetch } from "./api";
 import { chooseLanguage } from "./language";
+import { setChild } from "./child";
 import * as offline from "./offline";
 import type { Language } from "./types";
 
@@ -54,6 +55,9 @@ export function useMe() {
   });
 }
 
+/** Students and parents see the student pages (parents: their child's, read-only). */
+export const isLearner = (me: Me | null | undefined) => me?.kind === "student" || me?.kind === "parent";
+
 export function hasPermission(me: Me | null | undefined, permission: string): boolean {
   return Boolean(me?.permissions.includes(permission));
 }
@@ -75,6 +79,7 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => apiFetch<void>("/auth/logout", { method: "POST" }),
     onSettled: () => {
+      setChild(null);
       qc.clear();
       qc.setQueryData(ME_KEY, null);
       // Class lists and the user kept for offline use leave the phone with the user.

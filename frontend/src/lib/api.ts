@@ -1,3 +1,4 @@
+import { childId } from "./child";
 import type { Category, Language, QueryResponse } from "./types";
 
 // Same origin in production (Vercel) and in development (Vite proxies /api to :8000).
@@ -24,6 +25,9 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   if (init.body !== undefined && !(init.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   // Required by the backend on every cookie-authenticated change (blocks cross-site request forgery).
   headers.set("X-Requested-With", "XMLHttpRequest");
+  // Parents: which child the request is about (ignored by the API for everyone else).
+  const child = childId();
+  if (child && !headers.has("X-Child")) headers.set("X-Child", child);
   let res: Response;
   try {
     res = await fetch(`${API_V1}${path}`, { ...init, headers, credentials: "include" });

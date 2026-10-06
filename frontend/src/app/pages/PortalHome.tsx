@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import StaffDashboard from "../../features/dashboard/StaffDashboard";
 import StudentHome from "../../features/portal/StudentHome";
 import { NAV_LABELS } from "../../i18n/nav";
-import { hasPermission, useMe } from "../../lib/auth";
+import { hasPermission, isLearner, useMe } from "../../lib/auth";
 import { useLanguage } from "../../lib/language";
 import "../../features/portal/portal.css";
 
@@ -26,7 +26,7 @@ const firstName = (name: string) => name.split(" ").find((w) => !/^(dr|prof|mr|m
 export default function PortalHome() {
   const { data: me } = useMe();
   const [language] = useLanguage();
-  if (me?.kind === "student") return <StudentHome />;
+  if (isLearner(me)) return <StudentHome />;
   const t = NAV_LABELS[language];
   const links = STAFF_LINKS.filter(([, , perm]) => hasPermission(me, perm));
   return (

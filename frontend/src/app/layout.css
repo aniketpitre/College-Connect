@@ -184,3 +184,18 @@
 .verify-list .mono {
   font-family: var(--mono);
 }
+.child-switch select {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper-card);
+  color: inherit;
+  max-width: 160px;
+}
+@media (max-width: 600px) {
+  .child-switch select {
+    max-width: 120px;
+  }
+}

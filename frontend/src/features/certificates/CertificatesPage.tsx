@@ -6,7 +6,7 @@ import { Modal } from "../../components/Modal";
 import { StatusBadge } from "../../components/StatusBadge";
 import { CERT_STRINGS, type CertStrings } from "../../i18n/certificates";
 import { ApiError } from "../../lib/api";
-import { hasPermission, useMe } from "../../lib/auth";
+import { hasPermission, isLearner, useMe } from "../../lib/auth";
 import {
   myCertificatePdf,
   staffCertificatePdf,
@@ -38,7 +38,7 @@ const TONE: Record<CertStatus, "neutral" | "info" | "success" | "warning" | "dan
 
 export default function CertificatesPage() {
   const { data: me } = useMe();
-  return me?.kind === "student" ? <StudentCertificates /> : <StaffCertificates />;
+  return isLearner(me) ? <StudentCertificates /> : <StaffCertificates />;
 }
 
 function RequestFields({ T, types, value, onChange }: { T: CertStrings; types: CertTypeInfo[]; value: NewRequest; onChange: (v: NewRequest) => void }) {

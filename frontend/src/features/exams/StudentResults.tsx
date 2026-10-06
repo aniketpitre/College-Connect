@@ -1,4 +1,5 @@
 import { MARKS_STRINGS } from "../../i18n/marks";
+import { useMe } from "../../lib/auth";
 import { useLanguage } from "../../lib/language";
 import { myResultPdf, useMyResults, useRequestReval } from "../../lib/results";
 
@@ -8,6 +9,7 @@ export default function StudentResults() {
   const T = MARKS_STRINGS[language];
   const results = useMyResults();
   const ask = useRequestReval();
+  const { data: me } = useMe();
   const r = results.data;
   if (!r || r.results.length === 0) return null;
   const locale = language === "en" ? "en-IN" : `${language}-IN`;
@@ -60,7 +62,8 @@ export default function StudentResults() {
                       {s.revaluation ? (
                         <span className="muted small">{s.revaluation.status_label}</span>
                       ) : (
-                        s.can_request_revaluation && (
+                        s.can_request_revaluation &&
+                        me?.kind === "student" && (
                           <button type="button" className="btn btn-ghost btn-sm" disabled={ask.isPending} onClick={() => ask.mutate({ resultId: x.id, code: s.code })}>
                             {T.askReval}
                           </button>

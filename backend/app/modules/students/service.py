@@ -204,6 +204,11 @@ def get_student(student_id: ObjectId, session: ClientSession | None = None) -> d
 
 
 def my_student(ctx: AuthContext) -> dict[str, Any]:
+    """The signed-in student's record; for a parent, the linked child they picked."""
+    if ctx.user.get("kind") == "parent":
+        from app.modules.parents import service as parents
+
+        return parents.child(ctx)
     if ctx.user.get("kind") != "student":
         raise AppError(403, "This is for student accounts.", "forbidden")
     doc = get_db().students.find_one({"user_id": ctx.user_id})
@@ -592,5 +597,9 @@ def file_for(ctx: AuthContext, file_id: str) -> dict[str, Any]:
     if ctx.user.get("kind") == "student":
         mine = get_db().students.find_one({"user_id": ctx.user_id}, {"_id": 1})
         if mine and mine["_id"] == doc.get("student_id"):
+            return doc
+    if ctx.user.get("kind") == "parent":
+        child = my_student(ctx)  # parents: only their child's photo
+        if doc["_id"] == child.get("photo_file_id"):
             return doc
     raise AppError(404, "File not found.")  # not 403: don't reveal that the file exists

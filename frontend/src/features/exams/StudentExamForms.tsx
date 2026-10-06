@@ -1,4 +1,5 @@
 import { MARKS_STRINGS } from "../../i18n/marks";
+import { useMe } from "../../lib/auth";
 import { myHallTicketUrl, useMyExams, useSubmitForm } from "../../lib/exams";
 import { useLanguage } from "../../lib/language";
 import { formatPaise } from "../../lib/money";
@@ -9,6 +10,8 @@ export default function StudentExamForms() {
   const T = MARKS_STRINGS[language];
   const exams = useMyExams();
   const submit = useSubmitForm();
+  const { data: me } = useMe();
+  const isStudent = me?.kind === "student"; // parents see the form's status but don't submit it
   if (!exams.data?.length) return null;
   const locale = language === "en" ? "en-IN" : `${language}-IN`;
   const day = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
@@ -52,7 +55,7 @@ export default function StudentExamForms() {
               </p>
             )}
             <div className="row-actions">
-              {x.form_open && (x.form_status === "not_submitted" || x.form_status === "rejected") && (
+              {isStudent && x.form_open && (x.form_status === "not_submitted" || x.form_status === "rejected") && (
                 <button type="button" className="btn btn-primary btn-sm" disabled={submit.isPending} onClick={() => submit.mutate(x.id)}>
                   {T.submitForm}
                 </button>

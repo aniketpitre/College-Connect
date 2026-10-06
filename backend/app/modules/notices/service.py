@@ -220,8 +220,13 @@ def _visible_query(ctx: AuthContext, manage: bool = False) -> dict[str, Any]:
         "publish_at": {"$lte": now},
         "$or": [{"expires_at": None}, {"expires_at": {"$gte": now}}],
     }
-    if ctx.user.get("kind") == "student":
-        s = get_db().students.find_one({"user_id": ctx.user_id})
+    if ctx.user.get("kind") in ("student", "parent"):
+        from app.modules.students import service as students
+
+        try:
+            s: dict[str, Any] | None = students.my_student(ctx)  # parents see their child's notices
+        except AppError:
+            s = None
         mine: list[dict[str, Any]] = [{"audience.kind": {"$in": ["everyone", "students"]}}]
         if s and s.get("programme_id"):
             mine.append(

@@ -26,6 +26,7 @@ from app.core.security import new_token, token_hash
 
 COOKIE_NAME = "cc_session"
 CSRF_HEADER = "X-Requested-With"
+CHILD_HEADER = "X-Child"
 
 STAFF_SESSION = timedelta(hours=12)
 STUDENT_SESSION = timedelta(days=30)
@@ -46,6 +47,7 @@ register_indexes(
 class AuthContext:
     user: dict[str, Any]
     session: dict[str, Any]
+    child_id: str | None = None  # parents: the child this request is about (X-Child header)
 
     @property
     def user_id(self) -> ObjectId:
@@ -118,7 +120,8 @@ def _load(request: Request) -> AuthContext | None:
         return None
     if now - session["last_seen_at"] > LAST_SEEN_RESOLUTION:
         db.sessions.update_one({"_id": session["_id"]}, {"$set": {"last_seen_at": now}})
-    return AuthContext(user=user, session=session)
+    child = request.headers.get(CHILD_HEADER) if user.get("kind") == "parent" else None
+    return AuthContext(user=user, session=session, child_id=child or None)
 
 
 def optional_session(request: Request) -> AuthContext | None:
@@ -149,7 +152,21 @@ def signed_in(request: Request, ctx: AuthContext = Depends(signed_in_allow_passw
     if ctx.user.get("read_only") and request.method not in {"GET", "HEAD", "OPTIONS"}:
         # After a TC the former student can still sign in to read and download, but not change anything.
         raise AppError(403, "Your account is read-only: you have left the college.", "read_only")
+    if ctx.user.get("kind") == "parent":
+        _parent_guard(request, ctx)
     return ctx
+
+
+def _parent_guard(request: Request, ctx: AuthContext) -> None:
+    from app.modules.parents import guard
+    from app.modules.parents import service as parents
+
+    route = request.scope.get("route")
+    needs_child, area = guard.area_for(request.method, getattr(route, "path", request.url.path))
+    if needs_child:
+        parents.child(ctx)  # the child must be theirs
+        if area:
+            parents.check_area(ctx, area)
 
 
 def require(permission: P):

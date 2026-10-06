@@ -198,6 +198,13 @@ def publish(ctx: AuthContext, session_id: str, publish: bool, revaluation_days: 
     if publish:
         changes["revaluation_until"] = (clock.today() + timedelta(days=revaluation_days)).isoformat()
         changes["results_published_at"] = clock.now()
+    if publish and not session.get("results_notified"):
+        # Students and (if shared) parents hear about it once, through the message queue.
+        from app.modules.messaging import service as messaging
+
+        for r in db.results.find({"session_id": session["_id"]}, {"student_id": 1}):
+            messaging.queue(r["student_id"], "results_published", {"exam": session["name"]})
+        changes["results_notified"] = True
     db.exam_sessions.update_one({"_id": session["_id"]}, {"$set": changes})
     audit.record(
         f"results.{'published' if publish else 'withdrawn'}",

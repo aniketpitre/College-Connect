@@ -5,7 +5,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { Modal } from "../../components/Modal";
 import { TIMETABLE_STRINGS, type TimetableStrings } from "../../i18n/timetable";
 import { ApiError } from "../../lib/api";
-import { hasPermission, useMe } from "../../lib/auth";
+import { hasPermission, isLearner, useMe } from "../../lib/auth";
 import { useLanguage } from "../../lib/language";
 import { classLabel, useSetup } from "../../lib/setup";
 import {
@@ -66,7 +66,7 @@ type Tab = "mine" | "class" | "manage";
 
 export default function TimetablePage() {
   const { data: me } = useMe();
-  if (me?.kind === "student") return <StudentTimetable />;
+  if (isLearner(me)) return <StudentTimetable />;
   return <StaffTimetable />;
 }
 

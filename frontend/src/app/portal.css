@@ -178,3 +178,10 @@
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+/* Student: what parents can see */
+.sharing-card {
+  display: grid;
+  gap: 8px;
+  max-width: 560px;
+}

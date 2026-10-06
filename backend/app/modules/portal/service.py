@@ -52,9 +52,12 @@ def my_fees(ctx: AuthContext, academic_year_id: str | None) -> dict[str, Any]:
     year_id = _year(student, academic_year_id)
     account = fees.account(student["_id"], year_id)
     rows = get_db().receipts.find({"student_id": student["_id"], "academic_year_id": year_id}).sort("collected_at", -1)
+    from app.modules.payments import gateway
+
     return {
         "years": years,
         "academic_year_id": str(year_id),
+        "online_payment": gateway.enabled(),
         **{
             k: account[k]
             for k in (
@@ -103,6 +106,18 @@ def statement(ctx: AuthContext, academic_year_id: str | None) -> tuple[dict[str,
         "class": " ".join(x for x in (summary["programme_code"], summary["year_label"], summary["division"]) if x),
     }
     return info, year["name"], fees.account(student["_id"], year_id)
+
+
+CARD_AREA = {
+    "fee_overdue": "fees",
+    "fee_due_soon": "fees",
+    "attendance_low": "attendance",
+    "attendance_warning": "attendance",
+    "exam_form": "results",
+    "hall_ticket": "results",
+    "results": "results",
+}
+STUDENT_ONLY = {"document_rejected", "correction_approved", "correction_rejected", "exam_form"}
 
 
 def home(ctx: AuthContext) -> dict[str, Any]:
@@ -203,6 +218,15 @@ def home(ctx: AuthContext) -> dict[str, Any]:
             }
         )
     summary = students.summary(student)
+    attendance_pct = attendance["overall"]["percent"]
+    if ctx.user.get("kind") == "parent":
+        # Parents see only what the student shares, and not the student's own to-dos.
+        from app.modules.parents import service as parents
+
+        shared = parents.access(student)
+        cards = [c for c in cards if c["kind"] not in STUDENT_ONLY and shared.get(CARD_AREA.get(c["kind"], ""), True)]
+        balance = balance if shared["fees"] else None
+        attendance_pct = attendance_pct if shared["attendance"] else None
     return {
         "name": student["name"],
         "prn": student["prn"],
@@ -210,6 +234,6 @@ def home(ctx: AuthContext) -> dict[str, Any]:
         "academic_year": current["name"] if current else None,
         "photo_url": f"/files/{student['photo_file_id']}" if student.get("photo_file_id") else None,
         "balance": balance,
-        "attendance": attendance["overall"]["percent"],
+        "attendance": attendance_pct,
         "cards": cards,
     }

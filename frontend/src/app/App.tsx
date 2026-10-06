@@ -16,6 +16,8 @@ import CollectPage from "../features/fees/CollectPage";
 import FeeSetupPage from "../features/fees/FeeSetupPage";
 import FeesHome from "../features/fees/FeesHome";
 import OpeningPage from "../features/fees/OpeningPage";
+import OnlinePaymentsPage from "../features/fees/OnlinePaymentsPage";
+import MessagesPage from "../features/messages/MessagesPage";
 import ReportsPage from "../features/fees/ReportsPage";
 import StudentFeesPage from "../features/fees/StudentFeesPage";
 import NoticeDetailPage from "../features/notices/NoticeDetailPage";
@@ -96,6 +98,8 @@ export default function App() {
         <Route path="fees/setup" element={<FeeSetupPage />} />
         <Route path="fees/collect/:id" element={<CollectPage />} />
         <Route path="fees/reports" element={<ReportsPage />} />
+        <Route path="fees/online" element={<OnlinePaymentsPage />} />
+        <Route path="messages" element={<MessagesPage />} />
         <Route path="fees/opening" element={<OpeningPage />} />
         <Route path="fees/students/:id" element={<StudentFeesPage />} />
         <Route path="approvals" element={<ApprovalsPage />} />

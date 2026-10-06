@@ -10,6 +10,7 @@ import { fileUrl, useDecideDocument, useStudent, useStudentHistory, useUpdateStu
 import { ChangeRequestList } from "./ChangeRequestList";
 import { describeValue } from "./describe";
 import { DocumentList, UploadDocument } from "./Documents";
+import { ParentsTab } from "./ParentsTab";
 import { RecordView } from "./RecordView";
 import { StudentFields } from "./StudentForm";
 import { toBody, toValues } from "./studentValues";
@@ -31,6 +32,9 @@ const ACTIONS: Record<string, string> = {
   "students.promoted": "Promoted",
   "students.contact_confirmed": "Student confirmed contact details",
   "students.privacy_accepted": "Student accepted the privacy notice",
+  "parents.linked": "Parent linked",
+  "parents.unlinked": "Parent unlinked",
+  "parents.access_changed": "Student changed what parents see",
 };
 
 /** Office screen (English): one student's record, documents, corrections and history. */
@@ -40,7 +44,7 @@ export default function StudentDetailPage() {
   const student = useStudent(id);
   const setup = useSetup();
   const [editing, setEditing] = useState(false);
-  const [tab, setTab] = useState<"record" | "documents" | "requests" | "history">("record");
+  const [tab, setTab] = useState<"record" | "documents" | "parents" | "requests" | "history">("record");
   const canManage = hasPermission(me, "students.manage");
   const s = student.data;
 
@@ -78,6 +82,7 @@ export default function StudentDetailPage() {
           [
             ["record", "Record"],
             ["documents", `Documents (${s.documents.length})`],
+            ["parents", "Parents"],
             ["requests", "Correction requests"],
             ["history", "History"],
           ] as const
@@ -90,6 +95,7 @@ export default function StudentDetailPage() {
 
       {tab === "record" && <RecordView s={s} />}
       {tab === "documents" && <DocumentsTab s={s} canManage={canManage} />}
+      {tab === "parents" && <ParentsTab studentId={s.id} canManage={canManage} />}
       {tab === "requests" && (
         <>
           <ChangeRequestList status="pending" studentId={s.id} canDecide={canManage} />

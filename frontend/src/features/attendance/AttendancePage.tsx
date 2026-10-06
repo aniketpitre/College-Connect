@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { EmptyState } from "../../components/EmptyState";
 import { StatusBadge } from "../../components/StatusBadge";
-import { hasPermission, useMe } from "../../lib/auth";
+import { hasPermission, isLearner, useMe } from "../../lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ATTENDANCE_KEY,
@@ -29,7 +29,7 @@ type Tab = "today" | "reports" | "requests" | "exemptions";
 
 export default function AttendancePage() {
   const { data: me } = useMe();
-  if (me?.kind === "student") return <StudentAttendance />;
+  if (isLearner(me)) return <StudentAttendance />;
   return <StaffAttendance />;
 }
 

@@ -45,6 +45,8 @@ export interface StudentHome {
 }
 export interface MyFees extends Omit<FeeAccount, "student_id" | "student" | "late_fee"> {
   years: { id: string; name: string; is_current: boolean }[];
+  /** The college has an online payment gateway set up. */
+  online_payment?: boolean;
   receipts: { id: string; number: string; amount: number; mode_label: string; reference: string; collected_at: string; status: "valid" | "cancelled" }[];
 }
 
