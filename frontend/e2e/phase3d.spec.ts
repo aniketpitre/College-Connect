@@ -66,7 +66,7 @@ test("a student raises a grievance; the cell resolves it and the student closes 
 
   await student.reload();
   await student.getByRole("button", { name: /Practical batch timing clash/ }).click();
-  await expect(student.getByText("The practical moves to Friday from next week.")).toBeVisible();
+  await expect(student.getByText("The practical moves to Friday from next week.").first()).toBeVisible();
   await student.getByRole("button", { name: "Send feedback" }).click();
   await expect(student.getByText("Closed").first()).toBeVisible();
 });
