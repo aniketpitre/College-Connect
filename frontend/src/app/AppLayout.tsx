@@ -51,6 +51,12 @@ const NAV: NavItem[] = [
   { to: "/app/exams", label: "exams", kind: "staff", permission: ["marks.enter", "marks.approve", "marks.read", "exams.manage", "marks.scheme.dept", "results.read"] },
   { to: "/app/certificates", label: "certificates", kind: LEARNER },
   { to: "/app/admissions", label: "admissions", permission: "admissions.read" },
+  { to: "/app/library", label: "library", kind: "student" },
+  { to: "/app/library", label: "library", kind: "staff", permission: "library.read" },
+  { to: "/app/hostel", label: "hostel", kind: "student" },
+  { to: "/app/hostel", label: "hostel", kind: "staff", permission: "hostel.read" },
+  { to: "/app/placement", label: "placement", kind: "student" },
+  { to: "/app/placement", label: "placement", kind: "staff", permission: "placement.read" },
   {
     to: "/app/certificates",
     label: "certificates",
