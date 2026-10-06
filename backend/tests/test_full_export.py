@@ -34,7 +34,7 @@ def _browser_zip(c, rid):
 
 def test_full_export_restores_into_a_fresh_database(monkeypatch, client, sign_in, db, fees):  # noqa: F811
     from app.modules.exports import full
-    from scripts.restore_export import restore
+    from scripts.restore_export import check, ledger_total, restore
 
     monkeypatch.setattr(full, "PAGE_DOCS", 2)  # force paging even on a small database
     admin, principal, office = new_client(client), new_client(client), new_client(client)
@@ -64,6 +64,8 @@ def test_full_export_restores_into_a_fresh_database(monkeypatch, client, sign_in
         for name in names:
             if name != "audit_log":  # the export itself added audit entries after the pages were read
                 assert counts[name] == db[name].count_documents({}), name
+        assert check(data, target) == []
+        assert ledger_total(target) == ledger_total(db)
         original = db.students.find_one({"prn": "2026BCA001"})
         restored = target.students.find_one({"_id": original["_id"]})
         assert restored == original  # ObjectIds, dates and nested fields come back exactly
@@ -73,6 +75,8 @@ def test_full_export_restores_into_a_fresh_database(monkeypatch, client, sign_in
         u = target.users.find_one({"prn": "2026BCA001"})
         assert u["password_hash"] is None and u["must_change_password"] is True
         assert "prn_1" in "".join(target.students.index_information())
+        target.students.delete_one({"_id": original["_id"]})
+        assert any(p.startswith("students:") and "missing" in p for p in check(data, target))
         try:
             restore(data, target)
         except SystemExit as e:

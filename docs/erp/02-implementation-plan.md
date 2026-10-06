@@ -778,6 +778,25 @@ grievance, staff and leave, no-dues).
 - Demo data: state and HSC percentage for every student and a declared family income for most
   (the first student of each year leaves it blank to try the checker).
 
+**Delivered in the "Phase 4D" PR (4.7):**
+- Security review against the OWASP Top 10: [security-review.md](security-review.md). Fixes: the
+  client address for rate limits and the audit log no longer trusts `X-Forwarded-For` (uses
+  `X-Real-IP` set by Vercel); localhost origins for CORS only off Vercel
+  (`ALLOW_LOCALHOST_ORIGINS`); a Content-Security-Policy on the built web app and on API JSON;
+  HSTS and Permissions-Policy headers; NAAC intake keys validated; a dev dependency advisory
+  fixed. The review lists what the college must still do (set `APP_BASE_URL`,
+  `APP_SECRET_KEY`, `CRON_SECRET`; rotate the Atlas password; 2-step for all staff).
+- Load test (`python -m scripts.loadtest prepare|run`): 2,000 students each sign in and open
+  home, fees, attendance and results, then sign out, 50 at a time. Result on a 4-worker local
+  server: **2,000 students in 221 s (9.1 sign-ins a second), 0 errors: PASS** against the
+  15-minute target. Sign-in median 1.8 s, p95 2.9 s (Argon2 hashing is the cost, on purpose);
+  pages median about 0.6 s, p95 about 1.2 s. Fee day: receipt numbers stay gap-free with
+  many cashiers at once (`test_two_cashiers_at_once_never_share_a_number`).
+- Backup and restore drill: [runbooks/backup-restore.md](runbooks/backup-restore.md). Atlas M0
+  has no backups, so the full export is the backup; `restore_export` now checks every
+  collection against the export's counts and prints the ledger total. Drill run on the demo
+  data and on a 2,000-student copy: records and ledger totals match.
+
 ### 8.3 Acceptance criteria
 - The AQAR tables for a year are generated in minutes, with a list of missing evidence.
 - A mentor sees each at-risk mentee with the specific reasons, and the student never sees the risk label.

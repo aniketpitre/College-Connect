@@ -29,7 +29,9 @@ Build order: **core ERP first (Phases 0–2), then other features incl. the uniq
 - Backend checks (same as CI): `ruff check . && ruff format --check . && mypy app scripts && python -m pytest -q`. Database tests need a MongoDB replica set: `docker run -d -p 27017:27017 mongo:7 --replSet rs0` then `docker exec <id> mongosh --eval "rs.initiate()"`; without one they are skipped.
 - Frontend: `cd frontend && npm install && npm run dev` · checks (same as CI): `npm run lint && npm test && npm run build`
 - Demo data (never production): `cd backend && MONGODB_DB=collegeconnect_dev python -m scripts.seed_demo --erp` (needs an empty database; prints the demo logins).
-- Restore a full export into an empty database: `cd backend && python -m scripts.restore_export <zip> --db <new-name>`.
+- Restore a full export into an empty database: `cd backend && python -m scripts.restore_export <zip> --db <new-name>` (checks counts and prints the ledger total; drill steps in `docs/erp/runbooks/backup-restore.md`).
+- Load test (never production): `cd backend && MONGODB_DB=<test db> python -m scripts.loadtest prepare --students 2000`, start the server with `LOGIN_LIMIT_PER_IP=1000000 COOKIE_SECURE=false`, then `python -m scripts.loadtest run --url http://localhost:8000`.
+- Security: `docs/erp/security-review.md` (OWASP review, college to-dos). The client IP comes from `X-Real-IP` (never `X-Forwarded-For`); localhost CORS only when `ALLOW_LOCALHOST_ORIGINS` (default on, off on Vercel); the production frontend build carries a CSP (`vite.config.ts`), so new external scripts/styles must be added there.
 - End-to-end (CI job `e2e`): seed a fresh database as above, then `cd frontend && npx playwright test` with the same `MONGODB_DB` (set `E2E_PYTHON` / `E2E_CHROMIUM` to use a local venv or Chromium).
 
 ## Conventions
