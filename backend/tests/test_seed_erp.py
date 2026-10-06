@@ -51,6 +51,9 @@ def test_erp_seed_builds_a_consistent_demo(db):
     assert db.settings.find_one({"_id": "naac"})["sanctioned_posts"] == 14
     assert db.students.count_documents({"apaar_id": {"$type": "string"}}) == 51
     assert db.naac_evidence.count_documents({}) == 1
+    # Mentoring: the first-year class has a mentor, the rules have run, one counselling note.
+    assert db.students.count_documents({"mentor_id": {"$type": "objectId"}}) == counts["mentees"] == 20
+    assert db.risk_flags.count_documents({}) == 60 and db.mentor_notes.count_documents({}) == 1
 
 
 def test_seed_refuses_production(monkeypatch, capsys):

@@ -276,6 +276,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
     campus = _seed_campus(app, db, api, divisions)
     people = _seed_people(app, db, api, divisions)
     reports = _seed_reports(db, api, bca)
+    mentoring = _seed_mentoring(app, db, api, divisions)
 
     for one in api.values():
         db.sessions.delete_one({"_id": one.token_id})
@@ -296,6 +297,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         **campus,
         **people,
         **reports,
+        **mentoring,
     }
 
 
@@ -967,3 +969,27 @@ def _seed_reports(db: Database[dict[str, Any]], api: dict[str, "_Api"], bca: dic
         data={"title": "University affiliation letter (BCA)"},
     )
     return {"students with APAAR IDs": 51}
+
+
+def _seed_mentoring(
+    app: Any, db: Database[dict[str, Any]], api: dict[str, "_Api"], divisions: dict[int, str]
+) -> dict[str, int]:
+    """Prakash More mentors the first-year class; the early-warning rules run once; one note."""
+    from bson import ObjectId
+
+    prakash = db.users.find_one({"email": "faculty@demo.college"})
+    assert prakash is not None
+    db.users.update_one({"_id": prakash["_id"]}, {"$addToSet": {"roles": "mentor"}})
+    fy = [str(s["_id"]) for s in db.students.find({"division_id": ObjectId(divisions[1])}, {"_id": 1})]
+    api["office"].call("PUT", "/mentoring/assignments", json={"mentor_id": str(prakash["_id"]), "student_ids": fy})
+    counts = api["principal"].call("POST", "/risk/recompute")
+    flagged = db.risk_flags.find_one({"mentor_id": prakash["_id"], "level": {"$ne": "none"}}, sort=[("level", 1)])
+    if flagged:
+        mentor = _Api(app, db, db.users.find_one({"_id": prakash["_id"]}) or {})
+        mentor.call(
+            "POST",
+            f"/risk/students/{flagged['_id']}/notes",
+            json={"text": "Spoke to the student after class; agreed to meet weekly until attendance improves."},
+        )
+        db.sessions.delete_one({"_id": mentor.token_id})
+    return {"students at risk": counts["high"] + counts["medium"], "mentees": len(fy)}

@@ -722,6 +722,33 @@ grievance, staff and leave, no-dues).
 - Demo data: `iqac@demo.college`; sanctioned posts and intake, APAAR IDs for 51 students (one
   shared by mistake), one evidence file.
 
+**Delivered in the "Phase 4B" PR (4.3–4.4):**
+- Dashboards (`dashboard/overview.py`, on the staff home page):
+  - Principal: admitted against seats, fees collected against demand (and what is outstanding),
+    average attendance and how many are below the minimum, internal marks approved, certificate
+    turnaround and late requests, students at risk, leave and grievances waiting.
+  - Accounts: collected today, this month (by mode) and this year; receivable and overdue, with
+    the number of students overdue and receivables by year of study.
+  - HOD and mentors: their at-risk counts, next to the existing class and workload sections.
+- Early warning (`mentoring/`): five rules, each with an on/off switch and a threshold set by the
+  Principal: attendance below the minimum, attendance fallen in the last 4 weeks, internal marks
+  below a percentage in any subject, subjects still to clear, fees overdue for some days. One
+  reason makes a student "to watch", two or more "high risk"; each reason is spelt out ("Attendance
+  fell from 100% to 0% in the last 4 weeks", "Fees of Rs. 10,000.00 overdue for 65 days"). The
+  daily job works it out into one small document per student (also "Work it out now"), so the
+  pages and the Principal's attendance figures stay fast on the free tier.
+- Who sees it: the student's mentor (their mentees), the HOD (their department) and the Principal.
+  Never the student, parents or the office; nothing happens automatically. Mentors and HODs keep
+  counselling notes with a follow-up date; the audit log records that a note was added, not what
+  it says.
+- Mentors are assigned per class by the office (any class) or the HOD (their department); a
+  mentor is a teacher (`mentor`, `hod` or `faculty` role); the `mentor` role opens "My mentees".
+- Sign-in limit per IP address is now a setting (`LOGIN_LIMIT_PER_IP`, default 300 in 15 minutes,
+  was 30): a college lab or campus Wi-Fi puts many students behind one address; wrong passwords
+  are still limited per account by the lockout. (Ahead of the 4.7 load target.)
+- Demo data: Prakash More (`faculty@demo.college`) also has the mentor role and mentors the first
+  year; the rules have run (students at high risk and to watch, with reasons) and one note exists.
+
 ### 8.3 Acceptance criteria
 - The AQAR tables for a year are generated in minutes, with a list of missing evidence.
 - A mentor sees each at-risk mentee with the specific reasons, and the student never sees the risk label.
