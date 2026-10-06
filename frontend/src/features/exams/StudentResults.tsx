@@ -30,12 +30,10 @@ export default function StudentResults() {
       {ask.error && <p className="form-error">{ask.error.message}</p>}
       {r.results.map((x) => (
         <section key={x.id} className="card result-card">
-          <div className="request-head">
-            <b>{x.exam}</b>
-            <span>
-              {T.sgpa} <b>{x.sgpa?.toFixed(2) ?? "–"}</b> · <span className={x.outcome === "pass" ? "" : "att-critical"}>{T.outcome[x.outcome]}</span>
-            </span>
-          </div>
+          <h3 className="card-title">{x.exam}</h3>
+          <p>
+            {T.sgpa} <b>{x.sgpa?.toFixed(2) ?? "–"}</b> · <span className={x.outcome === "pass" ? "" : "att-critical"}>{T.outcome[x.outcome]}</span>
+          </p>
           <div className="data-table-scroll">
             <table className="audit-table">
               <thead>

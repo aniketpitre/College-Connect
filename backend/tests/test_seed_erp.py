@@ -22,6 +22,11 @@ def test_erp_seed_builds_a_consistent_demo(db):
     assert db.attendance_sessions.count_documents({}) == counts["lectures marked"]
     assert db.users.count_documents({"roles": "faculty", "department_id": {"$exists": True}}) == 9
     assert db.students.count_documents({"batch": "B1"}) == 30
+    # Exams: schemes for every subject, marks in two states, forms, last year's results.
+    assert db.assessment_schemes.count_documents({}) == 15
+    assert {s["status"] for s in db.marks_sheets.find({})} == {"approved", "published"}
+    assert db.exam_forms.count_documents({"status": "submitted"}) == counts["exam forms"] == 10
+    assert db.results.count_documents({}) == 20 and counts["results"] == 100
 
 
 def test_seed_refuses_production(monkeypatch, capsys):

@@ -467,7 +467,17 @@ def my_exams(ctx: AuthContext) -> list[dict[str, Any]]:
     from app.modules.students import service as students
 
     student = students.my_student(ctx)
-    return [_my_view(s, student) for s in _my_sessions(student)]
+    db = get_db()
+    today = clock.today().isoformat()
+    shown = []
+    for s in _my_sessions(student):
+        # A closed exam the student never had a form for is just noise in their list.
+        if today > s["form_deadline"] and not db.exam_forms.find_one(
+            {"session_id": s["_id"], "student_id": student["_id"]}, {"_id": 1}
+        ):
+            continue
+        shown.append(_my_view(s, student))
+    return shown
 
 
 def submit_form(ctx: AuthContext, session_id: str, ip: str) -> dict[str, Any]:
