@@ -7,6 +7,7 @@ from fastapi import APIRouter, BackgroundTasks
 from app.modules.helpdesk.analytics import log_query
 from app.modules.helpdesk.schemas import CategoryInfo, QueryRequest, QueryResponse
 from app.rag.pipeline import answer_question
+from app.rag.store import public_only
 
 router = APIRouter(tags=["help desk"])
 
@@ -28,7 +29,7 @@ def get_categories() -> list[CategoryInfo]:
 @router.post("/query", response_model=QueryResponse)
 def ask_question(request: QueryRequest, background: BackgroundTasks) -> QueryResponse:
     started = time.perf_counter()
-    result = answer_question(request.question, request.language, request.category)
+    result = answer_question(request.question, request.language, request.category, public_only())
     latency_ms = round((time.perf_counter() - started) * 1000)
     # Logged after the response is sent, so the database never slows down an answer.
     background.add_task(log_query, request.question, request.language, request.category, result, latency_ms)

@@ -6,7 +6,7 @@ import { StatusBadge } from "../../components/StatusBadge";
 import { NOTICE_STRINGS } from "../../i18n/notices";
 import { hasPermission, useMe } from "../../lib/auth";
 import { useLanguage } from "../../lib/language";
-import { attachmentUrl, localized, useEmailNotice, useNotice, useUpdateNotice, type EmailProgress } from "../../lib/notices";
+import { attachmentUrl, localized, useEmailNotice, useNotice, useUpdateNotice, type EmailProgress, type Notice } from "../../lib/notices";
 import "./notices.css";
 
 export default function NoticeDetailPage() {
@@ -37,6 +37,7 @@ export default function NoticeDetailPage() {
           {n.expires_on ? ` · ${t.validTill(new Date(`${n.expires_on}T00:00:00`).toLocaleDateString(locale, { day: "numeric", month: "long" }))}` : ""}
           {n.author ? ` · ${n.author}` : ""}
         </p>
+        {loc.machine && t.machine && <p className="small muted">{t.machine}</p>}
         {loc.body && <div className="notice-body">{loc.body}</div>}
         {n.has_attachment && (
           <a className="btn btn-ghost" href={attachmentUrl(n.id)} target="_blank" rel="noreferrer">
@@ -44,12 +45,39 @@ export default function NoticeDetailPage() {
           </a>
         )}
       </article>
-      {canPublish && <Manage id={n.id} state={n.state} pinned={n.pinned} audience={n.audience_label} emailed={n.emailed} />}
+      {canPublish && (
+        <Manage
+          id={n.id}
+          state={n.state}
+          pinned={n.pinned}
+          audience={n.audience_label}
+          emailed={n.emailed}
+          isPublic={n.public}
+          machine={Boolean(n.hi?.machine || n.mr?.machine)}
+        />
+      )}
+      {canPublish && n.state !== "withdrawn" && <EditTranslations key={`${n.hi?.title}|${n.mr?.title}`} notice={n} />}
     </div>
   );
 }
 
-function Manage({ id, state, pinned, audience, emailed }: { id: string; state: string; pinned: boolean; audience: string; emailed: number }) {
+function Manage({
+  id,
+  state,
+  pinned,
+  audience,
+  emailed,
+  isPublic,
+  machine,
+}: {
+  id: string;
+  state: string;
+  pinned: boolean;
+  audience: string;
+  emailed: number;
+  isPublic: boolean;
+  machine: boolean;
+}) {
   const update = useUpdateNotice(id);
   const email = useEmailNotice(id);
   const [withdrawing, setWithdrawing] = useState(false);
@@ -69,7 +97,9 @@ function Manage({ id, state, pinned, audience, emailed }: { id: string; state: s
       <h2 className="card-title">Manage (staff)</h2>
       <p className="muted small">
         Audience: {audience} · <StatusBadge tone={state === "published" ? "success" : "neutral"}>{state}</StatusBadge>
+        {isPublic && " · also on the public help desk"}
       </p>
+      {machine && <p className="small">The Hindi/Marathi version was translated automatically: read it in हिंदी / मराठी above and correct it if needed.</p>}
       {(update.error || email.error) && <p className="form-error">{(update.error ?? email.error)?.message}</p>}
       {progress && (
         <p className="auth-success" role="status">
@@ -107,5 +137,58 @@ function Manage({ id, state, pinned, audience, emailed }: { id: string; state: s
         }}
       />
     </section>
+  );
+}
+
+/** Staff: check and correct the Hindi/Marathi versions (saving them clears the "translated automatically" mark). */
+function EditTranslations({ notice }: { notice: Notice }) {
+  const update = useUpdateNotice(notice.id);
+  const [open, setOpen] = useState(false);
+  const [hi, setHi] = useState({ title: notice.hi?.title ?? "", body: notice.hi?.body ?? "" });
+  const [mr, setMr] = useState({ title: notice.mr?.title ?? "", body: notice.mr?.body ?? "" });
+  if (!open)
+    return (
+      <button type="button" className="link-btn" onClick={() => setOpen(true)}>
+        Edit the Hindi / Marathi versions
+      </button>
+    );
+  return (
+    <form
+      className="card"
+      onSubmit={(e) => {
+        e.preventDefault();
+        update.mutate({ hi, mr }, { onSuccess: () => setOpen(false) });
+      }}
+    >
+      <h2 className="card-title">Hindi and Marathi versions</h2>
+      {update.error && <p className="form-error">{update.error.message}</p>}
+      <div className="field-row translations">
+        {(
+          [
+            ["hi", "Hindi", hi, setHi],
+            ["mr", "Marathi", mr, setMr],
+          ] as const
+        ).map(([code, name, value, set]) => (
+          <div key={code}>
+            <div className="field">
+              <label htmlFor={`t-${code}-title`}>Title in {name}</label>
+              <input id={`t-${code}-title`} lang={code} value={value.title} onChange={(e) => set({ ...value, title: e.target.value })} />
+            </div>
+            <div className="field">
+              <label htmlFor={`t-${code}-body`}>Text in {name}</label>
+              <textarea id={`t-${code}-body`} lang={code} rows={5} value={value.body} onChange={(e) => set({ ...value, body: e.target.value })} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="row-actions" style={{ justifyContent: "flex-start" }}>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setOpen(false)}>
+          Cancel
+        </button>
+        <button type="submit" className="btn btn-primary btn-sm" disabled={update.isPending}>
+          Save translations
+        </button>
+      </div>
+    </form>
   );
 }

@@ -7,6 +7,7 @@ from app.core.auth import csrf_guard
 from app.core.config import settings
 from app.core.errors import install_error_handlers
 from app.modules.admissions import router as admissions
+from app.modules.assistant import router as assistant
 from app.modules.attendance import router as attendance
 from app.modules.auditlog import router as auditlog
 from app.modules.auth import router as auth
@@ -22,6 +23,7 @@ from app.modules.helpdesk import router as helpdesk
 from app.modules.hostel import router as hostel
 from app.modules.integrations import router as integrations
 from app.modules.jobs import router as jobs
+from app.modules.knowledge import router as knowledge
 from app.modules.library import router as library
 from app.modules.marks import router as marks
 from app.modules.mentoring import router as mentoring
@@ -81,6 +83,8 @@ ROUTERS: list[APIRouter] = [
     eligibility.router,
     integrations.router,
     integrations.open_router,
+    knowledge.router,
+    assistant.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

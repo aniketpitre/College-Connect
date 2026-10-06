@@ -124,6 +124,7 @@ class P(StrEnum):
     API_KEYS_MANAGE = "api_keys.manage"  # keys for the open read-only API (other systems)
     MESSAGES_READ = "messages.read"  # the delivery log and the outgoing message queue
     EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
+    KB_MANAGE = "kb.manage"  # help-desk documents: add, remove, re-index
 
 
 # Every staff member can read the college structure (programmes, divisions, subjects…).
@@ -146,6 +147,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.USERS_RESET_STUDENT,
         P.SETUP_MANAGE,
         P.EXPORT_REQUEST,
+        P.KB_MANAGE,
     }
     | _PUBLISH,
     Role.PRINCIPAL: _STAFF_BASE
@@ -179,6 +181,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
     Role.OFFICE: _STAFF_BASE
     | {
         P.ANALYTICS_VIEW,
+        P.KB_MANAGE,
         P.USERS_READ,
         P.USERS_CREATE_STUDENT,
         P.USERS_UPDATE,

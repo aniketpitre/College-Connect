@@ -24,7 +24,7 @@ def test_long_sections_are_split_with_overlap(monkeypatch):
     monkeypatch.setattr(chunking, "CHUNK_MAX_CHARS", 100)
     monkeypatch.setattr(chunking, "CHUNK_OVERLAP_CHARS", 20)
     paragraphs = "\n\n".join(f"Paragraph {i} " + "x" * 40 for i in range(6))
-    pieces = chunking._split_long(paragraphs)
+    pieces = chunking.split_long(paragraphs)
     assert len(pieces) > 1
     assert all(len(p) <= 100 for p in pieces)
 
