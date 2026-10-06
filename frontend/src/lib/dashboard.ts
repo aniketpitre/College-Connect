@@ -24,6 +24,7 @@ export interface Dashboard {
   leave?: { to_approve: number; on_leave_today: string[] };
   grievances?: { open: number; overdue: number };
   risk?: { high: number; medium: number };
+  help_desk?: { unanswered: number; asked: number; top: { key: string; question: string; count: number }[] };
   overview?: {
     year: string | null;
     admissions?: { seats: number; applied: number; admitted: number };

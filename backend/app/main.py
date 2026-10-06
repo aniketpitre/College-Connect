@@ -13,6 +13,7 @@ from app.modules.auditlog import router as auditlog
 from app.modules.auth import router as auth
 from app.modules.certificates import router as certificates
 from app.modules.dashboard import router as dashboard
+from app.modules.deadlines import router as deadlines
 from app.modules.eligibility import router as eligibility
 from app.modules.exams import router as exams
 from app.modules.exports import router as exports
@@ -85,6 +86,7 @@ ROUTERS: list[APIRouter] = [
     integrations.open_router,
     knowledge.router,
     assistant.router,
+    deadlines.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

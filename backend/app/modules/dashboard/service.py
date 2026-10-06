@@ -209,6 +209,14 @@ def _grievances(ctx: AuthContext) -> dict[str, Any]:
     }
 
 
+def _help_desk() -> dict[str, Any]:
+    """The knowledge-gap loop (plan 5.7): what students asked that the documents couldn't answer."""
+    from app.modules.helpdesk import analytics
+
+    week = analytics.gaps(days=7, limit=50)
+    return {"unanswered": len(week), "asked": sum(g["count"] for g in week), "top": week[:3]}
+
+
 def dashboard(ctx: AuthContext) -> dict[str, Any]:
     perms = ctx.permissions
     out: dict[str, Any] = {}
@@ -232,4 +240,6 @@ def dashboard(ctx: AuthContext) -> dict[str, Any]:
         out["accounts"] = overview.accounts()
     if (risk := mentoring.counts(ctx)) is not None:
         out["risk"] = risk
+    if P.KB_MANAGE in perms or P.ANALYTICS_VIEW in perms:
+        out["help_desk"] = _help_desk()
     return out

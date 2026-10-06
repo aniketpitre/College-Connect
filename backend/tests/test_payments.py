@@ -8,6 +8,7 @@ import pytest
 from bson import ObjectId
 
 from app.core.config import settings
+from app.modules.fees import receipts
 from app.modules.payments import gateway
 from app.modules.payments import service as payments
 from tests.fees_fixtures import RS, college, fees, new_client, structure_body  # noqa: F401
@@ -184,7 +185,9 @@ def test_daily_check_list_and_reconcile(ready, gw, db):
     gw["pay"](a["order_id"])
     assert payments.daily_check() == {"checked": 2, "settled": 1, "expired": 1}
 
-    day = accounts.get(f"{API}/fees/online-payments").json()
+    # The India day the payments were made (an hour ago can be yesterday just after midnight IST).
+    made_on = old.astimezone(receipts.IST).date().isoformat()
+    day = accounts.get(f"{API}/fees/online-payments", params={"day": made_on}).json()
     assert day["paid_count"] == 1 and day["paid_amount"] == 3_000 * RS and day["waiting"] == 1
     assert accounts.get(f"{API}/fees/online-payments", params={"day": "2020-01-01"}).json()["payments"] == []
     gw["pay"](b["order_id"])

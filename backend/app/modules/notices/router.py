@@ -8,6 +8,7 @@ from app.core.auth import AuthContext, require, signed_in
 from app.core.files import MAX_BYTES
 from app.core.rbac import P
 from app.core.requestinfo import base_url, client_ip
+from app.modules.deadlines import service as deadlines
 from app.modules.notices import service
 from app.modules.notices.schemas import NoticeIn, NoticeUpdate, TranslateIn
 
@@ -28,6 +29,8 @@ def _translate_later(background: BackgroundTasks, notice: dict[str, Any]) -> Non
     """Missing Hindi/Marathi versions are filled in after the response, so publishing stays quick."""
     if notice["state"] in ("published", "scheduled") and not (notice["hi"] and notice["mr"]):
         background.add_task(service.auto_translate, ObjectId(notice["id"]))
+    if notice["state"] in ("published", "scheduled"):
+        background.add_task(deadlines.propose_later, ObjectId(notice["id"]))  # for staff to confirm
 
 
 @router.post("/notices", status_code=201)

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import LanguageToggle from "../../app/LanguageToggle";
 import { EmptyState } from "../../components/EmptyState";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -20,7 +20,9 @@ export default function NoticesPage() {
   const canPublish = hasPermission(me, "notices.publish");
   const [manage, setManage] = useState(canPublish);
   const [q, setQ] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [params] = useSearchParams();
+  const draft = params.get("draft");
+  const [creating, setCreating] = useState(Boolean(draft) && canPublish);
   const notices = useNotices(q, manage && canPublish);
   const locale = language === "en" ? "en-IN" : `${language}-IN`;
 
@@ -68,7 +70,7 @@ export default function NoticesPage() {
           );
         })}
       </ul>
-      {creating && <NoticeForm onClose={() => setCreating(false)} />}
+      {creating && <NoticeForm onClose={() => setCreating(false)} initialTitle={draft ?? ""} />}
     </div>
   );
 }

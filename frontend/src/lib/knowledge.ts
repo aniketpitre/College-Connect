@@ -62,3 +62,32 @@ export function useReindex() {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
+
+export interface Gap {
+  key: string;
+  question: string;
+  count: number;
+  languages: string[];
+  last_at: string;
+}
+
+export const useGaps = () => useQuery({ queryKey: [...KEY, "gaps"], queryFn: () => apiFetch<Gap[]>("/kb/gaps") });
+
+export function useGapActions() {
+  const qc = useQueryClient();
+  const done = () => {
+    qc.invalidateQueries({ queryKey: KEY });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+  };
+  return {
+    answer: useMutation({
+      mutationFn: (body: { key: string; question: string; answer: string; category: string; audience: string }) =>
+        apiFetch<KbDocument & { questions_closed: number }>("/kb/gaps/answer", { method: "POST", body: JSON.stringify(body) }),
+      onSuccess: done,
+    }),
+    dismiss: useMutation({
+      mutationFn: (key: string) => apiFetch<{ questions_closed: number }>("/kb/gaps/dismiss", { method: "POST", body: JSON.stringify({ key }) }),
+      onSuccess: done,
+    }),
+  };
+}

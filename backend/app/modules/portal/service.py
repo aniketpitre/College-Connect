@@ -217,6 +217,21 @@ def home(ctx: AuthContext) -> dict[str, Any]:
                 "mr": n["mr"],
             }
         )
+    from app.modules.deadlines import service as deadlines
+
+    for d in deadlines.upcoming(ctx):
+        cards.append(
+            {
+                "kind": "deadline",
+                "severity": "warning" if d["days_left"] <= 3 else "info",
+                "title": d["what"].get("en", ""),
+                "what_hi": d["what"].get("hi"),
+                "what_mr": d["what"].get("mr"),
+                "due_date": d["date"],
+                "days_left": d["days_left"],
+                "notice_id": d["notice_id"],
+            }
+        )
     summary = students.summary(student)
     attendance_pct = attendance["overall"]["percent"]
     if ctx.user.get("kind") == "parent":

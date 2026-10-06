@@ -879,6 +879,24 @@ Shipped as four PRs: **5A** (5.1–5.3), **5B** (5.4–5.5), **5C** (5.6–5.7),
 - Demo data uses India's date (`clock.today()`), so the seeded overdue book is exactly 7 days late
   at any hour.
 
+**Delivered in the "Phase 5C" PR (5.6–5.7):**
+- Deadline radar (`app/modules/deadlines/`): when a notice is published or edited, its dates are
+  found (by the AI when a key is set, with what to do in English, Hindi and Marathi; otherwise by
+  date patterns such as "15 October", "15/10/2026", "2026-10-15", with the sentence around them)
+  and saved as *proposed*. Staff confirm, correct or dismiss each on the notice page and can add
+  their own; nothing reaches students unchecked, and a later edit never brings back a date staff
+  already decided on. Confirmed deadlines show on the home page of the students (and parents) the
+  notice is for, from 14 days before, in their language; the daily job queues a reminder 3 days
+  before and on the day (message `deadline_soon`, en/hi/mr), once per student. A withdrawn or
+  expired notice takes its deadlines with it.
+- Knowledge-gap loop: unanswered help-desk questions are grouped (same words, any case or
+  punctuation) and shown, most asked first, on the staff dashboard ("Help desk" section for the
+  Office, System Admin and Principal) and on "Help desk documents". One click answers a question
+  as an FAQ document (the help desk answers from it at once, and the grouped questions are marked
+  answered), opens a new notice with the question as its title, or dismisses it. The separate
+  analytics page stays.
+- A payments test no longer depends on the hour (an hour ago is yesterday just after midnight IST).
+
 ### 9.3 Acceptance criteria
 - A student asks in Marathi "मला अजून किती फी भरायची आहे?" and gets the exact balance from their ledger, citing their fee account and the fee notice.
 - No question, however phrased, returns another student's data (automated red-team tests).

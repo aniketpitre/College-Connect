@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { MoneyText } from "../../components/MoneyText";
+import { hasPermission, useMe } from "../../lib/auth";
 import { useDashboard, type Dashboard } from "../../lib/dashboard";
 import "./dashboard.css";
 
@@ -304,6 +305,30 @@ function Risk({ d }: { d: NonNullable<Dashboard["risk"]> }) {
   );
 }
 
+/** The knowledge-gap loop (plan 5.7): what the help desk couldn't answer this week. */
+function HelpDesk({ d }: { d: NonNullable<Dashboard["help_desk"]> }) {
+  const { data: me } = useMe();
+  // Office and System Admin answer them; others (the Principal) see the analytics.
+  const to = hasPermission(me, "kb.manage") ? "/app/knowledge#gaps" : "/app/analytics";
+  return (
+    <Section title="Help desk">
+      <div className="tiles dash-tiles">
+        <Count to={to} label="Questions it couldn't answer (7 days)" n={d.unanswered} warn />
+        <Count to={to} label="Times asked" n={d.asked} />
+      </div>
+      {d.top.length > 0 && (
+        <ul className="small">
+          {d.top.map((g) => (
+            <li key={g.key}>
+              {g.question} <span className="muted">({g.count})</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+}
+
 /** Staff home widgets (plan 2.11): only the sections the person's roles allow come back from the API. */
 export default function StaffDashboard() {
   const { data } = useDashboard(true);
@@ -319,6 +344,7 @@ export default function StaffDashboard() {
       {data.exam_cell && <ExamCell d={data.exam_cell} />}
       {data.office && <Office d={data.office} />}
       {(data.leave || data.grievances) && <People leave={data.leave} grievances={data.grievances} />}
+      {data.help_desk && <HelpDesk d={data.help_desk} />}
     </div>
   );
 }

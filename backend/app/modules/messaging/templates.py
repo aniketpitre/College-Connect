@@ -28,6 +28,7 @@ VARS: dict[str, tuple[str, ...]] = {
     "placement_selected": ("student", "company", "role"),
     "grievance_replied": ("student", "number"),
     "grievance_resolved": ("student", "number"),
+    "deadline_soon": ("student", "what", "date"),
 }
 
 # Which part of the student's record each message is about: parents get it only if shared.
@@ -49,6 +50,7 @@ AREA: dict[str, str | None] = {
     "placement_selected": None,
     "grievance_replied": "private",
     "grievance_resolved": "private",
+    "deadline_soon": None,
 }
 
 LABELS = {
@@ -68,9 +70,24 @@ LABELS = {
     "placement_selected": "Placement offer",
     "grievance_replied": "Reply to your grievance",
     "grievance_resolved": "Grievance resolved",
+    "deadline_soon": "Deadline coming up",
 }
 
 TEXT: dict[str, dict[str, tuple[str, str]]] = {
+    "deadline_soon": {
+        "en": (
+            "Deadline {date}: {what}",
+            "Reminder for {student}: {what}, by {date}. See the notice in CollegeConnect.",
+        ),
+        "hi": (
+            "अंतिम तिथि {date}: {what}",
+            "{student} के लिए याद दिलाना: {what}, {date} तक। सूचना CollegeConnect में देखें।",
+        ),
+        "mr": (
+            "अंतिम तारीख {date}: {what}",
+            "{student} यांच्यासाठी आठवण: {what}, {date} पर्यंत. सूचना CollegeConnect मध्ये पाहा.",
+        ),
+    },
     "otp": {
         "en": (
             "{code} is your CollegeConnect sign-in code",
