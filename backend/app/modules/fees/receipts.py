@@ -13,6 +13,7 @@ from datetime import UTC, datetime, time, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from bson import ObjectId
 from pymongo import ASCENDING, DESCENDING, IndexModel, ReturnDocument
 from pymongo.client_session import ClientSession
 
@@ -37,6 +38,7 @@ MODES = {
     "cheque": "Cheque",
     "dd": "Demand draft",
     "bank_transfer": "Bank transfer",
+    "online": "Online payment",
 }
 _CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
@@ -94,90 +96,135 @@ def collect(ctx: AuthContext, body: CollectIn, ip: str) -> dict[str, Any]:
         "Academic year",
         "academic_year_id",
     )
-    prefix = setup.institution().get("receipt_prefix") or "R"
-    heads = {h["_id"]: h for h in get_db().fee_heads.find()}
-    snapshot = students.summary(student)
-    db = get_db()
 
     def work(session: ClientSession) -> dict[str, Any]:
-        rows = ledger.entries(student["_id"], year["_id"], session=session)
-        balance = sum(e["amount"] for e in rows)
+        return issue(
+            student,
+            year,
+            body.amount,
+            mode=body.mode,
+            reference=body.reference,
+            bank=body.bank.strip(),
+            instrument_date=body.instrument_date.isoformat() if body.instrument_date else None,
+            note=body.note.strip(),
+            collector_id=ctx.user_id,
+            collector_name=ctx.user["name"],
+            ip=ip,
+            session=session,
+        )
+
+    return view(run_in_transaction(work))
+
+
+def issue(
+    student: dict[str, Any],
+    year: dict[str, Any],
+    amount: int,
+    *,
+    mode: str,
+    reference: str,
+    collector_id: ObjectId | None,
+    collector_name: str,
+    ip: str | None,
+    session: ClientSession,
+    bank: str = "",
+    instrument_date: str | None = None,
+    note: str = "",
+    allow_credit: bool = False,
+) -> dict[str, Any]:
+    """Inside a transaction: next receipt number, the receipt, the ledger payment and the audit entry.
+
+    The counter refuses more than is due; an online payment the gateway has already taken is
+    recorded in full (`allow_credit`): anything above the balance stays as a credit.
+    """
+    db = get_db()
+    prefix = setup.institution().get("receipt_prefix") or "R"
+    heads = {h["_id"]: h for h in db.fee_heads.find(session=session)}
+    snapshot = students.summary(student)
+    rows = ledger.entries(student["_id"], year["_id"], session=session)
+    balance = sum(e["amount"] for e in rows)
+    if not allow_credit:
         if balance <= 0:
             raise AppError(409, "Nothing is due for this year.", "nothing_due")
-        if body.amount > balance:
+        if amount > balance:
             raise AppError(422, f"Only {format_inr(balance)} is due.", field="amount")
-        counter = db.counters.find_one_and_update(
-            {"_id": f"receipt:{year['name']}"},
-            {"$inc": {"seq": 1}},
-            upsert=True,
-            return_document=ReturnDocument.AFTER,
-            session=session,
-        )
-        assert counter is not None  # upsert always returns the document
-        seq = counter["seq"]
-        number = f"{prefix}/{year['name']}/{seq:06d}"
-        lines = ledger.allocate(body.amount, ledger.by_head(rows), ledger.head_order(rows))
-        now = datetime.now(UTC)
-        receipt: dict[str, Any] = {
-            "number": number,
-            "seq": seq,
-            "academic_year_id": year["_id"],
-            "academic_year": year["name"],
-            "student_id": student["_id"],
-            "student": {
-                "name": student["name"],
-                "prn": student["prn"],
-                "class": " ".join(
-                    x for x in (snapshot["programme_code"], snapshot["year_label"], snapshot["division"]) if x
-                ),
-            },
-            "amount": body.amount,
-            "lines": [
-                {
-                    "head_id": ln["head_id"],
-                    "code": heads[ln["head_id"]]["code"],
-                    "name": heads[ln["head_id"]]["name"],
-                    "amount": -ln["amount"],
-                }
-                for ln in lines
-            ],
-            "mode": body.mode,
-            "reference": body.reference,
-            "bank": body.bank.strip(),
-            "instrument_date": body.instrument_date.isoformat() if body.instrument_date else None,
-            "note": body.note.strip(),
-            "collected_by": ctx.user_id,
-            "collector_name": ctx.user["name"],
-            "collected_at": now,
-            "status": "valid",
-            "prints": 0,
-            "verify_code": new_verify_code(),
-        }
-        receipt["_id"] = db.receipts.insert_one(receipt, session=session).inserted_id
-        entry = ledger.post(
-            student_id=student["_id"],
-            academic_year_id=year["_id"],
-            type="payment",
-            lines=lines,
-            created_by=ctx.user_id,
-            session=session,
-            ref={"type": "receipt", "id": receipt["_id"]},
-            receipt_number=number,
-        )
-        db.receipts.update_one({"_id": receipt["_id"]}, {"$set": {"entry_id": entry["_id"]}}, session=session)
-        audit.record(
-            "fees.collected",
-            actor_id=ctx.user_id,
-            target_type="student",
-            target_id=student["_id"],
-            ip=ip,
-            details={"receipt": number, "amount": body.amount, "mode": body.mode},
-            session=session,
-        )
-        return receipt
-
-    receipt = run_in_transaction(work)
-    return view(receipt)
+    counter = db.counters.find_one_and_update(
+        {"_id": f"receipt:{year['name']}"},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+        session=session,
+    )
+    assert counter is not None  # upsert always returns the document
+    seq = counter["seq"]
+    number = f"{prefix}/{year['name']}/{seq:06d}"
+    outstanding = ledger.by_head(rows)
+    order = ledger.head_order(rows)
+    if not order and not outstanding:  # an online payment with nothing demanded: a credit on the first head
+        first = db.fee_heads.find_one({}, sort=[("_id", 1)], session=session)
+        if first is None:
+            raise AppError(409, "No fee heads are set up.", "nothing_due")
+        order = [first["_id"]]
+    lines = ledger.allocate(amount, outstanding, order)
+    now = datetime.now(UTC)
+    receipt: dict[str, Any] = {
+        "number": number,
+        "seq": seq,
+        "academic_year_id": year["_id"],
+        "academic_year": year["name"],
+        "student_id": student["_id"],
+        "student": {
+            "name": student["name"],
+            "prn": student["prn"],
+            "class": " ".join(
+                x for x in (snapshot["programme_code"], snapshot["year_label"], snapshot["division"]) if x
+            ),
+        },
+        "amount": amount,
+        "lines": [
+            {
+                "head_id": ln["head_id"],
+                "code": heads[ln["head_id"]]["code"],
+                "name": heads[ln["head_id"]]["name"],
+                "amount": -ln["amount"],
+            }
+            for ln in lines
+        ],
+        "mode": mode,
+        "reference": reference,
+        "bank": bank,
+        "instrument_date": instrument_date,
+        "note": note,
+        "collected_by": collector_id,
+        "collector_name": collector_name,
+        "collected_at": now,
+        "status": "valid",
+        "prints": 0,
+        "verify_code": new_verify_code(),
+    }
+    receipt["_id"] = db.receipts.insert_one(receipt, session=session).inserted_id
+    entry = ledger.post(
+        student_id=student["_id"],
+        academic_year_id=year["_id"],
+        type="payment",
+        lines=lines,
+        created_by=collector_id,
+        session=session,
+        ref={"type": "receipt", "id": receipt["_id"]},
+        receipt_number=number,
+    )
+    db.receipts.update_one({"_id": receipt["_id"]}, {"$set": {"entry_id": entry["_id"]}}, session=session)
+    receipt["entry_id"] = entry["_id"]
+    audit.record(
+        "fees.collected",
+        actor_id=collector_id,
+        target_type="student",
+        target_id=student["_id"],
+        ip=ip,
+        details={"receipt": number, "amount": amount, "mode": mode},
+        session=session,
+    )
+    return receipt
 
 
 def get_receipt(receipt_id: str) -> dict[str, Any]:

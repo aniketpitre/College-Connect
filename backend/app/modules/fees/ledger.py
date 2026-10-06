@@ -57,7 +57,7 @@ def post(
     academic_year_id: ObjectId,
     type: str,
     lines: list[dict[str, Any]],
-    created_by: ObjectId,
+    created_by: ObjectId | None,
     session: ClientSession,
     ref: dict[str, Any] | None = None,
     reason: str | None = None,

@@ -26,6 +26,9 @@ export default function FeesHome() {
           <Link className="btn btn-ghost" to="/app/fees/reports">
             Reports
           </Link>
+          <Link className="btn btn-ghost" to="/app/fees/online">
+            Online payments
+          </Link>
           {hasPermission(me, "fees.manage") && (
             <>
               <Link className="btn btn-ghost" to="/app/fees/opening">

@@ -29,6 +29,15 @@ export interface PortalStrings {
   certificateReady: (kind: string) => string;
   // My fees
   feesTitle: string;
+  payOnline: string;
+  payTitle: string;
+  payAmount: string;
+  payHint: string;
+  payNow: string;
+  paying: string;
+  paySuccess: (receipt: string) => string;
+  payPending: string;
+  cancel: string;
   year: string;
   totalFee: string;
   paid: string;
@@ -80,6 +89,15 @@ const EN: PortalStrings = {
   results: (exam) => `Results for ${exam} are out.`,
   certificateReady: (kind) => `Your ${kind} is ready. Download it or collect it from the office.`,
   feesTitle: "My fees",
+  payOnline: "Pay online",
+  payTitle: "Pay fees online",
+  payAmount: "Amount",
+  payHint: "UPI, debit or credit card, or net banking. The receipt appears here as soon as the payment goes through.",
+  payNow: "Continue to payment",
+  paying: "Opening the payment page…",
+  paySuccess: (r) => `Payment received. Receipt ${r} is ready to download.`,
+  payPending: "We are confirming your payment with the bank. Your receipt will appear here shortly; you don't need to pay again.",
+  cancel: "Cancel",
   year: "Year",
   totalFee: "Total fee",
   paid: "Paid",
@@ -141,6 +159,15 @@ const HI: PortalStrings = {
   results: (exam) => `${exam} का परिणाम आ गया है।`,
   certificateReady: (kind) => `आपका ${kind} तैयार है। डाउनलोड करें या कार्यालय से लें।`,
   feesTitle: "मेरी फ़ीस",
+  payOnline: "ऑनलाइन भुगतान करें",
+  payTitle: "फ़ीस का ऑनलाइन भुगतान",
+  payAmount: "राशि",
+  payHint: "UPI, डेबिट या क्रेडिट कार्ड, या नेट बैंकिंग। भुगतान होते ही रसीद यहाँ दिखेगी।",
+  payNow: "भुगतान पर जाएँ",
+  paying: "भुगतान पेज खुल रहा है…",
+  paySuccess: (r) => `भुगतान प्राप्त हुआ। रसीद ${r} डाउनलोड के लिए तैयार है।`,
+  payPending: "हम बैंक से आपके भुगतान की पुष्टि कर रहे हैं। रसीद जल्द ही यहाँ दिखेगी; दोबारा भुगतान न करें।",
+  cancel: "रद्द करें",
   year: "वर्ष",
   totalFee: "कुल फ़ीस",
   paid: "भुगतान किया",
@@ -202,6 +229,15 @@ const MR: PortalStrings = {
   results: (exam) => `${exam} चा निकाल लागला आहे.`,
   certificateReady: (kind) => `तुमचे ${kind} तयार आहे. डाउनलोड करा किंवा कार्यालयातून घ्या.`,
   feesTitle: "माझे शुल्क",
+  payOnline: "ऑनलाइन भरा",
+  payTitle: "शुल्क ऑनलाइन भरा",
+  payAmount: "रक्कम",
+  payHint: "UPI, डेबिट किंवा क्रेडिट कार्ड, किंवा नेट बँकिंग. पैसे भरताच पावती इथे दिसेल.",
+  payNow: "पैसे भरण्यासाठी पुढे जा",
+  paying: "पेमेंट पेज उघडत आहे…",
+  paySuccess: (r) => `पैसे मिळाले. पावती ${r} डाउनलोडसाठी तयार आहे.`,
+  payPending: "आम्ही बँकेकडून तुमच्या पेमेंटची खात्री करत आहोत. पावती लवकरच इथे दिसेल; पुन्हा पैसे भरू नका.",
+  cancel: "रद्द करा",
   year: "वर्ष",
   totalFee: "एकूण शुल्क",
   paid: "भरले",

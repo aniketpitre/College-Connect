@@ -41,6 +41,10 @@ class Settings:
     email_from: str
     # Vercel Cron sends "Authorization: Bearer <CRON_SECRET>"; scheduled jobs refuse calls without it.
     cron_secret: str | None
+    # Online fee payment (Razorpay). Without the key pair the "Pay online" button is hidden.
+    razorpay_key_id: str | None
+    razorpay_key_secret: str | None
+    razorpay_webhook_secret: str | None
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -55,6 +59,9 @@ class Settings:
             email_api_key=os.getenv("EMAIL_API_KEY") or None,
             email_from=os.getenv("EMAIL_FROM", "CollegeConnect <onboarding@resend.dev>"),
             cron_secret=os.getenv("CRON_SECRET") or None,
+            razorpay_key_id=os.getenv("RAZORPAY_KEY_ID") or None,
+            razorpay_key_secret=os.getenv("RAZORPAY_KEY_SECRET") or None,
+            razorpay_webhook_secret=os.getenv("RAZORPAY_WEBHOOK_SECRET") or None,
         )
 
 

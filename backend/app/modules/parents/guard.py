@@ -17,6 +17,8 @@ ROUTES: dict[tuple[str, str], str | None] = {
     ("GET", "/me/fees"): "fees",
     ("GET", "/me/fees/statement.pdf"): "fees",
     ("GET", "/me/receipts/{receipt_id}/pdf"): "fees",
+    ("POST", "/me/payments"): "fees",  # parents can pay online
+    ("POST", "/me/payments/{payment_id}/confirm"): "fees",
     ("GET", "/me/attendance"): "attendance",
     ("GET", "/me/marks"): "results",
     ("GET", "/me/exams"): "results",

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { AmountInput } from "../../components/AmountInput";
+import { Modal } from "../../components/Modal";
 import LanguageToggle from "../../app/LanguageToggle";
 import { EmptyState } from "../../components/EmptyState";
 import { MoneyText } from "../../components/MoneyText";
@@ -6,7 +8,8 @@ import { StatusBadge } from "../../components/StatusBadge";
 import { PORTAL_STRINGS } from "../../i18n/portal";
 import { ApiError } from "../../lib/api";
 import { useLanguage } from "../../lib/language";
-import { formatPaise } from "../../lib/money";
+import { formatPaise, parseRupees } from "../../lib/money";
+import { usePayOnline } from "../../lib/payments";
 import { myReceiptPdf, myStatementPdf, useMyFees } from "../../lib/portal";
 import "../fees/fees.css";
 import "./portal.css";
@@ -20,6 +23,8 @@ export default function MyFeesPage() {
   const f = fees.data;
   const locale = language === "en" ? "en-IN" : `${language}-IN`;
   const day = (iso: string) => new Date(iso.length === 10 ? `${iso}T00:00:00` : iso).toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
+  const [paying, setPaying] = useState(false);
+  const [paid, setPaid] = useState<string | null>(null);
   const balances = (f?.entries ?? []).reduce<number[]>((acc, e) => [...acc, (acc.at(-1) ?? 0) + e.amount], []);
 
   return (
@@ -43,6 +48,28 @@ export default function MyFeesPage() {
       {f && (
         <>
           {!f.has_demand && <p className="muted">{t.noFees}</p>}
+          {paid && (
+            <div className="auth-success" role="status">
+              {paid}
+            </div>
+          )}
+          {f.online_payment && f.balance > 0 && (
+            <div className="row-actions pay-row">
+              <button type="button" className="btn btn-primary" onClick={() => (setPaid(null), setPaying(true))}>
+                {t.payOnline}
+              </button>
+            </div>
+          )}
+          {paying && (
+            <PayModal
+              yearId={f.academic_year_id}
+              suggested={f.overdue > 0 ? f.overdue : f.balance}
+              max={f.balance}
+              language={language}
+              onClose={() => setPaying(false)}
+              onDone={(message) => (setPaying(false), setPaid(message))}
+            />
+          )}
           <div className="tiles fee-tiles">
             <div className="tile">
               <div className="tile-label">{t.totalFee}</div>
@@ -167,5 +194,61 @@ export default function MyFeesPage() {
         </>
       )}
     </div>
+  );
+}
+
+function PayModal({
+  yearId,
+  suggested,
+  max,
+  language,
+  onClose,
+  onDone,
+}: {
+  yearId: string;
+  suggested: number;
+  max: number;
+  language: keyof typeof PORTAL_STRINGS;
+  onClose: () => void;
+  onDone: (message: string) => void;
+}) {
+  const t = PORTAL_STRINGS[language];
+  const [amount, setAmount] = useState((suggested / 100).toFixed(2).replace(/\.00$/, ""));
+  const pay = usePayOnline();
+  const paise = parseRupees(amount);
+  return (
+    <Modal open title={t.payTitle} onClose={onClose}>
+      <form
+        lang={language}
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (paise === null) return;
+          pay.mutate(
+            { academic_year_id: yearId, amount: paise },
+            {
+              onSuccess: (p) => {
+                if (!p) return; // closed the payment page: nothing happened
+                onDone(p.status === "paid" && p.receipt_number ? t.paySuccess(p.receipt_number) : t.payPending);
+              },
+            },
+          );
+        }}
+      >
+        <p className="muted small">{t.payHint}</p>
+        <div className="field">
+          <label htmlFor="pay-amount">{t.payAmount}</label>
+          <AmountInput id="pay-amount" value={amount} onChange={setAmount} required />
+        </div>
+        {pay.error && <p className="form-error">{pay.error.message}</p>}
+        <div className="modal-actions">
+          <button type="button" className="btn btn-ghost" onClick={onClose}>
+            {t.cancel}
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={pay.isPending || paise === null || paise <= 0 || paise > max}>
+            {pay.isPending ? t.paying : t.payNow}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

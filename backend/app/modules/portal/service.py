@@ -52,9 +52,12 @@ def my_fees(ctx: AuthContext, academic_year_id: str | None) -> dict[str, Any]:
     year_id = _year(student, academic_year_id)
     account = fees.account(student["_id"], year_id)
     rows = get_db().receipts.find({"student_id": student["_id"], "academic_year_id": year_id}).sort("collected_at", -1)
+    from app.modules.payments import gateway
+
     return {
         "years": years,
         "academic_year_id": str(year_id),
+        "online_payment": gateway.enabled(),
         **{
             k: account[k]
             for k in (

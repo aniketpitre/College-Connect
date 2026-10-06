@@ -214,3 +214,12 @@ a.tile-link {
   font: inherit;
   margin-left: 4px;
 }
+.reconcile-card {
+  margin-top: 24px;
+  display: grid;
+  gap: 8px;
+}
+.pay-row {
+  justify-content: flex-start;
+  margin-bottom: 16px;
+}
