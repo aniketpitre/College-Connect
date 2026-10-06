@@ -138,6 +138,8 @@ function StaffForm({ staff, canManage, onClose }: { staff: StaffMember; canManag
     designation: staff.designation ?? "",
     employment: staff.employment ?? "permanent",
     teaching: staff.teaching,
+    gender: staff.gender ?? "",
+    social_category: staff.social_category ?? "",
     joined_on: staff.joined_on ?? "",
     experience_years: staff.experience_years,
     phone: staff.phone ?? "",
@@ -161,6 +163,8 @@ function StaffForm({ staff, canManage, onClose }: { staff: StaffMember; canManag
                 ...f,
                 employee_code: opt(f.employee_code),
                 joined_on: opt(f.joined_on),
+                gender: opt(f.gender),
+                social_category: opt(f.social_category),
                 phone: opt(f.phone),
                 appointment_order: opt(f.appointment_order),
                 appointment_date: opt(f.appointment_date),
@@ -189,6 +193,26 @@ function StaffForm({ staff, canManage, onClose }: { staff: StaffMember; canManag
                   {v}
                 </option>
               ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="st-gender">Gender</label>
+            <select id="st-gender" value={f.gender} onChange={(e) => setF({ ...f, gender: e.target.value })}>
+              <option value="">—</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="st-cat">Social category (AISHE)</label>
+            <select id="st-cat" value={f.social_category} onChange={(e) => setF({ ...f, social_category: e.target.value })}>
+              <option value="">—</option>
+              <option value="general">General</option>
+              <option value="ews">EWS</option>
+              <option value="sc">SC</option>
+              <option value="st">ST</option>
+              <option value="obc">OBC</option>
             </select>
           </div>
           <div className="field">

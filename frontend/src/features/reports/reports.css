@@ -1,0 +1,46 @@
+.report-year select {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper-card);
+}
+.metric-card {
+  margin-bottom: 12px;
+}
+.metric-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  flex-wrap: wrap;
+}
+.metric-title {
+  display: block;
+  font-size: 1.05rem;
+}
+.metric-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.metric-gaps {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--danger);
+}
+.metric-body {
+  margin-top: 10px;
+}
+.naac-settings {
+  margin-bottom: 12px;
+}
+.naac-settings summary {
+  cursor: pointer;
+  font-weight: 600;
+}

@@ -61,6 +61,7 @@ const NAV: NavItem[] = [
   { to: "/app/grievances", label: "grievances", kind: "staff", permission: ["grievance.manage", "grievance.read", "grievance.sensitive"] },
   { to: "/app/leave", label: "leave", kind: "staff", permission: "leave.apply" },
   { to: "/app/staff", label: "staff", kind: "staff", permission: ["staff.read", "staff.read.dept"] },
+  { to: "/app/reports", label: "reports", kind: "staff", permission: "reports.read" },
   {
     to: "/app/certificates",
     label: "certificates",

@@ -20,6 +20,8 @@ export interface StaffMember {
   designation: string | null;
   employment: string | null;
   teaching: boolean;
+  gender: "female" | "male" | "other" | null;
+  social_category: "general" | "ews" | "sc" | "st" | "obc" | null;
   joined_on: string | null;
   experience_years: number;
   phone: string | null;

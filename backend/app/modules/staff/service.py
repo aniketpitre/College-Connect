@@ -101,6 +101,8 @@ def _profile_view(u: dict[str, Any], p: dict[str, Any] | None, depts: dict[Objec
         "designation": p.get("designation"),
         "employment": p.get("employment"),
         "teaching": p.get("teaching", bool(set(u.get("roles", [])) & TEACHING)),
+        "gender": p.get("gender"),
+        "social_category": p.get("social_category"),
         "joined_on": p.get("joined_on"),
         "experience_years": p.get("experience_years", 0),
         "phone": p.get("phone"),

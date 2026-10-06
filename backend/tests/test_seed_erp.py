@@ -47,6 +47,10 @@ def test_erp_seed_builds_a_consistent_demo(db):
     assert sorted(r["status"] for r in db.leave_requests.find({})) == ["approved", "pending"]
     assert sorted(g["status"] for g in db.grievances.find({})) == ["open", "open", "resolved"]
     assert db.grievances.count_documents({"anonymous": True}) == 1
+    # Reports: NAAC settings, APAAR IDs (one duplicate), one evidence file.
+    assert db.settings.find_one({"_id": "naac"})["sanctioned_posts"] == 14
+    assert db.students.count_documents({"apaar_id": {"$type": "string"}}) == 51
+    assert db.naac_evidence.count_documents({}) == 1
 
 
 def test_seed_refuses_production(monkeypatch, capsys):

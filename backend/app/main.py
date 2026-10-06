@@ -29,6 +29,7 @@ from app.modules.parents import router as parents
 from app.modules.payments import router as payments
 from app.modules.placement import router as placement
 from app.modules.portal import router as portal
+from app.modules.reports import router as reports
 from app.modules.results import router as results
 from app.modules.setup import router as setup
 from app.modules.staff import router as staff
@@ -72,6 +73,7 @@ ROUTERS: list[APIRouter] = [
     placement.router,
     grievance.router,
     staff.router,
+    reports.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

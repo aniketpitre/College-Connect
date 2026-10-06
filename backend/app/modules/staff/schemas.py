@@ -16,6 +16,8 @@ class StaffProfileIn(BaseModel):
     designation: str = Field(..., min_length=2, max_length=80)
     employment: Literal["permanent", "contract", "visiting", "ad_hoc"] = "permanent"
     teaching: bool = True
+    gender: Literal["female", "male", "other"] | None = None
+    social_category: Literal["general", "ews", "sc", "st", "obc"] | None = Field(None, description="For AISHE")
     joined_on: date | None = None
     experience_years: float = Field(0, ge=0, le=60, description="Before joining this college")
     phone: str | None = Field(None, max_length=15)
