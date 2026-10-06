@@ -10,6 +10,7 @@ from app.modules.attendance import router as attendance
 from app.modules.auditlog import router as auditlog
 from app.modules.auth import router as auth
 from app.modules.certificates import router as certificates
+from app.modules.dashboard import router as dashboard
 from app.modules.exams import router as exams
 from app.modules.exports import router as exports
 from app.modules.fees import router as fees
@@ -52,6 +53,7 @@ ROUTERS: list[APIRouter] = [
     results.router,
     certificates.router,
     jobs.router,
+    dashboard.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

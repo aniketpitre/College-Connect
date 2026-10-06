@@ -11,7 +11,11 @@ export interface HomeCard {
     | "correction_rejected"
     | "notice"
     | "attendance_low"
-    | "attendance_warning";
+    | "attendance_warning"
+    | "exam_form"
+    | "hall_ticket"
+    | "results"
+    | "certificate_ready";
   severity: "danger" | "warning" | "info";
   amount?: number;
   since?: string;

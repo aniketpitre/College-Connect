@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import StaffDashboard from "../../features/dashboard/StaffDashboard";
 import StudentHome from "../../features/portal/StudentHome";
 import { NAV_LABELS } from "../../i18n/nav";
 import { hasPermission, useMe } from "../../lib/auth";
@@ -10,6 +11,8 @@ const STAFF_LINKS: [string, string, string][] = [
   ["/app/approvals", "approvals", "approvals.decide"],
   ["/app/students", "students", "students.read"],
   ["/app/notices", "notices", "notices.read"],
+  ["/app/exams", "exams", "marks.read"],
+  ["/app/certificates", "certificates", "certificates.manage"],
   ["/app/users", "users", "users.read"],
   ["/app/setup", "setup", "setup.read"],
   ["/app/audit", "audit", "audit.read"],
@@ -40,6 +43,7 @@ export default function PortalHome() {
           {t.account} →
         </Link>
       </div>
+      <StaffDashboard />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { MoneyText } from "../../components/MoneyText";
+import { CERT_STRINGS } from "../../i18n/certificates";
 import { PORTAL_STRINGS } from "../../i18n/portal";
 import { STUDENT_STRINGS } from "../../i18n/student";
 import { useLanguage } from "../../lib/language";
@@ -34,6 +35,14 @@ export default function StudentHome() {
         return { body: t.attendanceLow(c.code!, c.percent!, c.must_attend!), to: "/app/attendance" };
       case "attendance_warning":
         return { body: t.attendanceWarning(c.code!, c.percent!, c.can_miss!), to: "/app/attendance" };
+      case "exam_form":
+        return { body: t.examForm(c.title!, day(c.due_date!)), to: "/app/exams" };
+      case "hall_ticket":
+        return { body: t.hallTicket(c.title!), to: "/app/exams" };
+      case "results":
+        return { body: t.results(c.title!), to: "/app/exams" };
+      case "certificate_ready":
+        return { body: t.certificateReady(CERT_STRINGS[language].types[c.type!] ?? c.type!), to: "/app/certificates" };
       case "notice":
         return { body: `${t.newNotice}: ${(language !== "en" && c[language]?.title) || c.title}`, to: `/app/notices/${c.notice_id}` };
     }
