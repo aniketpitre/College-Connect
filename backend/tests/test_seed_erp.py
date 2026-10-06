@@ -27,6 +27,10 @@ def test_erp_seed_builds_a_consistent_demo(db):
     assert {s["status"] for s in db.marks_sheets.find({})} == {"approved", "published"}
     assert db.exam_forms.count_documents({"status": "submitted"}) == counts["exam forms"] == 10
     assert db.results.count_documents({}) == 20 and counts["results"] == 100
+    # Certificates: one issued, one verified, two waiting (one of them late).
+    assert counts["certificate requests"] == 4
+    by_status = sorted(r["status"] for r in db.certificate_requests.find({}))
+    assert by_status == ["ready", "requested", "requested", "verified"]
 
 
 def test_seed_refuses_production(monkeypatch, capsys):

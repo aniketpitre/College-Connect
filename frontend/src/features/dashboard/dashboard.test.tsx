@@ -35,6 +35,7 @@ describe("home dashboards", () => {
     });
     renderApp("/app");
     expect(await screen.findByRole("heading", { name: "Today's lectures" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Welcome, Mehta" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Take attendance" }).getAttribute("href")).toBe("/app/attendance/take/s1/2026-10-05");
     expect(screen.getByText("Taken ✓")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Open →" }).getAttribute("href")).toBe("/app/exams/marks/d1/sub1");

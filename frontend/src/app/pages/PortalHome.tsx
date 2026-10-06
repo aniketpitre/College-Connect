@@ -19,6 +19,9 @@ const STAFF_LINKS: [string, string, string][] = [
   ["/app/analytics", "analytics", "analytics.view"],
 ];
 
+/** "Dr. Sunita Rane" → "Sunita": titles aren't a first name. */
+const firstName = (name: string) => name.split(" ").find((w) => !/^(dr|prof|mr|mrs|ms|shri|smt)\.?$/i.test(w)) ?? name;
+
 /** Students get their own home; staff get shortcuts to what their roles allow. */
 export default function PortalHome() {
   const { data: me } = useMe();
@@ -30,7 +33,7 @@ export default function PortalHome() {
     <div lang={language}>
       <div className="eyebrow">CollegeConnect</div>
       <h1>
-        {language === "en" ? "Welcome" : language === "hi" ? "स्वागत है" : "स्वागत आहे"}, {me?.name.split(" ")[0]}
+        {language === "en" ? "Welcome" : language === "hi" ? "स्वागत है" : "स्वागत आहे"}, {firstName(me?.name ?? "")}
       </h1>
       <p className="muted">{me?.role_labels.join(", ")}</p>
       <div className="staff-links">
