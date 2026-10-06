@@ -93,8 +93,15 @@ async def security_headers(request: Request, call_next):
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(self)")
+    if settings.cookie_secure:
+        response.headers.setdefault("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
     if request.url.path.startswith("/api/") and "/docs" not in request.url.path:
         response.headers.setdefault("Cache-Control", "no-store")
+        # JSON is data, never a page: nothing in it may load, run or be framed. (PDFs are left alone so
+        # the browser's own viewer can open receipts and certificates.)
+        if response.headers.get("content-type", "").startswith("application/json"):
+            response.headers.setdefault("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
     return response
 
 
@@ -111,7 +118,7 @@ def create_app() -> FastAPI:
     # one origin, so CORS isn't needed; ALLOWED_ORIGINS adds extra origins (comma-separated).
     app.add_middleware(
         CORSMiddleware,
-        allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
+        allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+" if settings.allow_localhost_origins else None,
         allow_origins=list(settings.allowed_origins),
         allow_credentials=True,
         allow_methods=["*"],

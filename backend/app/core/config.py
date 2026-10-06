@@ -44,6 +44,9 @@ class Settings:
     # Sign-ins allowed per IP address in 15 minutes. A college lab or campus Wi-Fi puts many
     # students behind one address; wrong passwords are limited per account as well (lockout).
     login_limit_per_ip: int
+    # Lets a local Vite dev server (http://localhost:*) call the API with cookies. Off on Vercel,
+    # so a page on someone's own machine can't make signed-in requests to production.
+    allow_localhost_origins: bool
     # Online fee payment (Razorpay). Without the key pair the "Pay online" button is hidden.
     razorpay_key_id: str | None
     razorpay_key_secret: str | None
@@ -68,6 +71,7 @@ class Settings:
             email_from=os.getenv("EMAIL_FROM", "CollegeConnect <onboarding@resend.dev>"),
             cron_secret=os.getenv("CRON_SECRET") or None,
             login_limit_per_ip=int(os.getenv("LOGIN_LIMIT_PER_IP") or 300),
+            allow_localhost_origins=_flag("ALLOW_LOCALHOST_ORIGINS", not os.getenv("VERCEL")),
             razorpay_key_id=os.getenv("RAZORPAY_KEY_ID") or None,
             razorpay_key_secret=os.getenv("RAZORPAY_KEY_SECRET") or None,
             razorpay_webhook_secret=os.getenv("RAZORPAY_WEBHOOK_SECRET") or None,

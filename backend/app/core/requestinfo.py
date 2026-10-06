@@ -2,10 +2,12 @@ from fastapi import Request
 
 
 def client_ip(request: Request) -> str:
-    """Vercel puts the real client address first in X-Forwarded-For."""
-    forwarded = request.headers.get("x-forwarded-for", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """The caller's address, for rate limits and the audit log.
+
+    Vercel sets X-Real-IP itself, so a client can't fake it; X-Forwarded-For can carry whatever
+    the client sent, so it is not trusted (it would let anyone dodge the per-IP limits). Off Vercel
+    (local development) the socket address is used.
+    """
     return request.headers.get("x-real-ip") or (request.client.host if request.client else "unknown")
 
 
