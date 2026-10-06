@@ -98,6 +98,11 @@ def my_attendance(ctx: AuthContext = Depends(signed_in)) -> dict[str, Any]:
 
 @router.get("/cron/attendance-alerts", include_in_schema=False)
 def attendance_alerts(authorization: str | None = Header(None)) -> dict[str, int]:
+    """Older single-job path: queues the alerts and sends them (the daily job does both too)."""
+    from app.modules.messaging import service as messaging
+
     if not settings.cron_secret or authorization != f"Bearer {settings.cron_secret}":
         raise AppError(401, "Not allowed.", "unauthorized")
-    return stats.send_alerts()
+    alerts = stats.send_alerts()
+    messaging.process_queue()
+    return alerts

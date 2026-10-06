@@ -18,6 +18,7 @@ from app.modules.helpdesk import admin as helpdesk_admin
 from app.modules.helpdesk import router as helpdesk
 from app.modules.jobs import router as jobs
 from app.modules.marks import router as marks
+from app.modules.messaging import router as messaging
 from app.modules.notices import router as notices
 from app.modules.onboarding import router as onboarding
 from app.modules.parents import router as parents
@@ -58,6 +59,7 @@ ROUTERS: list[APIRouter] = [
     dashboard.router,
     parents.router,
     payments.router,
+    messaging.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

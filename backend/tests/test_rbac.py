@@ -12,6 +12,7 @@ def test_permission_matrix():
         P.FEES_MANAGE,
         P.FEES_COLLECT,
         P.APPROVALS_DECIDE,
+        P.MESSAGES_READ,  # the delivery log names students and parents
     }
     # Nor does it run the academic side (timetable, attendance).
     academics = {
@@ -51,6 +52,7 @@ def test_permission_matrix():
         P.RESULTS_READ,
         P.CERT_READ,
         P.CERT_SIGN_PRINCIPAL,
+        P.MESSAGES_READ,
     }
     assert P.USERS_CREATE_STAFF not in permissions_for(["office"])
     assert P.USERS_CREATE_STUDENT in permissions_for(["office"])
@@ -63,6 +65,7 @@ def test_permission_matrix():
         P.FEES_READ,
         P.FEES_MANAGE,
         P.FEES_COLLECT,
+        P.MESSAGES_READ,
     }
     assert permissions_for(["faculty"]) == {
         P.SETUP_READ,

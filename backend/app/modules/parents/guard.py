@@ -40,6 +40,8 @@ OWN = {
     ("DELETE", "/auth/sessions/{sid}"),
     ("GET", "/auth/login-history"),
     ("PATCH", "/me/preferences"),
+    ("GET", "/me/notifications"),
+    ("PUT", "/me/notifications"),
 }
 
 

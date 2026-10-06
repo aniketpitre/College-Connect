@@ -392,12 +392,11 @@ def _issue(ctx: AuthContext, r: dict[str, Any], ip: str) -> dict[str, Any]:
         "certificates.issued", actor_id=ctx.user_id, target_type="student", target_id=student["_id"], ip=ip,
         details={"type": r["type"], "number": cert["number"]},
     )  # fmt: skip
-    if student.get("email"):
-        send_email(
-            student["email"],
-            f"Your {TYPES[r['type']]['name'].lower()} is ready",
-            f"Dear {student['name']},\n\nYour {TYPES[r['type']]['name'].lower()} ({cert['number']}) is ready. "
-            "Download it from CollegeConnect (My certificates) or collect the signed copy at the office.\n",
+    if r["type"] != "tc":  # after a TC the student has left; they collect it in person
+        from app.modules.messaging import service as messaging
+
+        messaging.notify(
+            student, "certificate_ready", {"certificate": TYPES[r["type"]]["name"], "number": cert["number"]}
         )
     updated = db.certificate_requests.find_one({"_id": r["_id"]})
     assert updated is not None

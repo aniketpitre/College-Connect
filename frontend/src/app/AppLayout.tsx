@@ -55,6 +55,7 @@ const NAV: NavItem[] = [
     kind: "staff",
     permission: ["certificates.manage", "certificates.read", "certificates.sign.principal", "certificates.sign.hod"],
   },
+  { to: "/app/messages", label: "messages", permission: "messages.read" },
   { to: "/app/account", label: "account" },
   { to: "/app/users", label: "users", permission: "users.read" },
   { to: "/app/setup", label: "setup", permission: "setup.read" },

@@ -24,7 +24,6 @@ from pymongo import ASCENDING, IndexModel
 from app.core import audit, clock
 from app.core.auth import AuthContext, create_session, revoke_user_sessions
 from app.core.db import get_db, register_indexes, run_in_transaction
-from app.core.email import send_email
 from app.core.errors import AppError
 from app.core.ratelimit import hit
 from app.core.requestinfo import client_ip
@@ -291,19 +290,16 @@ def request_code(request: Request, phone: str) -> dict[str, Any]:
     hit(f"otp:phone:{phone}", limit=5, window_seconds=60 * 60)
     db = get_db()
     user = db.users.find_one({"phone": phone, "kind": "parent", "status": "active"})
-    if user and user.get("contact_email"):
+    if user and (user.get("contact_email") or user.get("phone")):
         code = f"{secrets.randbelow(10**6):06d}"
         db.login_codes.replace_one(
             {"_id": phone},
             {"code_hash": _code_hash(phone, code), "attempts": 0, "expires_at": datetime.now(UTC) + CODE_LIFETIME},
             upsert=True,
         )
-        send_email(
-            user["contact_email"],
-            f"{code} is your CollegeConnect sign-in code",
-            f"Your sign-in code is {code}. It works for 10 minutes.\n\n"
-            "If you didn't ask for it, ignore this email. Never share this code with anyone.\n",
-        )
+        from app.modules.messaging import service as messaging
+
+        messaging.send_to(user, "otp", {"code": code})  # SMS/WhatsApp when set up, and email
         audit.record("auth.otp.sent", actor_id=user["_id"], ip=ip)
     # The same answer whether or not the number is registered, so numbers can't be checked here.
     return {"sent": True}

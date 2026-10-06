@@ -11,6 +11,8 @@ from app.core.config import settings
 from app.core.errors import AppError
 from app.modules.attendance import stats
 from app.modules.certificates import service as certificates
+from app.modules.messaging import reminders
+from app.modules.messaging import service as messaging
 from app.modules.payments import service as payments
 
 router = APIRouter(tags=["jobs"], include_in_schema=False)
@@ -24,8 +26,11 @@ def check_secret(authorization: str | None) -> None:
 @router.get("/cron/daily")
 def daily(authorization: str | None = Header(None)) -> dict[str, Any]:
     check_secret(authorization)
-    return {
-        "attendance_alerts": stats.send_alerts(),
-        "certificates": certificates.escalate_overdue(),
+    out: dict[str, Any] = {
         "online_payments": payments.daily_check(),
+        "attendance_alerts": stats.send_alerts(),
+        "fee_reminders": reminders.queue_fee_reminders(),
+        "certificates": certificates.escalate_overdue(),
     }
+    out["messages"] = messaging.process_queue()  # what's left waits for tomorrow or "Send now"
+    return out

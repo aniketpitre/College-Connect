@@ -19,9 +19,9 @@ from pymongo.errors import DuplicateKeyError
 from app.core import audit, clock
 from app.core.auth import AuthContext
 from app.core.db import get_db, register_indexes
-from app.core.email import send_email
 from app.core.errors import AppError
 from app.modules.attendance import service
+from app.modules.messaging import service as messaging
 from app.modules.setup import service as setup
 from app.modules.timetable import service as timetable
 
@@ -264,19 +264,18 @@ def readable_divisions(ctx: AuthContext) -> list[dict[str, Any]]:
 
 
 def send_alerts(today: date | None = None) -> dict[str, int]:
-    """Emails each student once per subject when they drop below the warning level, and again
-    below the minimum. Run daily by Vercel Cron (GET /cron/daily; /cron/attendance-alerts runs it alone)."""
+    """Tells each student (and parents, if shared) once per subject when they drop below the warning
+    level, and again below the minimum. Run daily by Vercel Cron (GET /cron/daily). Returns how many
+    alerts were queued for messaging."""
     db = get_db()
     minimum, warn = thresholds()
     year = setup.current_year()
     if not year:
         return {"students": 0, "sent": 0}
-    inst = setup.institution()
-    students = list(db.students.find({"status": "active"}, {"name": 1, "email": 1, "user_id": 1}))
+    students = list(db.students.find({"status": "active"}, {"name": 1}))
     rows = tally([s["_id"] for s in students], {"academic_year_id": year["_id"]})
     sent = 0
     for s in students:
-        email = s.get("email") or (db.users.find_one({"_id": s.get("user_id")}, {"email": 1}) or {}).get("email")
         subjects = _subjects(list(rows.get(s["_id"], {})))
         for subject_id, r in rows.get(s["_id"], {}).items():
             if r["held"] < ALERT_MIN_LECTURES:
@@ -294,33 +293,19 @@ def send_alerts(today: date | None = None) -> dict[str, int]:
                         "academic_year_id": year["_id"],
                         "percent": pct,
                         "at": clock.now(),
-                        "emailed": bool(email),
                     }
                 )
             except DuplicateKeyError:
                 continue  # already told about this level
-            if not email:
-                continue
             sub = subjects.get(subject_id, {})
             need = must_attend(r["held"], r["attended"], minimum)
-            if level == "critical":
-                advice = (
-                    f"This is below the minimum of {minimum}%. Attend the next {need} lectures in a row to reach it."
-                )
-            else:
-                spare = can_miss(r["held"], r["attended"], minimum)
-                advice = f"The minimum is {minimum}%. You can miss {spare} more lectures."
-            text = (
-                f"Dear {s['name']},\n\n"
-                f"Your attendance in {sub.get('code')} {sub.get('name')} is {pct}% "
-                f"({r['attended']} of {r['held']} lectures).\n{advice}\n\n"
-                "If you were on medical leave or official duty, submit the document at the college office.\n\n"
-                f"{inst.get('name') or 'CollegeConnect'}"
+            spare = can_miss(r["held"], r["attended"], minimum)
+            # Queued: the daily job sends them to the student and (if shared) their parents.
+            messaging.queue(
+                s["_id"],
+                f"attendance_{level}",
+                {"code": sub.get("code"), "pct": pct, "minimum": minimum, "n": need if level == "critical" else spare},
             )
-            subject_line = (
-                f"{'Low attendance' if level == 'critical' else 'Attendance warning'}: {sub.get('code')} {pct}%"
-            )
-            if send_email(email, subject_line, text):
-                sent += 1
+            sent += 1
     audit.record("attendance.alerts_sent", details={"sent": sent, "students": len(students)})
     return {"students": len(students), "sent": sent}

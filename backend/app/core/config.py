@@ -45,6 +45,11 @@ class Settings:
     razorpay_key_id: str | None
     razorpay_key_secret: str | None
     razorpay_webhook_secret: str | None
+    # SMS through MSG91 (India: each message needs a DLT-approved template, SMS_TEMPLATE_<NAME>).
+    sms_api_key: str | None
+    # WhatsApp through the Meta Cloud API (approved templates, WHATSAPP_TEMPLATE_<NAME>).
+    whatsapp_token: str | None
+    whatsapp_phone_id: str | None
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -62,6 +67,9 @@ class Settings:
             razorpay_key_id=os.getenv("RAZORPAY_KEY_ID") or None,
             razorpay_key_secret=os.getenv("RAZORPAY_KEY_SECRET") or None,
             razorpay_webhook_secret=os.getenv("RAZORPAY_WEBHOOK_SECRET") or None,
+            sms_api_key=os.getenv("SMS_API_KEY") or None,
+            whatsapp_token=os.getenv("WHATSAPP_TOKEN") or None,
+            whatsapp_phone_id=os.getenv("WHATSAPP_PHONE_ID") or None,
         )
 
 

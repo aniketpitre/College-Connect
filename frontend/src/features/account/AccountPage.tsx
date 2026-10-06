@@ -7,6 +7,7 @@ import { RecoveryCodes, TwoStepSetup } from "../../app/TwoStepSetup";
 import { Modal } from "../../components/Modal";
 import { StatusBadge } from "../../components/StatusBadge";
 import { ACCOUNT_STRINGS, type AccountStrings } from "../../i18n/account";
+import { Notifications } from "./Notifications";
 import { AUTH_STRINGS, errorText } from "../../i18n/auth";
 import {
   describeDevice,
@@ -46,6 +47,8 @@ export default function AccountPage() {
           {t.changePassword}
         </Link>
       </section>
+
+      <Notifications language={language} />
 
       <TwoStepSection t={t} language={language} />
       <DevicesSection t={t} when={when} />

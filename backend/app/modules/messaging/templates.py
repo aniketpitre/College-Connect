@@ -1,0 +1,154 @@
+# ruff: noqa: E501  (message texts read better on one line)
+"""
+Message templates in English, Hindi and Marathi.
+
+One text per template works as an SMS, a WhatsApp message and an email body, and reads right
+for the student and for their parents (it names the student). SMS in India must match a
+DLT-approved template, so each key below maps to a provider template id set in the environment
+(SMS_TEMPLATE_<KEY>, WHATSAPP_TEMPLATE_<KEY>); the variables are sent in the order of `VARS`.
+"""
+
+from typing import Any
+
+# The order of each template's variables (for SMS/WhatsApp providers' numbered placeholders).
+VARS: dict[str, tuple[str, ...]] = {
+    "otp": ("code",),
+    "attendance_critical": ("student", "code", "pct", "minimum", "n"),
+    "attendance_warning": ("student", "code", "pct", "minimum", "n"),
+    "fee_due": ("student", "amount", "label", "date"),
+    "fee_overdue": ("student", "amount"),
+    "results_published": ("student", "exam"),
+    "certificate_ready": ("student", "certificate", "number"),
+}
+
+# Which part of the student's record each message is about: parents get it only if shared.
+AREA: dict[str, str | None] = {
+    "otp": None,
+    "attendance_critical": "attendance",
+    "attendance_warning": "attendance",
+    "fee_due": "fees",
+    "fee_overdue": "fees",
+    "results_published": "results",
+    "certificate_ready": None,
+}
+
+LABELS = {
+    "otp": "Sign-in code",
+    "attendance_critical": "Attendance below minimum",
+    "attendance_warning": "Attendance warning",
+    "fee_due": "Fee due soon",
+    "fee_overdue": "Fee overdue",
+    "results_published": "Results published",
+    "certificate_ready": "Certificate ready",
+}
+
+TEXT: dict[str, dict[str, tuple[str, str]]] = {
+    "otp": {
+        "en": (
+            "{code} is your CollegeConnect sign-in code",
+            "{code} is your CollegeConnect sign-in code. It works for 10 minutes. Never share it.",
+        ),
+        "hi": (
+            "{code} आपका CollegeConnect साइन-इन कोड है",
+            "{code} आपका CollegeConnect साइन-इन कोड है। यह 10 मिनट तक चलेगा। इसे किसी से साझा न करें।",
+        ),
+        "mr": (
+            "{code} हा तुमचा CollegeConnect साइन-इन कोड आहे",
+            "{code} हा तुमचा CollegeConnect साइन-इन कोड आहे. तो 10 मिनिटे चालेल. तो कोणालाही सांगू नका.",
+        ),
+    },
+    "attendance_critical": {
+        "en": (
+            "Low attendance: {code} {pct}%",
+            "Attendance of {student} in {code} is {pct}%, below the minimum of {minimum}%. Attend the next {n} lectures to reach it.",
+        ),
+        "hi": (
+            "कम उपस्थिति: {code} {pct}%",
+            "{student} की {code} में उपस्थिति {pct}% है, जो न्यूनतम {minimum}% से कम है। इसे पूरा करने के लिए अगले {n} व्याख्यानों में उपस्थित रहें।",
+        ),
+        "mr": (
+            "कमी उपस्थिती: {code} {pct}%",
+            "{student} यांची {code} मधील उपस्थिती {pct}% आहे, किमान {minimum}% पेक्षा कमी. ती गाठण्यासाठी पुढील {n} तासिकांना उपस्थित राहा.",
+        ),
+    },
+    "attendance_warning": {
+        "en": (
+            "Attendance warning: {code} {pct}%",
+            "Attendance of {student} in {code} is {pct}% (minimum {minimum}%). Only {n} more lectures can be missed.",
+        ),
+        "hi": (
+            "उपस्थिति चेतावनी: {code} {pct}%",
+            "{student} की {code} में उपस्थिति {pct}% है (न्यूनतम {minimum}%)। अब केवल {n} व्याख्यान छोड़े जा सकते हैं।",
+        ),
+        "mr": (
+            "उपस्थिती इशारा: {code} {pct}%",
+            "{student} यांची {code} मधील उपस्थिती {pct}% आहे (किमान {minimum}%). आता फक्त {n} तासिका चुकवता येतील.",
+        ),
+    },
+    "fee_due": {
+        "en": (
+            "Fee due on {date}",
+            "{label} of {amount} for {student} is due on {date}. Pay online in CollegeConnect or at the college counter.",
+        ),
+        "hi": (
+            "{date} को फ़ीस देय",
+            "{student} की {label} {amount} {date} को देय है। CollegeConnect पर ऑनलाइन या कॉलेज काउंटर पर भुगतान करें।",
+        ),
+        "mr": (
+            "{date} रोजी शुल्क देय",
+            "{student} यांचा {label} {amount} {date} रोजी देय आहे. CollegeConnect वर ऑनलाइन किंवा कॉलेज काउंटरवर भरा.",
+        ),
+    },
+    "fee_overdue": {
+        "en": (
+            "Fee overdue: {amount}",
+            "{amount} of fees for {student} is overdue. Please pay online in CollegeConnect or at the college counter.",
+        ),
+        "hi": (
+            "बकाया फ़ीस: {amount}",
+            "{student} की {amount} फ़ीस बकाया है। कृपया CollegeConnect पर ऑनलाइन या कॉलेज काउंटर पर भुगतान करें।",
+        ),
+        "mr": (
+            "थकित शुल्क: {amount}",
+            "{student} यांचे {amount} शुल्क थकित आहे. कृपया CollegeConnect वर ऑनलाइन किंवा कॉलेज काउंटरवर भरा.",
+        ),
+    },
+    "results_published": {
+        "en": (
+            "Results published: {exam}",
+            "Results of {exam} for {student} are out. See them in CollegeConnect (Exams & results).",
+        ),
+        "hi": (
+            "परिणाम घोषित: {exam}",
+            "{student} का {exam} का परिणाम आ गया है। CollegeConnect (परीक्षा और परिणाम) में देखें।",
+        ),
+        "mr": (
+            "निकाल जाहीर: {exam}",
+            "{student} यांचा {exam} चा निकाल लागला आहे. CollegeConnect (परीक्षा आणि निकाल) मध्ये पाहा.",
+        ),
+    },
+    "certificate_ready": {
+        "en": (
+            "{certificate} ready",
+            "The {certificate} ({number}) for {student} is ready. Download it in CollegeConnect or collect the signed copy at the office.",
+        ),
+        "hi": (
+            "{certificate} तैयार",
+            "{student} का {certificate} ({number}) तैयार है। CollegeConnect से डाउनलोड करें या कार्यालय से हस्ताक्षरित प्रति लें।",
+        ),
+        "mr": (
+            "{certificate} तयार",
+            "{student} यांचे {certificate} ({number}) तयार आहे. CollegeConnect मधून डाउनलोड करा किंवा कार्यालयातून स्वाक्षरी केलेली प्रत घ्या.",
+        ),
+    },
+}
+
+
+def render(key: str, language: str | None, params: dict[str, Any]) -> tuple[str, str]:
+    """(subject, text) in the person's language (English if unknown)."""
+    subject, text = TEXT[key].get(language or "en", TEXT[key]["en"])
+    return subject.format(**params), text.format(**params)
+
+
+def ordered(key: str, params: dict[str, Any]) -> list[str]:
+    return [str(params[v]) for v in VARS[key]]
