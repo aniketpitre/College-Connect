@@ -33,6 +33,10 @@ def test_erp_seed_builds_a_consistent_demo(db):
     assert by_status == ["ready", "requested", "requested", "verified"]
     # Parents: one account with two children.
     assert [len(p["children"]) for p in db.users.find({"kind": "parent"})] == [2]
+    # Admissions: one open cycle, applicants at each stage, enquiries.
+    by_status = sorted(a["status"] for a in db.applications.find({}))
+    assert counts["applications"] == 5 and by_status == ["draft", "submitted", "verified", "verified", "verified"]
+    assert db.enquiries.count_documents({}) == 2 and db.admission_cycles.find_one({})["status"] == "open"
 
 
 def test_seed_refuses_production(monkeypatch, capsys):
