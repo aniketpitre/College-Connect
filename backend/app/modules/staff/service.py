@@ -432,6 +432,7 @@ def my_leave(ctx: AuthContext) -> dict[str, Any]:
     users.update(_names([r["decided_by"] for r in rows if r.get("decided_by")]))
     return {
         "year": year["name"],
+        "today": clock.today().isoformat(),
         "balances": balances(ctx.user_id, year),
         "requests": [_view(r, names=users) for r in rows],
         "approver": _approver(ctx.user),

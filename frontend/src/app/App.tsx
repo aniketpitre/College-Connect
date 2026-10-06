@@ -19,6 +19,9 @@ import OpeningPage from "../features/fees/OpeningPage";
 import OnlinePaymentsPage from "../features/fees/OnlinePaymentsPage";
 import MessagesPage from "../features/messages/MessagesPage";
 import HostelPage from "../features/campus/HostelPage";
+import GrievancePage from "../features/grievance/GrievancePage";
+import LeavePage from "../features/staff/LeavePage";
+import StaffPage from "../features/staff/StaffPage";
 import LibraryPage from "../features/campus/LibraryPage";
 import PlacementPage from "../features/campus/PlacementPage";
 import AdmissionsPage from "../features/admissions/AdmissionsPage";
@@ -110,6 +113,9 @@ export default function App() {
         <Route path="messages" element={<MessagesPage />} />
         <Route path="library" element={<LibraryPage />} />
         <Route path="hostel" element={<HostelPage />} />
+        <Route path="grievances" element={<GrievancePage />} />
+        <Route path="leave" element={<LeavePage />} />
+        <Route path="staff" element={<StaffPage />} />
         <Route path="placement" element={<PlacementPage />} />
         <Route path="application" element={<MyApplicationPage />} />
         <Route path="admissions" element={<AdmissionsPage />} />

@@ -21,6 +21,8 @@ export interface Dashboard {
   };
   office?: { certificates_open: number; certificates_overdue: number; certificates_to_issue: number; corrections: number; documents: number };
   principal?: { approvals: number; exports: number; certificates_to_sign: number; certificates_overdue: number; attendance_minimum: number };
+  leave?: { to_approve: number; on_leave_today: string[] };
+  grievances?: { open: number; overdue: number };
 }
 
 export const useDashboard = (enabled: boolean) =>

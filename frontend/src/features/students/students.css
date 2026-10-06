@@ -322,3 +322,26 @@ a.user-cell:hover .user-name {
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
 }
+
+/* No-dues check before a TC / migration certificate */
+.no-dues {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 8px 0 12px;
+}
+.no-dues ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+.no-dues-owed {
+  border-color: var(--danger);
+}
+.no-dues-clear {
+  border-color: var(--success, #2f855a);
+}
+.no-dues-lookup {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
