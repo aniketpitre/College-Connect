@@ -22,6 +22,7 @@ import HostelPage from "../features/campus/HostelPage";
 import GrievancePage from "../features/grievance/GrievancePage";
 import LeavePage from "../features/staff/LeavePage";
 import StaffPage from "../features/staff/StaffPage";
+import AccreditationPage from "../features/reports/ReportsPage";
 import LibraryPage from "../features/campus/LibraryPage";
 import PlacementPage from "../features/campus/PlacementPage";
 import AdmissionsPage from "../features/admissions/AdmissionsPage";
@@ -116,6 +117,7 @@ export default function App() {
         <Route path="grievances" element={<GrievancePage />} />
         <Route path="leave" element={<LeavePage />} />
         <Route path="staff" element={<StaffPage />} />
+        <Route path="reports" element={<AccreditationPage />} />
         <Route path="placement" element={<PlacementPage />} />
         <Route path="application" element={<MyApplicationPage />} />
         <Route path="admissions" element={<AdmissionsPage />} />

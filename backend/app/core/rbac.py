@@ -24,6 +24,7 @@ class Role(StrEnum):
     PLACEMENT = "placement"
     GRIEVANCE = "grievance"  # Grievance Redressal Cell
     ICC = "icc"  # Internal Complaints Committee / Anti-ragging: sensitive grievances only
+    IQAC = "iqac"  # IQAC coordinator: NAAC evidence and reports
     STUDENT = "student"
     PARENT = "parent"
     APPLICANT = "applicant"  # someone applying for admission (online application only)
@@ -49,6 +50,7 @@ ROLE_LABELS: dict[Role, str] = {
     Role.PLACEMENT: "Placement Officer",
     Role.GRIEVANCE: "Grievance Cell",
     Role.ICC: "ICC / Anti-ragging",
+    Role.IQAC: "IQAC Coordinator",
     Role.STUDENT: "Student",
     Role.PARENT: "Parent",
     Role.APPLICANT: "Applicant",
@@ -112,6 +114,8 @@ class P(StrEnum):
     STAFF_MANAGE = "staff.manage"  # staff records, qualifications, leave types and adjustments
     LEAVE_APPLY = "leave.apply"  # every staff member
     LEAVE_APPROVE = "leave.approve"  # HOD (their department's staff), Principal (HODs, others)
+    REPORTS_READ = "reports.read"  # NAAC / AQAR tables, AISHE, NIRF, APAAR checks and ABC credit export
+    NAAC_MANAGE = "naac.manage"  # NAAC evidence uploads and settings (sanctioned posts, intake)
     MESSAGES_READ = "messages.read"  # the delivery log and the outgoing message queue
     EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
 
@@ -160,6 +164,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.GRIEVANCE_READ,
         P.STAFF_READ,
         P.LEAVE_APPROVE,
+        P.REPORTS_READ,
     }
     | _PUBLISH,
     Role.OFFICE: _STAFF_BASE
@@ -184,6 +189,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.ADMISSIONS_READ,
         P.STAFF_READ,
         P.STAFF_MANAGE,
+        P.REPORTS_READ,
     }
     | _PUBLISH,
     Role.ACCOUNTS: _STAFF_BASE
@@ -219,6 +225,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
     Role.PLACEMENT: _STAFF_BASE | {P.PLACEMENT_MANAGE, P.PLACEMENT_READ, P.RESULTS_READ} | _PUBLISH,
     Role.GRIEVANCE: _STAFF_BASE | {P.GRIEVANCE_MANAGE, P.GRIEVANCE_READ},
     Role.ICC: _STAFF_BASE | {P.GRIEVANCE_SENSITIVE},
+    Role.IQAC: _STAFF_BASE | {P.REPORTS_READ, P.NAAC_MANAGE, P.STAFF_READ},
 }
 
 

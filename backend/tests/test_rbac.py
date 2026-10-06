@@ -18,6 +18,7 @@ def test_permission_matrix():
         *(P.LIBRARY_MANAGE, P.LIBRARY_READ, P.HOSTEL_MANAGE, P.HOSTEL_READ, P.PLACEMENT_MANAGE, P.PLACEMENT_READ),
         *(P.GRIEVANCE_MANAGE, P.GRIEVANCE_READ, P.GRIEVANCE_SENSITIVE),  # complaints name students
         *(P.STAFF_READ, P.STAFF_READ_DEPT, P.STAFF_MANAGE, P.LEAVE_APPROVE),  # staff records are HR's
+        *(P.REPORTS_READ, P.NAAC_MANAGE),  # reports carry student and staff data
     }
     # Nor does it run the academic side (timetable, attendance).
     academics = {
@@ -66,6 +67,7 @@ def test_permission_matrix():
         P.STAFF_READ,
         P.LEAVE_APPLY,
         P.LEAVE_APPROVE,
+        P.REPORTS_READ,
     }
     assert P.USERS_CREATE_STAFF not in permissions_for(["office"])
     assert P.USERS_CREATE_STUDENT in permissions_for(["office"])
