@@ -8,7 +8,7 @@ from app.core.auth import AuthContext, require, signed_in
 from app.core.errors import AppError
 from app.core.rbac import P
 from app.core.requestinfo import client_ip
-from app.modules.exports import service
+from app.modules.exports import full, service
 
 router = APIRouter(tags=["exports"])
 
@@ -56,6 +56,30 @@ def download(request_id: str, request: Request, ctx: AuthContext = Depends(requi
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{filename}"', "Cache-Control": "private, no-store"},
     )
+
+
+@router.get("/export/requests/{request_id}/full")
+def full_manifest(
+    request_id: str, request: Request, ctx: AuthContext = Depends(require(P.EXPORT_REQUEST))
+) -> dict[str, Any]:
+    r = service.approved_request(ctx, request_id)
+    if r["dataset"] != "full":
+        raise AppError(409, "This is not a full export.", "conflict")
+    return full.manifest(ctx, r, client_ip(request))
+
+
+@router.get("/export/requests/{request_id}/full/{collection}")
+def full_page(
+    request_id: str, collection: str, after: str | None = None, ctx: AuthContext = Depends(require(P.EXPORT_REQUEST))
+) -> Response:
+    r = service.approved_request(ctx, request_id)
+    if r["dataset"] != "full":
+        raise AppError(409, "This is not a full export.", "conflict")
+    body, next_after = full.page(collection, after)
+    headers = {"Cache-Control": "private, no-store"}
+    if next_after:
+        headers["X-Next-After"] = next_after
+    return Response(content=body, media_type="application/x-ndjson", headers=headers)
 
 
 @router.get("/me/data-export")
