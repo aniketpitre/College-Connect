@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import { apiFetch } from "../lib/api";
+import { AssistantPanel } from "../features/assistant/AssistantPanel";
 import { OfflineSync } from "../features/attendance/OfflineSync";
 import { NAV_LABELS } from "../i18n/nav";
 import { PARENT_STRINGS } from "../i18n/parent";
@@ -78,6 +79,7 @@ const NAV: NavItem[] = [
   { to: "/app/audit", label: "audit", permission: "audit.read" },
   { to: "/app/exports", label: "exports", permission: "export.request" },
   { to: "/app/api-keys", label: "apiKeys", permission: "api_keys.manage" },
+  { to: "/app/knowledge", label: "knowledge", permission: "kb.manage" },
   { to: "/app/analytics", label: "analytics", permission: "analytics.view" },
 ];
 
@@ -170,6 +172,7 @@ export default function AppLayout() {
           )}
         </main>
       </div>
+      {me?.session_state === "active" && (!isParent || child) && <AssistantPanel key={child?.id} />}
     </div>
   );
 }

@@ -1,31 +1,39 @@
 """
-Notices (spec §3.10, plan item 1.13): text and/or a PDF, an audience, a publish time, an expiry
-and a pin; optional Hindi/Marathi versions typed by staff; email to the audience.
+Notices (spec §3.10, plan items 1.13 and 5.2): text and/or a PDF, an audience, a publish time, an
+expiry and a pin; Hindi/Marathi versions typed by staff or translated automatically (marked
+`machine` until staff save their own); email to the audience. Every change re-indexes the notice
+into the help desk (`knowledge.index_notice`), for its own audience only, or the public help desk
+too when marked `public`.
 
 Who sees a notice is decided in one place, `_visible_query`: students see notices for everyone,
 for all students, or for their own class (programme, optionally year and division); staff see
 notices for everyone and for staff; publishers see every notice to manage it.
 """
 
+import logging
 import re
 from datetime import UTC, date, datetime, time
 from typing import Any
 from zoneinfo import ZoneInfo
 
+import anthropic
 from bson import ObjectId
 from pymongo import ASCENDING, DESCENDING, IndexModel
 from pymongo.errors import DuplicateKeyError
 
-from app.core import audit, files
+from app.core import audit, files, ratelimit
 from app.core.auth import AuthContext
 from app.core.db import get_db, register_indexes
 from app.core.email import send_email
 from app.core.errors import AppError
 from app.core.rbac import P
+from app.modules.knowledge import service as knowledge
 from app.modules.notices.schemas import NoticeIn, NoticeUpdate
 from app.modules.setup import service as setup
 from app.modules.students import service as students
+from app.rag import generator
 
+log = logging.getLogger(__name__)
 IST = ZoneInfo("Asia/Kolkata")
 EMAIL_CHUNK = 100
 
@@ -116,6 +124,7 @@ def view(n: dict[str, Any], *, full: bool = True) -> dict[str, Any]:
         "publish_at": n["publish_at"].isoformat(),
         "expires_on": n["expires_on"] if n.get("expires_on") else None,
         "pinned": n.get("pinned", False),
+        "public": n.get("public", False),
         "state": state,
         "has_attachment": bool(n.get("attachment_file_id")),
         "author": n.get("author_name"),
@@ -140,6 +149,7 @@ def create(ctx: AuthContext, body: NoticeIn, ip: str) -> dict[str, Any]:
         "expires_on": body.expires_on.isoformat() if body.expires_on else None,
         "expires_at": _expires_at(body.expires_on),
         "pinned": body.pinned,
+        "public": body.public,
         "status": "published",
         "author_id": ctx.user_id,
         "author_name": ctx.user["name"],
@@ -155,6 +165,7 @@ def create(ctx: AuthContext, body: NoticeIn, ip: str) -> dict[str, Any]:
         ip=ip,
         details={"title": doc["title"], "audience": audience_label(doc["audience"])},
     )
+    knowledge.index_notice(doc["_id"])
     return view(doc)
 
 
@@ -178,6 +189,8 @@ def update(ctx: AuthContext, notice_id: str, body: NoticeUpdate, ip: str) -> dic
         changes["expires_at"] = _expires_at(body.expires_on)
     if body.status == "withdrawn" and not (body.reason and body.reason.strip()):
         raise AppError(422, "Say why the notice is withdrawn.", field="reason")
+    if body.public and n["audience"]["kind"] not in ("everyone", "students"):
+        raise AppError(422, "Only a notice for everyone or all students can be public.", field="public")
     if not changes:
         return view(n)
     changes["updated_at"] = datetime.now(UTC)
@@ -192,6 +205,7 @@ def update(ctx: AuthContext, notice_id: str, body: NoticeUpdate, ip: str) -> dic
         reason=body.reason,
         details={"fields": sorted(k for k in changes if k not in {"updated_at", "updated_by"})},
     )
+    knowledge.index_notice(n["_id"])
     return view(_get(notice_id))
 
 
@@ -205,7 +219,94 @@ def attach(ctx: AuthContext, notice_id: str, filename: str, data: bytes, ip: str
         {"_id": n["_id"]}, {"$set": {"attachment_file_id": saved["_id"], "attachment_name": saved["filename"]}}
     )
     audit.record("notices.attachment_added", actor_id=ctx.user_id, target_type="notice", target_id=n["_id"], ip=ip)
+    knowledge.index_notice(n["_id"])
     return view(_get(notice_id))
+
+
+# --- automatic translation (plan 5.2) -------------------------------------------------------
+
+
+def translate(title: str, body: str) -> dict[str, dict[str, str]]:
+    """Hindi and Marathi drafts of a notice, for staff to check before publishing."""
+    if not generator.llm_available():
+        raise AppError(503, "Automatic translation isn't set up on this server.", "not_configured")
+    if len(body) > generator.TRANSLATE_MAX_CHARS:
+        raise AppError(
+            422,
+            f"Notices up to {generator.TRANSLATE_MAX_CHARS:,} characters are translated automatically; "
+            "translate a shorter summary.",
+            field="body",
+        )
+    try:
+        t = generator.translate_notice(title.strip(), body.strip())
+    except anthropic.APIError as e:
+        log.warning("Notice translation failed: %s", type(e).__name__)
+        raise AppError(502, "The translation service didn't answer. Try again in a minute.", "unavailable") from e
+    if t is None:
+        raise AppError(422, "This notice could not be translated automatically.", "not_translated")
+    return {
+        "hi": {"title": t.hi_title.strip(), "body": t.hi_body.strip()},
+        "mr": {"title": t.mr_title.strip(), "body": t.mr_body.strip()},
+    }
+
+
+def translate_for(ctx: AuthContext, title: str, body: str) -> dict[str, dict[str, str]]:
+    ratelimit.hit(f"translate:{ctx.user_id}", 30, 3600, "Too many translations this hour. Try again later.")
+    return translate(title, body)
+
+
+def needs_translation(n: dict[str, Any]) -> bool:
+    return (
+        n["status"] == "published"
+        and not (n.get("hi") and n.get("mr"))
+        and len(n.get("body", "")) <= generator.TRANSLATE_MAX_CHARS
+        and generator.llm_available()
+    )
+
+
+def auto_translate(notice_id: ObjectId) -> bool:
+    """Fills in the missing Hindi/Marathi versions of a published notice (marked `machine`), then
+    re-indexes it. Runs after the response (and daily for any that failed); never raises."""
+    db = get_db()
+    n = db.notices.find_one({"_id": notice_id})
+    if not n or not needs_translation(n):
+        return False
+    try:
+        t = translate(n["title"], n.get("body", ""))
+    except AppError as e:
+        log.warning("Automatic translation of notice %s failed: %s", notice_id, e.message)
+        return False
+    done = []
+    for lang in ("hi", "mr"):
+        # Only where staff haven't typed their own in the meantime.
+        change = {lang: {**t[lang], "machine": True}, "updated_at": datetime.now(UTC)}
+        r = db.notices.update_one({"_id": notice_id, lang: None}, {"$set": change})
+        if r.modified_count:
+            done.append(lang)
+    if done:
+        audit.record("notices.translated", target_type="notice", target_id=notice_id, details={"languages": done})
+        knowledge.index_notice(notice_id)
+    return bool(done)
+
+
+def translate_pending(limit: int = 5) -> int:
+    """Daily: translations that didn't happen at publishing (service down, key added later)."""
+    if not generator.llm_available():
+        return 0
+    now = datetime.now(UTC)
+    rows = (
+        get_db()
+        .notices.find(
+            {
+                "status": "published",
+                "$or": [{"hi": None}, {"mr": None}],
+                "$and": [{"$or": [{"expires_at": None}, {"expires_at": {"$gte": now}}]}],
+            },
+            {"_id": 1},
+        )
+        .limit(limit)
+    )
+    return sum(auto_translate(r["_id"]) for r in rows)
 
 
 # --- who sees what --------------------------------------------------------------------------

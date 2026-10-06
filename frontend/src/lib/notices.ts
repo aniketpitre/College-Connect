@@ -5,6 +5,8 @@ import type { Language } from "./types";
 export interface Translation {
   title: string;
   body: string;
+  /** Translated automatically and not yet saved by staff. */
+  machine?: boolean;
 }
 export interface Notice {
   id: string;
@@ -17,6 +19,8 @@ export interface Notice {
   publish_at: string;
   expires_on: string | null;
   pinned: boolean;
+  /** Also answered from on the public help desk. */
+  public: boolean;
   state: "published" | "scheduled" | "expired" | "withdrawn";
   has_attachment: boolean;
   author: string | null;
@@ -36,7 +40,14 @@ const KEY = ["notices"] as const;
 /** The notice in the reader's language when staff typed one, otherwise English. */
 export function localized(n: Pick<Notice, "title" | "body" | "hi" | "mr">, lang: Language): Translation {
   const t = lang === "en" ? null : n[lang];
-  return { title: t?.title || n.title, body: (t?.body || n.body) ?? "" };
+  return { title: t?.title || n.title, body: (t?.body || n.body) ?? "", machine: Boolean(t?.machine) };
+}
+
+/** Hindi and Marathi drafts of a notice, for staff to check before publishing. */
+export function useTranslateNotice() {
+  return useMutation({
+    mutationFn: (body: { title: string; body: string }) => apiFetch<{ hi: Translation; mr: Translation }>("/notices/translate", { method: "POST", body: JSON.stringify(body) }),
+  });
 }
 
 export function useNotices(q: string, manage = false) {

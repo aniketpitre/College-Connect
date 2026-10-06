@@ -16,6 +16,7 @@ class SourceRef(BaseModel):
     title: str
     document: str
     section: str
+    link: str | None = None
 
 
 class QueryResponse(BaseModel):

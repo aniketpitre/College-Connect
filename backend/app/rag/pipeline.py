@@ -8,7 +8,7 @@ import httpx
 from app.rag import generator
 from app.rag.config import EMBEDDING_MODEL, MIN_SIMILARITY, TOP_K
 from app.rag.embeddings import embed, embeddings_available
-from app.rag.store import get_index
+from app.rag.store import Allowed, get_index
 
 log = logging.getLogger(__name__)
 
@@ -44,14 +44,16 @@ def pipeline_status() -> dict:
     }
 
 
-def _retrieve(question: str, language: str, category: str | None) -> tuple[list[tuple[dict, float]], float]:
+def _retrieve(
+    question: str, language: str, category: str | None, allowed: Allowed | None
+) -> tuple[list[tuple[dict, float]], float]:
     """Returns (hits, confidence)."""
     index = get_index()
 
     if index.has_embeddings and embeddings_available():
         try:
             query_vec = embed([question], input_type="query", model=index.embedding_model or EMBEDDING_MODEL)[0]
-            hits = [h for h in index.vector_search(query_vec, TOP_K, category) if h[1] >= MIN_SIMILARITY]
+            hits = [h for h in index.vector_search(query_vec, TOP_K, category, allowed) if h[1] >= MIN_SIMILARITY]
             # Heuristic: map cosine similarity above the cut-off onto 0.5-0.95.
             confidence = min(0.95, 0.5 + 1.5 * (hits[0][1] - MIN_SIMILARITY)) if hits else 0.0
             return hits, confidence
@@ -64,14 +66,17 @@ def _retrieve(question: str, language: str, category: str | None) -> tuple[list[
             query = generator.translate_query_to_english(question)
         except anthropic.APIError:
             log.exception("Query translation failed; searching with the original question")
-    hits = index.bm25_search(query, TOP_K, category)
+    hits = index.bm25_search(query, TOP_K, category, allowed)
     # Heuristic: saturating map of the top BM25 score onto 0-0.95.
     confidence = min(0.95, hits[0][1] / (hits[0][1] + 3)) if hits else 0.0
     return hits, confidence
 
 
 def _source(chunk: dict) -> dict:
-    return {"title": chunk["title"], "document": chunk["document"], "section": chunk["section"]}
+    source = {"title": chunk["title"], "document": chunk["document"], "section": chunk["section"]}
+    if chunk.get("link"):
+        source["link"] = chunk["link"]
+    return source
 
 
 def _dedupe_sources(chunks: list[dict]) -> list[dict]:
@@ -95,8 +100,10 @@ def _extractive(language: str, hits: list[tuple[dict, float]], confidence: float
     }
 
 
-def answer_question(question: str, language: str, category: str | None = None) -> dict:
-    hits, confidence = _retrieve(question, language, category)
+def answer_question(question: str, language: str, category: str | None = None, allowed: Allowed | None = None) -> dict:
+    """`allowed` limits the documents to those the asker may see (None: every chunk in the index;
+    the public help desk passes the public-only filter)."""
+    hits, confidence = _retrieve(question, language, category, allowed)
 
     if not hits:
         return {

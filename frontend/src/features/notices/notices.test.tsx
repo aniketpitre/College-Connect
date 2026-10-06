@@ -74,4 +74,35 @@ describe("notices", () => {
     expect(await screen.findByText(/Emailed 200 of 150|Emailed 150 of 150|Emailed 200/)).toBeTruthy();
     await waitFor(() => expect(calls.filter((c) => c.path === "/notices/n2/email")).toHaveLength(2));
   });
+
+  it("office translates a notice to Hindi and Marathi before publishing", async () => {
+    const setup = { institution: {}, current_year: null, academic_years: [], departments: [], categories: [], programmes: [], divisions: [] };
+    const calls = mockApi((method, path) => {
+      if (path === "/auth/me") return { status: 200, body: office };
+      if (path === "/setup") return { status: 200, body: setup };
+      if (path.startsWith("/notices?")) return { status: 200, body: [] };
+      if (path === "/notices/translate")
+        return { status: 200, body: { hi: { title: "छुट्टी", body: "सोमवार को बंद" }, mr: { title: "सुट्टी", body: "सोमवारी बंद" } } };
+      if (path === "/notices" && method === "POST") return { status: 201, body: { ...notice, id: "n3", public: true } };
+      if (path === "/notices/n3") return { status: 200, body: { ...notice, id: "n3", public: true } };
+      return { status: 404 };
+    });
+    renderApp("/app/notices");
+    fireEvent.click(await screen.findByRole("button", { name: "New notice" }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("Title"), { target: { value: "Holiday on Monday" } });
+    fireEvent.change(within(dialog).getByLabelText("Text"), { target: { value: "Closed on Monday." } });
+    fireEvent.click(within(dialog).getByRole("button", { name: /Hindi \/ Marathi versions/ }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Translate from English" }));
+    await waitFor(() => expect((within(dialog).getByLabelText("Title in Marathi") as HTMLInputElement).value).toBe("सुट्टी"));
+    fireEvent.change(within(dialog).getByLabelText("Audience"), { target: { value: "everyone" } });
+    fireEvent.click(within(dialog).getByLabelText(/public help desk/));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Publish" }));
+    expect(await screen.findByText(/also on the public help desk/)).toBeTruthy();
+    expect(calls.find((c) => c.method === "POST" && c.path === "/notices")?.body).toMatchObject({
+      hi: { title: "छुट्टी", body: "सोमवार को बंद" },
+      mr: { title: "सुट्टी", body: "सोमवारी बंद" },
+      public: true,
+    });
+  });
 });

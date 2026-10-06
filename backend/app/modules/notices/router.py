@@ -1,6 +1,7 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, Query, Request, Response, UploadFile
+from bson import ObjectId
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Query, Request, Response, UploadFile
 
 from app.core import files
 from app.core.auth import AuthContext, require, signed_in
@@ -8,7 +9,7 @@ from app.core.files import MAX_BYTES
 from app.core.rbac import P
 from app.core.requestinfo import base_url, client_ip
 from app.modules.notices import service
-from app.modules.notices.schemas import NoticeIn, NoticeUpdate
+from app.modules.notices.schemas import NoticeIn, NoticeUpdate, TranslateIn
 
 router = APIRouter(tags=["notices"])
 PUBLISH = Depends(require(P.NOTICES_PUBLISH))
@@ -23,9 +24,23 @@ def list_notices(
     return service.list_notices(ctx, manage=manage, q=q)
 
 
+def _translate_later(background: BackgroundTasks, notice: dict[str, Any]) -> None:
+    """Missing Hindi/Marathi versions are filled in after the response, so publishing stays quick."""
+    if notice["state"] in ("published", "scheduled") and not (notice["hi"] and notice["mr"]):
+        background.add_task(service.auto_translate, ObjectId(notice["id"]))
+
+
 @router.post("/notices", status_code=201)
-def create(body: NoticeIn, request: Request, ctx: AuthContext = PUBLISH) -> dict[str, Any]:
-    return service.create(ctx, body, client_ip(request))
+def create(body: NoticeIn, request: Request, background: BackgroundTasks, ctx: AuthContext = PUBLISH) -> dict[str, Any]:
+    notice = service.create(ctx, body, client_ip(request))
+    _translate_later(background, notice)
+    return notice
+
+
+@router.post("/notices/translate")
+def translate(body: TranslateIn, ctx: AuthContext = PUBLISH) -> dict[str, Any]:
+    """Hindi and Marathi drafts for the form, for staff to check and edit before publishing."""
+    return service.translate_for(ctx, body.title, body.body)
 
 
 @router.get("/notices/{notice_id}")
@@ -34,8 +49,12 @@ def get_notice(notice_id: str, ctx: AuthContext = ME) -> dict[str, Any]:
 
 
 @router.patch("/notices/{notice_id}")
-def update(notice_id: str, body: NoticeUpdate, request: Request, ctx: AuthContext = PUBLISH) -> dict[str, Any]:
-    return service.update(ctx, notice_id, body, client_ip(request))
+def update(
+    notice_id: str, body: NoticeUpdate, request: Request, background: BackgroundTasks, ctx: AuthContext = PUBLISH
+) -> dict[str, Any]:
+    notice = service.update(ctx, notice_id, body, client_ip(request))
+    _translate_later(background, notice)
+    return notice
 
 
 @router.post("/notices/{notice_id}/attachment")

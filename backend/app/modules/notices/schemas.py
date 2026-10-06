@@ -35,6 +35,13 @@ class NoticeIn(BaseModel):
     publish_at: datetime | None = Field(None, description="Default: now")
     expires_on: date | None = None
     pinned: bool = False
+    public: bool = Field(False, description="Also answer from it on the public help desk (everyone/students only)")
+
+    @model_validator(mode="after")
+    def _public(self) -> "NoticeIn":
+        if self.public and self.audience.kind not in ("everyone", "students"):
+            raise ValueError("public: Only a notice for everyone or all students can be public.")
+        return self
 
 
 class NoticeUpdate(BaseModel):
@@ -44,5 +51,11 @@ class NoticeUpdate(BaseModel):
     mr: Translation | None = None
     expires_on: date | None = None
     pinned: bool | None = None
+    public: bool | None = None
     status: Literal["published", "withdrawn"] | None = None
     reason: str | None = Field(None, max_length=300)
+
+
+class TranslateIn(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    body: str = Field("", max_length=20_000)

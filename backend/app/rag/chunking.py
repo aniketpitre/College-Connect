@@ -1,5 +1,6 @@
 """Turn knowledge-base files into citable chunks."""
 
+import io
 import re
 from pathlib import Path
 
@@ -8,7 +9,7 @@ from app.rag.config import CHUNK_MAX_CHARS, CHUNK_OVERLAP_CHARS
 CATEGORIES = {"admissions", "fees", "examinations", "placements", "hostel", "notices"}
 
 
-def _parse_front_matter(text: str) -> tuple[dict, str]:
+def parse_front_matter(text: str) -> tuple[dict, str]:
     match = re.match(r"^---\s*\n(.*?)\n---\s*\n", text, re.DOTALL)
     if not match:
         return {}, text
@@ -20,7 +21,7 @@ def _parse_front_matter(text: str) -> tuple[dict, str]:
     return meta, text[match.end() :]
 
 
-def _split_sections(body: str) -> list[tuple[str, str]]:
+def split_sections(body: str) -> list[tuple[str, str]]:
     """Split markdown on '## ' headings -> [(section_title, text)]."""
     sections: list[tuple[str, str]] = []
     current_title = "Overview"
@@ -37,7 +38,7 @@ def _split_sections(body: str) -> list[tuple[str, str]]:
     return sections
 
 
-def _split_long(text: str) -> list[str]:
+def split_long(text: str) -> list[str]:
     """Split text longer than CHUNK_MAX_CHARS on paragraph boundaries, with overlap."""
     if len(text) <= CHUNK_MAX_CHARS:
         return [text]
@@ -57,10 +58,12 @@ def _split_long(text: str) -> list[str]:
     return out
 
 
-def _read_pdf(path: Path) -> list[tuple[str, str]]:
-    from pypdf import PdfReader  # ingest-only dependency
+def read_pdf(source: Path | bytes) -> list[tuple[str, str]]:
+    """[("Page n", text)] for the pages that have text (a scanned PDF has none)."""
+    from pypdf import PdfReader
 
-    pages = [(f"Page {i}", page.extract_text() or "") for i, page in enumerate(PdfReader(str(path)).pages, start=1)]
+    reader = PdfReader(io.BytesIO(source) if isinstance(source, bytes) else str(source))
+    pages = [(f"Page {i}", page.extract_text() or "") for i, page in enumerate(reader.pages, start=1)]
     return [(section, text) for section, text in pages if text.strip()]
 
 
@@ -71,17 +74,17 @@ def chunk_file(path: Path, knowledge_dir: Path) -> list[dict]:
 
     meta: dict[str, str] = {}
     if path.suffix.lower() == ".pdf":
-        sections = _read_pdf(path)
+        sections = read_pdf(path)
     else:
-        meta, body = _parse_front_matter(path.read_text(encoding="utf-8"))
-        sections = _split_sections(body)
+        meta, body = parse_front_matter(path.read_text(encoding="utf-8"))
+        sections = split_sections(body)
 
     title = meta.get("title", path.stem.replace("_", " "))
     document = meta.get("document", path.name)
 
     chunks = []
     for section, text in sections:
-        for n, piece in enumerate(_split_long(text)):
+        for n, piece in enumerate(split_long(text)):
             chunks.append(
                 {
                     "id": f"{path.stem}::{section}::{n}",

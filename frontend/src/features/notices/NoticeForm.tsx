@@ -2,13 +2,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Modal } from "../../components/Modal";
 import { ApiError } from "../../lib/api";
-import { useCreateNotice } from "../../lib/notices";
+import { useCreateNotice, useTranslateNotice } from "../../lib/notices";
 import { useSetup } from "../../lib/setup";
 
 /** Staff form (English): a new notice, with optional Hindi/Marathi versions and a PDF. */
 export function NoticeForm({ onClose }: { onClose: () => void }) {
   const setup = useSetup();
   const create = useCreateNotice();
+  const translate = useTranslateNotice();
+  const [isPublic, setIsPublic] = useState(false);
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -43,6 +45,7 @@ export function NoticeForm({ onClose }: { onClose: () => void }) {
                 publish_at: publishAt ? new Date(publishAt).toISOString() : null,
                 expires_on: expires || null,
                 pinned,
+                public: isPublic && (kind === "everyone" || kind === "students"),
               },
               file,
             },
@@ -66,6 +69,31 @@ export function NoticeForm({ onClose }: { onClose: () => void }) {
         <button type="button" className="link-btn" onClick={() => setShowTranslations(!showTranslations)}>
           {showTranslations ? "− Hide" : "+ Add"} Hindi / Marathi versions
         </button>
+        {!showTranslations && <p className="small muted">Left empty, Hindi and Marathi versions are made automatically after publishing; check them on the notice.</p>}
+        {showTranslations && (
+          <div className="row-actions" style={{ justifyContent: "flex-start" }}>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              disabled={translate.isPending || title.trim().length < 3}
+              onClick={() =>
+                translate.mutate(
+                  { title, body },
+                  {
+                    onSuccess: (t) => {
+                      setHi({ title: t.hi.title, body: t.hi.body });
+                      setMr({ title: t.mr.title, body: t.mr.body });
+                    },
+                  },
+                )
+              }
+            >
+              {translate.isPending ? "Translating…" : "Translate from English"}
+            </button>
+            {translate.error && <span className="form-error">{translate.error.message}</span>}
+            {translate.isSuccess && <span className="small muted">Check the translations and correct them before publishing.</span>}
+          </div>
+        )}
         {showTranslations && (
           <div className="field-row translations">
             <div>
@@ -152,6 +180,13 @@ export function NoticeForm({ onClose }: { onClose: () => void }) {
         <label className="check-label">
           <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} /> Pin to the top
         </label>
+        {(kind === "everyone" || kind === "students") && (
+          <label className="check-label">
+            <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} /> Also answer from it on the public help desk (anyone,
+            without signing in)
+          </label>
+        )}
+        <p className="small muted">The help desk answers from this notice for its audience until it expires.</p>
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>
             Cancel

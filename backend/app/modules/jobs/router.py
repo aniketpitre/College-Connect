@@ -12,10 +12,12 @@ from app.core.errors import AppError
 from app.modules.attendance import stats
 from app.modules.certificates import service as certificates
 from app.modules.grievance import service as grievance
+from app.modules.knowledge import service as knowledge
 from app.modules.library import service as library
 from app.modules.mentoring import service as mentoring
 from app.modules.messaging import reminders
 from app.modules.messaging import service as messaging
+from app.modules.notices import service as notices
 from app.modules.payments import service as payments
 
 router = APIRouter(tags=["jobs"], include_in_schema=False)
@@ -37,6 +39,8 @@ def daily(authorization: str | None = Header(None)) -> dict[str, Any]:
         "library": library.daily(),
         "grievances": grievance.daily(),
         "early_warning": mentoring.daily(),
+        "notice_translations": notices.translate_pending(),
+        "knowledge_base": knowledge.catch_up(),
     }
     out["messages"] = messaging.process_queue()  # what's left waits for tomorrow or "Send now"
     return out

@@ -832,6 +832,35 @@ grievance, staff and leave, no-dues).
 | 5.8 | Staff assistant with permission-checked query tools |
 | 5.9 | Evaluation set (cited-answer accuracy in EN/HI/MR) + privacy tests |
 
+Shipped as four PRs: **5A** (5.1–5.3), **5B** (5.4–5.5), **5C** (5.6–5.7), **5D** (5.8–5.9).
+
+**Delivered in the "Phase 5A" PR (5.1–5.3):**
+- Knowledge base in MongoDB (`app/modules/knowledge/`): `kb_documents` (one per document, with
+  who may get answers from it), `kb_chunks` (the citable sections, each carrying the audience and
+  a notice's publish/expiry times), `kb_meta` (a version token; each server instance reloads its
+  in-memory copy only when it changes). The first change copies the bundled `index.json` in, so
+  the public help desk keeps every answer; until then (and if MongoDB is down) it answers from
+  the bundled file. Search stays in memory (keywords, or embeddings when `VOYAGE_API_KEY` is set
+  and every chunk has one); Atlas Vector Search is left for when the corpus outgrows memory.
+- "Help desk documents" page (`/app/knowledge`, permission `kb.manage`: System Admin **and
+  Office**, who keep the college's circulars): upload a PDF with text, `.md` or `.txt`, or type
+  the text; choose the office and the audience (public help desk too, or signed-in members only);
+  remove; "Re-index" (indexes notices that failed earlier and adds missing embeddings, a batch at
+  a time; the daily job does the same).
+- Notices (5.2): every publish, edit, PDF upload and withdrawal re-indexes the notice for its
+  own audience (a class notice answers only that class; staff notices only staff); expiry needs
+  no job, because search checks the dates. A notice for everyone or all students can be marked
+  "also on the public help desk". The PDF's text is indexed too. Automatic translation:
+  "Translate from English" in the form drafts Hindi and Marathi for staff to correct before
+  publishing; a notice published without them is translated right after publishing (and by the
+  daily job if that failed), marked "translated automatically" until staff save their own, and
+  the translations are indexed too. Notices up to 6,000 characters are translated.
+- Assistant panel (5.3) in every portal (students, parents for the chosen child, staff,
+  applicants): `POST /assistant/ask` answers from what the person may see (the same rules as the
+  notice board; applicants public documents only), with sources that link to the notice. 60
+  questions an hour per person. Logged like the public help desk (question, language, source,
+  `channel: portal`), never with who asked.
+
 ### 9.3 Acceptance criteria
 - A student asks in Marathi "मला अजून किती फी भरायची आहे?" and gets the exact balance from their ledger, citing their fee account and the fee notice.
 - No question, however phrased, returns another student's data (automated red-team tests).

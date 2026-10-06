@@ -12,6 +12,8 @@ export interface SourceRef {
   title: string;
   document: string;
   section: string;
+  /** In the portal: the page the source came from (a notice). */
+  link?: string;
 }
 
 export interface QueryResponse {

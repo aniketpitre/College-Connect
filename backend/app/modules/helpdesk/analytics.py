@@ -26,6 +26,7 @@ def log_query(
     category_filter: str | None,
     result: dict,
     latency_ms: int,
+    channel: str = "public",
 ) -> None:
     """Best effort: a logging failure must never affect the student's answer."""
     if not db_available():
@@ -43,6 +44,7 @@ def log_query(
                 "confidence": result["confidence"],
                 "sources": [f"{s['document']} · {s['section']}" for s in result["sources"]],
                 "latency_ms": latency_ms,
+                "channel": channel,  # public help desk or the signed-in portal; never who asked
             }
         )
     except PyMongoError:

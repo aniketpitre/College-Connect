@@ -17,6 +17,7 @@ ALLOWED = {
     ("POST", "/me/application/fee/{payment_id}/confirm"),
     ("GET", "/files/{file_id}"),  # their own uploads only (students.file_for)
     ("GET", "/admissions/options"),
+    ("POST", "/assistant/ask"),  # public documents only
     ("PATCH", "/me/preferences"),
     ("GET", "/me/notifications"),
     ("PUT", "/me/notifications"),
