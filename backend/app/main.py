@@ -22,6 +22,7 @@ from app.modules.hostel import router as hostel
 from app.modules.jobs import router as jobs
 from app.modules.library import router as library
 from app.modules.marks import router as marks
+from app.modules.mentoring import router as mentoring
 from app.modules.messaging import router as messaging
 from app.modules.notices import router as notices
 from app.modules.onboarding import router as onboarding
@@ -74,6 +75,7 @@ ROUTERS: list[APIRouter] = [
     grievance.router,
     staff.router,
     reports.router,
+    mentoring.router,
     helpdesk.router,
     helpdesk_admin.router,
 ]

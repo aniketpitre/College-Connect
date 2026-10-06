@@ -116,6 +116,11 @@ class P(StrEnum):
     LEAVE_APPROVE = "leave.approve"  # HOD (their department's staff), Principal (HODs, others)
     REPORTS_READ = "reports.read"  # NAAC / AQAR tables, AISHE, NIRF, APAAR checks and ABC credit export
     NAAC_MANAGE = "naac.manage"  # NAAC evidence uploads and settings (sanctioned posts, intake)
+    MENTEES = "mentoring.mentees"  # their own mentees: risk reasons and counselling notes
+    MENTOR_ASSIGN = "mentoring.assign"  # set students' mentors (office: any class; HOD: their department)
+    RISK_READ = "risk.read"  # early-warning list for the whole college (Principal)
+    RISK_READ_DEPT = "risk.read.dept"  # early-warning list for their department (HOD)
+    RISK_MANAGE = "risk.manage"  # early-warning rules, recompute now
     MESSAGES_READ = "messages.read"  # the delivery log and the outgoing message queue
     EXPORT_REQUEST = "export.request"  # full CSV exports; each needs the Principal's approval
 
@@ -165,6 +170,8 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.STAFF_READ,
         P.LEAVE_APPROVE,
         P.REPORTS_READ,
+        P.RISK_READ,
+        P.RISK_MANAGE,
     }
     | _PUBLISH,
     Role.OFFICE: _STAFF_BASE
@@ -190,6 +197,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.STAFF_READ,
         P.STAFF_MANAGE,
         P.REPORTS_READ,
+        P.MENTOR_ASSIGN,
     }
     | _PUBLISH,
     Role.ACCOUNTS: _STAFF_BASE
@@ -216,10 +224,12 @@ ROLE_PERMISSIONS: dict[Role, frozenset[P]] = {
         P.CERT_SIGN_HOD,
         P.STAFF_READ_DEPT,
         P.LEAVE_APPROVE,
+        P.MENTEES,
+        P.MENTOR_ASSIGN,
+        P.RISK_READ_DEPT,
     },
-    **{
-        role: _STAFF_BASE | {P.TIMETABLE_READ, P.ATTENDANCE_TAKE, P.MARKS_ENTER} for role in (Role.FACULTY, Role.MENTOR)
-    },
+    Role.FACULTY: _STAFF_BASE | {P.TIMETABLE_READ, P.ATTENDANCE_TAKE, P.MARKS_ENTER},
+    Role.MENTOR: _STAFF_BASE | {P.TIMETABLE_READ, P.ATTENDANCE_TAKE, P.MARKS_ENTER, P.MENTEES},
     Role.LIBRARIAN: _STAFF_BASE | {P.LIBRARY_MANAGE, P.LIBRARY_READ} | _PUBLISH,
     Role.WARDEN: _STAFF_BASE | {P.HOSTEL_MANAGE, P.HOSTEL_READ} | _PUBLISH,
     Role.PLACEMENT: _STAFF_BASE | {P.PLACEMENT_MANAGE, P.PLACEMENT_READ, P.RESULTS_READ} | _PUBLISH,

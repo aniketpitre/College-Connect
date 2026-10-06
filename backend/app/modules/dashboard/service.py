@@ -15,7 +15,9 @@ from app.core.db import get_db
 from app.core.rbac import P
 from app.modules.attendance import service as attendance
 from app.modules.attendance import stats
+from app.modules.dashboard import overview
 from app.modules.marks import service as marks
+from app.modules.mentoring import service as mentoring
 from app.modules.timetable import service as timetable
 
 
@@ -224,4 +226,10 @@ def dashboard(ctx: AuthContext) -> dict[str, Any]:
         out["leave"] = leave
     if perms & {P.GRIEVANCE_MANAGE, P.GRIEVANCE_READ, P.GRIEVANCE_SENSITIVE}:
         out["grievances"] = _grievances(ctx)
+    if P.RISK_READ in perms:
+        out["overview"] = overview.principal()
+    if P.FEES_MANAGE in perms:
+        out["accounts"] = overview.accounts()
+    if (risk := mentoring.counts(ctx)) is not None:
+        out["risk"] = risk
     return out

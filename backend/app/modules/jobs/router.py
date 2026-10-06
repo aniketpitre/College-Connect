@@ -13,6 +13,7 @@ from app.modules.attendance import stats
 from app.modules.certificates import service as certificates
 from app.modules.grievance import service as grievance
 from app.modules.library import service as library
+from app.modules.mentoring import service as mentoring
 from app.modules.messaging import reminders
 from app.modules.messaging import service as messaging
 from app.modules.payments import service as payments
@@ -35,6 +36,7 @@ def daily(authorization: str | None = Header(None)) -> dict[str, Any]:
         "certificates": certificates.escalate_overdue(),
         "library": library.daily(),
         "grievances": grievance.daily(),
+        "early_warning": mentoring.daily(),
     }
     out["messages"] = messaging.process_queue()  # what's left waits for tomorrow or "Send now"
     return out
