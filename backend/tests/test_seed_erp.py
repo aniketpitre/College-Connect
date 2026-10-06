@@ -37,6 +37,11 @@ def test_erp_seed_builds_a_consistent_demo(db):
     by_status = sorted(a["status"] for a in db.applications.find({}))
     assert counts["applications"] == 5 and by_status == ["draft", "submitted", "verified", "verified", "verified"]
     assert db.enquiries.count_documents({}) == 2 and db.admission_cycles.find_one({})["status"] == "open"
+    # Campus: library loans (one overdue), hostel residents with requests, placement drives.
+    assert db.books.count_documents({}) == 6 and db.loans.count_documents({"status": "open"}) == 4
+    assert db.hostel_allotments.count_documents({"status": "active"}) == 4 and db.outpasses.count_documents({}) == 1
+    assert db.drives.count_documents({}) == 2 and counts["placement registrations"] >= 5
+    assert db.drive_registrations.count_documents({"status": "selected"}) == 1
 
 
 def test_seed_refuses_production(monkeypatch, capsys):
