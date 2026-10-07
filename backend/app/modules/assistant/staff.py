@@ -20,8 +20,6 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-import anthropic
-
 from app.core import audit, clock
 from app.core.auth import AuthContext
 from app.core.db import get_db
@@ -136,7 +134,7 @@ def _ai_plan(question: str) -> Plan | None:
         return None
     try:
         p = generator.plan_staff_query(question)
-    except anthropic.APIError as e:
+    except generator.LLM_ERRORS as e:
         log.warning("Staff query planning failed (%s); using keywords", type(e).__name__)
         return None
     if p is None or p.tool not in TOOLS:

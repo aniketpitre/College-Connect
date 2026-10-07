@@ -18,7 +18,6 @@ import re
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-import anthropic
 from bson import ObjectId
 from pymongo import ASCENDING, IndexModel
 from pymongo.errors import DuplicateKeyError
@@ -119,7 +118,7 @@ def _ai_dates(title: str, body: str, today: date) -> list[dict[str, Any]] | None
         return None
     try:
         found = generator.extract_deadlines(title, body[: generator.TRANSLATE_MAX_CHARS * 2], today.isoformat())
-    except anthropic.APIError as e:
+    except generator.LLM_ERRORS as e:
         log.warning("Deadline extraction failed (%s); using date patterns", type(e).__name__)
         return None
     out = []

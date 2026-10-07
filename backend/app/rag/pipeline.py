@@ -2,10 +2,9 @@
 
 import logging
 
-import anthropic
 import httpx
 
-from app.rag import generator
+from app.rag import generator, smalltalk
 from app.rag.config import EMBEDDING_MODEL, MIN_SIMILARITY, TOP_K
 from app.rag.embeddings import embed, embeddings_available
 from app.rag.store import Allowed, get_index
@@ -14,14 +13,23 @@ log = logging.getLogger(__name__)
 
 NOT_FOUND = {
     "en": (
-        "I couldn't find an approved document matching your question. "
-        "Please rephrase, or contact the relevant department office."
-    ),
-    "hi": ("आपके प्रश्न से मेल खाता कोई स्वीकृत दस्तावेज़ नहीं मिला। कृपया प्रश्न को दोबारा लिखें या संबंधित विभाग कार्यालय से संपर्क करें।"),
+        "Sorry, I couldn't find that in the college's documents. 🙏 I'm the college help desk, so I can "
+        "help with fees, exams, attendance, certificates, admissions, scholarships, the hostel and notices. "
+        "Try asking in other words, or the college office will be happy to help.\n\n"
+    )
+    + smalltalk.EXAMPLES["en"],
+    "hi": (
+        "माफ़ कीजिए, यह कॉलेज के दस्तावेज़ों में नहीं मिला। 🙏 मैं कॉलेज का हेल्प डेस्क हूँ, इसलिए फीस, परीक्षा, "
+        "उपस्थिति, प्रमाणपत्र, प्रवेश, छात्रवृत्ति, छात्रावास और सूचनाओं में मदद कर सकता हूँ। प्रश्न दूसरे शब्दों में "
+        "पूछें, या कॉलेज कार्यालय आपकी मदद करेगा।\n\n"
+    )
+    + smalltalk.EXAMPLES["hi"],
     "mr": (
-        "तुमच्या प्रश्नाशी जुळणारा कोणताही मंजूर दस्तऐवज सापडला नाही. "
-        "कृपया प्रश्न पुन्हा मांडा किंवा संबंधित विभाग कार्यालयाशी संपर्क साधा."
-    ),
+        "माफ करा, हे महाविद्यालयाच्या कागदपत्रांत सापडले नाही. 🙏 मी महाविद्यालयाचा हेल्प डेस्क आहे, त्यामुळे फी, "
+        "परीक्षा, उपस्थिती, प्रमाणपत्रे, प्रवेश, शिष्यवृत्ती, वसतिगृह आणि सूचनांबद्दल मदत करू शकतो. प्रश्न वेगळ्या "
+        "शब्दांत विचारा, किंवा महाविद्यालयाचे कार्यालय तुम्हाला मदत करेल.\n\n"
+    )
+    + smalltalk.EXAMPLES["mr"],
 }
 
 EXTRACTIVE_MIN_CONFIDENCE = 0.3
@@ -38,7 +46,7 @@ def pipeline_status() -> dict:
     return {
         "retrieval": "vector" if index.has_embeddings and embeddings_available() else "bm25",
         "embedding_model": index.embedding_model,
-        "generation": generator.CLAUDE_MODEL if generator.llm_available() else "extractive",
+        "generation": generator.model_name() if generator.llm_available() else "extractive",
         "chunks": len(index.chunks),
         "documents": len({c["document"] for c in index.chunks}),
     }
@@ -64,7 +72,7 @@ def _retrieve(
     if language != "en" and generator.llm_available():
         try:
             query = generator.translate_query_to_english(question)
-        except anthropic.APIError:
+        except generator.LLM_ERRORS:
             log.exception("Query translation failed; searching with the original question")
     hits = index.bm25_search(query, TOP_K, category, allowed)
     # Heuristic: saturating map of the top BM25 score onto 0-0.95.
@@ -133,13 +141,25 @@ def answer_question(
     the public help desk passes the public-only filter). `record`: excerpts of the asker's own
     record (Ask my record), cited like documents; `personal`: the question is about the asker
     ("my fees"), so without an AI the record itself is the answer."""
+    chat = smalltalk.reply(question, language)
+    if chat:
+        # A greeting or thanks: answered at once, and not an unanswered question for the office.
+        return {
+            "answer": chat,
+            "category": category or "notices",
+            "sources": [],
+            "confidence": 0.0,
+            "grounded": False,
+            "chat": True,
+        }
+
     hits, confidence = _retrieve(question, language, category, allowed)
     record = record or []
 
     if record and not generator.llm_available() and (personal or not hits):
         return _record_answer(record, hits, allowed)
 
-    if not hits and not record:
+    if not hits and not record and not generator.llm_available():
         return {
             "answer": NOT_FOUND[language],
             "category": category or "notices",
@@ -163,28 +183,32 @@ def answer_question(
     def fallback() -> dict:
         if record and (personal or not hits):
             return _record_answer(record, hits, allowed)
+        if not hits:
+            return {
+                "answer": NOT_FOUND[language],
+                "category": category or "notices",
+                "sources": [],
+                "confidence": 0.0,
+                "grounded": False,
+            }
         return _extractive(language, hits, confidence)
 
     chunks = record + [c for c, _ in hits]
     try:
         result = generator.generate_answer(question, language, chunks)
-    except anthropic.RateLimitError:
-        log.warning("Claude rate limited; returning extractive answer")
-        return fallback()
-    except anthropic.APIStatusError as e:
-        log.error("Claude API error %s: %s", e.status_code, e.message)
-        return fallback()
-    except anthropic.APIConnectionError:
-        log.exception("Could not reach Claude; returning extractive answer")
+    except generator.LLM_ERRORS as e:
+        log.warning("AI call failed (%s); answering without it", e)
         return fallback()
 
     if result is None or not result.answerable:
         return {
             "answer": result.answer if result else NOT_FOUND[language],
-            "category": category or chunks[0]["category"],
+            "category": category or (chunks[0]["category"] if chunks else "notices"),
             "sources": [],
             "confidence": 0.0,
             "grounded": False,
+            # Not about the college (the AI steered it back): not a gap in the documents.
+            "chat": bool(result and not result.on_topic),
         }
 
     by_id = {c["id"]: c for c in chunks}

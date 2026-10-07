@@ -10,6 +10,10 @@ CLAUDE_MODEL = os.getenv("RAG_CLAUDE_MODEL", "claude-opus-5-5")
 # Short, grounded Q&A does well at low effort; raise to "medium"/"high" if answers need more reasoning.
 CLAUDE_EFFORT = os.getenv("RAG_CLAUDE_EFFORT", "low")
 
+# Free alternative: Google Gemini (used when no Anthropic key is set). Get a key at aistudio.google.com.
+GEMINI_API_KEY = os.getenv("RAG_GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = os.getenv("RAG_GEMINI_MODEL", "gemini-2.5-flash")
+
 VOYAGE_API_KEY = os.getenv("VOYAGE_API_KEY")
 # Multilingual embedding model, so Hindi/Marathi questions match English documents.
 EMBEDDING_MODEL = os.getenv("RAG_EMBEDDING_MODEL", "voyage-3.5")

@@ -39,4 +39,4 @@ Build order: **core ERP first (Phases 0–2), then other features incl. the uniq
 - Money is stored as integer paise; balances are computed from ledger entries, never edited in place; corrections are reversal entries with a reason.
 - Every student-facing string exists in en/hi/mr.
 - A student or parent must only ever reach their own (or their linked child's) data; enforce in the backend service layer and test it.
-- Environment variables for the app use the `RAG_` prefix for AI settings (plain `CLAUDE_*` names clash with Claude Code's own variables).
+- Environment variables for the app use the `RAG_` prefix for AI settings (plain `CLAUDE_*` names clash with Claude Code's own variables). The AI is Claude (`ANTHROPIC_API_KEY`) or, free, Google Gemini (`RAG_GEMINI_API_KEY`, model `RAG_GEMINI_MODEL`, default `gemini-2.5-flash`); `rag/generator.py` sends every task through `_text`/`_structured`, and callers catch `generator.LLM_ERRORS`. Greetings/thanks get fixed en/hi/mr replies (`rag/smalltalk.py`); unrelated questions are steered back to college topics; neither is logged as a knowledge gap.
