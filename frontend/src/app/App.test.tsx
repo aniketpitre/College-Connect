@@ -8,10 +8,33 @@ afterEach(() => {
 });
 
 describe("public routes", () => {
-  it("serves the help desk at /", () => {
+  it("serves the home page at /: sign-in panels, and the AI only after signing in", async () => {
     mockApi(() => signedOut);
     renderApp("/");
-    expect(screen.getByRole("heading", { name: "How can I help you today?" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Your college, in one place" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Student sign in/ }).getAttribute("href")).toBe("/login?as=student");
+    expect(screen.getByRole("link", { name: /Parent sign in/ }).getAttribute("href")).toBe("/login?as=parent");
+    expect(screen.getByRole("link", { name: /Staff sign in/ }).getAttribute("href")).toBe("/login?as=staff");
+    expect(screen.getByRole("link", { name: /Apply for admission/ }).getAttribute("href")).toBe("/apply");
+    expect(screen.getByRole("heading", { name: "Ask CollegeConnect AI" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Sign in to ask" }).getAttribute("href")).toBe("/login");
+    expect(screen.queryByRole("textbox")).toBeNull(); // no way to ask without signing in
+  });
+
+  it("shows the home page in Marathi and offers the portal when signed in", async () => {
+    localStorage.setItem("cc-lang", "mr");
+    mockApi((_m, path) => (path === "/auth/me" ? { status: 200, body: makeMe() } : { status: 404 }));
+    renderApp("/");
+    expect(screen.getByRole("heading", { name: "तुमचे महाविद्यालय, एकाच ठिकाणी" })).toBeTruthy();
+    expect(await screen.findByRole("link", { name: "माझ्या पोर्टलवर जा" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "माझे पोर्टल उघडा आणि ‘विचारा’ दाबा" }).getAttribute("href")).toBe("/app");
+    localStorage.clear();
+  });
+
+  it("opens the sign-in tab chosen on the home page", async () => {
+    mockApi(() => signedOut);
+    renderApp("/login?as=parent");
+    expect((await screen.findByRole("tab", { name: "Parent" })).getAttribute("aria-selected")).toBe("true");
   });
 
   it("redirects the old /#/admin link to analytics, which needs a sign-in", async () => {

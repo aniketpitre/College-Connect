@@ -923,6 +923,13 @@ Shipped as four PRs: **5A** (5.1–5.3), **5B** (5.4–5.5), **5C** (5.6–5.7),
   students and parents can't use the staff assistant; a parent asking about another student gets
   only their own child's record.
 
+**After Phase 5 (October 2026): home page, AI behind sign-in.** The public help desk at `/` is
+replaced by a home page (sign-in panels for students, parents, staff and new admissions, and a
+CollegeConnect AI card that asks people to sign in first), in English, Hindi and Marathi. `/query`
+(and the legacy `/api/query`) now needs a sign-in and answers each person from what they may see,
+like `/assistant/ask`; documents and notices marked "public" are now "everyone, including admission
+applicants". The evaluation script keeps the public-only filter to score the bundled documents.
+
 ### 9.4 Status against the Phase 5 acceptance criteria
 - Marathi "मला अजून किती फी भरायची आहे?" → the exact ledger balance, citing the fee account and
   the fee notice: tested (with and without an AI key).

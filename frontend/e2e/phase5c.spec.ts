@@ -45,15 +45,19 @@ test("deadline radar: the office confirms a date from a notice and the student s
   await expect(student.getByText(/Submit the scholarship form at the office .*: by .* \(\d+ days left\)/)).toBeVisible();
 });
 
-test("knowledge gaps: an unanswered question becomes an FAQ the help desk answers", async ({ page }) => {
-  await page.goto("/");
+test("knowledge gaps: an unanswered question becomes an FAQ the help desk answers", async ({ browser }) => {
+  const student = await (await browser.newContext()).newPage();
+  await signIn(student, "Student", `${START}BCA003`);
+  await student.getByRole("button", { name: /Ask/ }).click();
+  const panel = student.getByRole("dialog", { name: "CollegeConnect AI" });
   const ask = async (q: string) => {
-    await page.getByRole("textbox", { name: "Ask a question…" }).fill(q);
-    await page.keyboard.press("Enter");
+    await panel.getByRole("textbox").fill(q);
+    await panel.getByRole("button", { name: "Ask", exact: true }).click();
   };
   await ask("Are pet dogs allowed inside?");
-  await expect(page.getByText(/couldn't find an approved document/).first()).toBeVisible();
+  await expect(panel.getByText("Not found in the official documents").first()).toBeVisible();
 
+  const page = await (await browser.newContext()).newPage();
   await signIn(page, "Staff", "office@demo.college");
   await expect(page.getByText("Questions it couldn't answer (7 days)")).toBeVisible();
   await page.getByText("Questions it couldn't answer (7 days)").click();
@@ -63,7 +67,6 @@ test("knowledge gaps: an unanswered question becomes an FAQ the help desk answer
   await item.getByRole("button", { name: "Save the FAQ" }).click();
   await expect(page.getByText(/question answered|questions answered/)).toBeVisible();
 
-  await page.goto("/");
   await ask("Are pet dogs allowed inside?");
-  await expect(page.getByText(/pet dogs are not allowed inside the college premises/).first()).toBeVisible();
+  await expect(panel.getByText(/pet dogs are not allowed inside the college premises/).first()).toBeVisible();
 });

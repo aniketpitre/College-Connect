@@ -15,8 +15,8 @@ const OFFICES: Record<string, string> = {
   notices: "Notices",
 };
 const AUDIENCE: Record<KbDocument["audience"], string> = {
-  public: "Public help desk",
-  everyone: "Signed-in members",
+  public: "Everyone incl. applicants",
+  everyone: "Students, parents, staff",
   students: "All students",
   staff: "Staff",
   class: "A class",
@@ -116,8 +116,8 @@ export default function KnowledgePage() {
           <div className="field">
             <label htmlFor="kb-aud">Who gets answers from it</label>
             <select id="kb-aud" value={audience} onChange={(e) => setAudience(e.target.value)}>
-              <option value="public">Anyone (public help desk too)</option>
-              <option value="everyone">Signed-in students, parents and staff only</option>
+              <option value="public">Everyone signed in, including admission applicants</option>
+              <option value="everyone">Students, parents and staff only</option>
             </select>
           </div>
           <div className="field">

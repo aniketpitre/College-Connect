@@ -13,7 +13,7 @@ export interface AuthStrings {
   hide: string;
   signingIn: string;
   forgot: string;
-  backToHelpDesk: string;
+  backToHome: string;
   errors: Record<string, string>;
   changeTitle: string;
   changeIntroForced: string;
@@ -42,7 +42,7 @@ export const AUTH_STRINGS: Record<Language, AuthStrings> = {
     hide: "Hide",
     signingIn: "Signing in…",
     forgot: "Forgot password?",
-    backToHelpDesk: "Back to the help desk",
+    backToHome: "Back to the home page",
     errors: {
       invalid_credentials: "Wrong PRN/email or password.",
       account_locked: "Too many wrong attempts. Please try again in 15 minutes.",
@@ -78,7 +78,7 @@ export const AUTH_STRINGS: Record<Language, AuthStrings> = {
     hide: "छिपाएं",
     signingIn: "साइन इन हो रहा है…",
     forgot: "पासवर्ड भूल गए?",
-    backToHelpDesk: "हेल्प डेस्क पर वापस जाएं",
+    backToHome: "मुख्य पृष्ठ पर वापस जाएं",
     errors: {
       invalid_credentials: "PRN/ईमेल या पासवर्ड गलत है।",
       account_locked: "बहुत अधिक गलत प्रयास। कृपया 15 मिनट बाद फिर कोशिश करें।",
@@ -114,7 +114,7 @@ export const AUTH_STRINGS: Record<Language, AuthStrings> = {
     hide: "लपवा",
     signingIn: "साइन इन होत आहे…",
     forgot: "पासवर्ड विसरलात?",
-    backToHelpDesk: "हेल्प डेस्कवर परत जा",
+    backToHome: "मुख्य पानावर परत जा",
     errors: {
       invalid_credentials: "PRN/ईमेल किंवा पासवर्ड चुकीचा आहे.",
       account_locked: "खूप चुकीचे प्रयत्न. कृपया 15 मिनिटांनी पुन्हा प्रयत्न करा.",

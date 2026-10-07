@@ -182,8 +182,7 @@ export function NoticeForm({ onClose, initialTitle = "" }: { onClose: () => void
         </label>
         {(kind === "everyone" || kind === "students") && (
           <label className="check-label">
-            <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} /> Also answer from it on the public help desk (anyone,
-            without signing in)
+            <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} /> Also answer from it for admission applicants
           </label>
         )}
         <p className="small muted">The help desk answers from this notice for its audience until it expires.</p>
