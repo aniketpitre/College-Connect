@@ -13,7 +13,12 @@ import PasswordInput from "../PasswordInput";
 
 export default function LoginPage() {
   const [language, setLanguage] = useState<Language>(savedLanguage);
-  const [mode, setMode] = useState<"student" | "staff" | "parent">("student");
+  const [params] = useSearchParams();
+  // The home page's panels open the matching tab (?as=student|parent|staff).
+  const [mode, setMode] = useState<"student" | "staff" | "parent">(() => {
+    const as = params.get("as");
+    return as === "parent" || as === "staff" ? as : "student";
+  });
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   // Parents: a one-time code by default, a password if they have set one.
@@ -23,7 +28,6 @@ export default function LoginPage() {
   const verifyCode = useVerifyCode();
   const p = PARENT_STRINGS[language];
   const codeMode = mode === "parent" && !withPassword;
-  const [params] = useSearchParams();
   const navigate = useNavigate();
   const { data: me } = useMe();
   const login = useLogin();
@@ -173,7 +177,7 @@ export default function LoginPage() {
         <div className="auth-links">
           <Link to="/forgot-password">{t.forgot}</Link>
           <Link to="/apply">{language === "en" ? "Apply for admission" : language === "hi" ? "प्रवेश के लिए आवेदन" : "प्रवेशासाठी अर्ज"}</Link>
-          <Link to="/">{t.backToHelpDesk}</Link>
+          <Link to="/">{t.backToHome}</Link>
         </div>
       </form>
     </div>

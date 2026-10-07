@@ -5,7 +5,8 @@ from app.core import db as core_db
 from app.core.errors import AppError
 
 
-def test_v1_and_legacy_paths_both_work(client):
+def test_v1_and_legacy_paths_both_work(client, sign_in):
+    sign_in(client, ["faculty"])  # the help desk answers signed-in people only
     for prefix in ("/api/v1", "/api"):
         assert client.get(f"{prefix}/health").status_code == 200
         r = client.post(f"{prefix}/query", json={"question": "What's the hostel fee?"})
@@ -18,16 +19,18 @@ def test_docs_only_list_v1_paths(client):
     assert not any(p.startswith("/api/query") for p in paths)
 
 
-def test_errors_use_one_format(client, db):
+def test_errors_use_one_format(client, db, sign_in):
     assert client.get("/api/v1/auth/me").json() == {"error": {"code": "not_signed_in", "message": "Please sign in."}}
     assert client.get("/api/v1/does-not-exist").json()["error"]["code"] == "not_found"
+    assert client.post("/api/v1/query", json={"question": "fees"}).json()["error"]["code"] == "not_signed_in"
 
+    sign_in(client, ["faculty"])
     body = client.post("/api/v1/query", json={"question": "", "language": "en"}).json()
     assert body["error"]["code"] == "validation_error"
     assert body["error"]["field"] == "question"
 
 
-def test_unexpected_errors_hide_details(client, monkeypatch):
+def test_unexpected_errors_hide_details(client, monkeypatch, sign_in):
     from fastapi.testclient import TestClient
 
     from app.main import app
@@ -37,7 +40,9 @@ def test_unexpected_errors_hide_details(client, monkeypatch):
         raise RuntimeError("secret internal detail")
 
     monkeypatch.setattr(helpdesk, "answer_question", boom)
-    r = TestClient(app, raise_server_exceptions=False).post("/api/v1/query", json={"question": "fees"})
+    c = TestClient(app, raise_server_exceptions=False, base_url="https://testserver", headers={"X-Requested-With": "x"})
+    sign_in(c, ["faculty"])
+    r = c.post("/api/v1/query", json={"question": "fees"})
     assert r.status_code == 500
     assert r.json() == {"error": {"code": "internal_error", "message": "Something went wrong. Please try again."}}
 

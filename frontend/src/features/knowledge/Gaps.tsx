@@ -95,8 +95,8 @@ function AnswerForm({
       <div className="field">
         <label htmlFor={`gw-${gap.key}`}>Who gets answers from it</label>
         <select id={`gw-${gap.key}`} value={audience} onChange={(e) => setAudience(e.target.value)}>
-          <option value="public">Anyone (public help desk too)</option>
-          <option value="everyone">Signed-in members only</option>
+          <option value="public">Everyone signed in, including admission applicants</option>
+          <option value="everyone">Students, parents and staff only</option>
         </select>
       </div>
       <div>

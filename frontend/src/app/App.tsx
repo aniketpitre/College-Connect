@@ -39,7 +39,6 @@ import NoticeDetailPage from "../features/notices/NoticeDetailPage";
 import NoticesPage from "../features/notices/NoticesPage";
 import MyFeesPage from "../features/portal/MyFeesPage";
 import ProfilePage from "../features/profile/ProfilePage";
-import HelpDesk from "../features/helpdesk/HelpDesk";
 import InstitutionSetupPage from "../features/setup/InstitutionSetupPage";
 import ImportPage from "../features/students/ImportPage";
 import PromotePage from "../features/students/PromotePage";
@@ -52,6 +51,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import PortalHome from "./pages/PortalHome";
+import HomePage from "./pages/HomePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import SetupPage from "./pages/SetupPage";
 import TwoStepPage from "./pages/TwoStepPage";
@@ -63,7 +63,7 @@ import RequireAuth from "./RequireAuth";
 function HomeOrLegacyRedirect() {
   const { hash } = useLocation();
   if (hash.startsWith("#/admin")) return <Navigate to="/app/analytics" replace />;
-  return <HelpDesk />;
+  return <HomePage />;
 }
 
 export default function App() {

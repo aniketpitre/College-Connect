@@ -30,8 +30,11 @@ def _ask(c, question, language="en", **kw):
     return r.json()
 
 
-def _public(c, question):
-    return c.post(f"{API}/query", json={"question": question, "language": "en"}).json()
+def _public(_c, question):
+    """What applicants (and anything marked public) can be answered from: the public-only filter."""
+    from app.rag.pipeline import answer_question
+
+    return answer_question(question, "en", None, store.public_only())
 
 
 def _titles(result):

@@ -13,9 +13,9 @@ def test_admin_stats_requires_the_analytics_permission(client, sign_in):
 
 @requires_mongo
 def test_admin_stats_aggregates_questions(client, sign_in):
+    sign_in(client, ["office"])
     for q, lang in [("What's the hostel fee?", "en"), ("hostel fee", "hi"), ("weather on mars", "en")]:
         client.post("/api/query", json={"question": q, "language": lang})
-    sign_in(client, ["office"])
     stats = client.get("/api/v1/admin/stats?days=7").json()
     assert stats["analytics_enabled"] is True
     assert stats["total_queries"] == 3

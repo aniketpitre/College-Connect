@@ -19,7 +19,7 @@ export interface Notice {
   publish_at: string;
   expires_on: string | null;
   pinned: boolean;
-  /** Also answered from on the public help desk. */
+  /** Also answered from for admission applicants (the help desk needs a sign-in). */
   public: boolean;
   state: "published" | "scheduled" | "expired" | "withdrawn";
   has_attachment: boolean;

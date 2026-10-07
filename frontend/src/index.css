@@ -157,3 +157,31 @@ h1 {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* The EN / हि / मर switch (home, sign-in, portal pages). */
+.lang-toggle {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+.lang-toggle button {
+  background: transparent;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-weight: 600;
+}
+.lang-toggle button.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+@media (max-width: 480px) {
+  .lang-toggle button {
+    padding: 6px 9px;
+  }
+}

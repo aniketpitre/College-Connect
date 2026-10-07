@@ -100,7 +100,7 @@ function Manage({
       <h2 className="card-title">Manage (staff)</h2>
       <p className="muted small">
         Audience: {audience} · <StatusBadge tone={state === "published" ? "success" : "neutral"}>{state}</StatusBadge>
-        {isPublic && " · also on the public help desk"}
+        {isPublic && " · also answered for admission applicants"}
       </p>
       {machine && <p className="small">The Hindi/Marathi version was translated automatically: read it in हिंदी / मराठी above and correct it if needed.</p>}
       {(update.error || email.error) && <p className="form-error">{(update.error ?? email.error)?.message}</p>}

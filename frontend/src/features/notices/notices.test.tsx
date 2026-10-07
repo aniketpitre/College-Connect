@@ -96,9 +96,9 @@ describe("notices", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Translate from English" }));
     await waitFor(() => expect((within(dialog).getByLabelText("Title in Marathi") as HTMLInputElement).value).toBe("सुट्टी"));
     fireEvent.change(within(dialog).getByLabelText("Audience"), { target: { value: "everyone" } });
-    fireEvent.click(within(dialog).getByLabelText(/public help desk/));
+    fireEvent.click(within(dialog).getByLabelText(/admission applicants/));
     fireEvent.click(within(dialog).getByRole("button", { name: "Publish" }));
-    expect(await screen.findByText(/also on the public help desk/)).toBeTruthy();
+    expect(await screen.findByText(/also answered for admission applicants/)).toBeTruthy();
     expect(calls.find((c) => c.method === "POST" && c.path === "/notices")?.body).toMatchObject({
       hi: { title: "छुट्टी", body: "सोमवार को बंद" },
       mr: { title: "सुट्टी", body: "सोमवारी बंद" },

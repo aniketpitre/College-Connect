@@ -129,13 +129,15 @@ def test_ai_finds_deadlines_in_three_languages(client, sign_in, fees, db, monkey
 def test_unanswered_questions_become_faqs(client, sign_in, fees, db):  # noqa: F811
     office = new_client(client)
     sign_in(office, ["office"])
+    student = new_client(client)
+    sign_in_as_student(student, db, "2026BCA001")
     for q in (
         "Is there a canteen menu?",
         "is there a CANTEEN menu",
         "Is there a canteen menu ?!",
         "Where do I park my scooter?",
     ):
-        assert client.post(f"{API}/query", json={"question": q}).json()["grounded"] is False
+        assert student.post(f"{API}/assistant/ask", json={"question": q}).json()["grounded"] is False
 
     gaps = office.get(f"{API}/kb/gaps").json()
     assert [(g["key"], g["count"]) for g in gaps] == [("is there a canteen menu", 3), ("where do i park my scooter", 1)]
@@ -152,12 +154,10 @@ def test_unanswered_questions_become_faqs(client, sign_in, fees, db):  # noqa: F
         },
     ).json()
     assert faq["title"] == "FAQ: Is there a canteen menu?" and faq["questions_closed"] == 3
-    answer = client.post(f"{API}/query", json={"question": "Is there a canteen menu?"}).json()
+    answer = student.post(f"{API}/assistant/ask", json={"question": "Is there a canteen menu?"}).json()
     assert answer["grounded"] and answer["sources"][0]["title"] == "FAQ: Is there a canteen menu?"
     assert office.post(f"{API}/kb/gaps/dismiss", json={"key": gaps[1]["key"]}).json() == {"questions_closed": 1}
     assert office.get(f"{API}/kb/gaps").json() == []
-    student = new_client(client)
-    sign_in_as_student(student, db, "2026BCA001")
     assert student.get(f"{API}/kb/gaps").status_code == 403
     assert (
         "help_desk" not in office.get(f"{API}/dashboard").json()

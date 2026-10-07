@@ -57,7 +57,7 @@ certificates, accounts) and adds three things they don't:
 | **Staff login** | Email + password. Accounts are created by the System Admin; no self sign-up. |
 | **Student login** | **PRN / enrolment number + password.** The office creates the account at admission with a one-time temporary password, printed on the admission slip or sent by SMS/email. The student must set their own password at first login. *(Default — see Decision D3.)* |
 | **Parent login** | Mobile number + OTP, or mobile number + password. A parent account is linked to one or more students by the office; one parent can see all their children. |
-| **Public (no login)** | The CollegeConnect AI help desk for general questions, and the **Verify** page for receipts/certificates. |
+| **Public (no login)** | The home page (sign-in panels for each kind of user, admission link, what CollegeConnect AI does) and the **Verify** page for receipts/certificates. CollegeConnect AI itself needs a sign-in (decision of October 2026). |
 | **Password rules** | At least 10 characters; checked against a list of common passwords; no forced periodic expiry (per current NIST guidance). |
 | **Two-step verification** | Required for any role that can touch money, marks or user accounts (System Admin, Principal, Accounts, Exam Cell). Email or authenticator-app code. Optional for everyone else. |
 | **Forgot password** | Student/parent: OTP to registered mobile or email. Staff: reset link to registered email. If neither is on file, the office resets it in person after checking ID. |
@@ -87,7 +87,7 @@ Hostel Warden); their dashboard combines them.
 | R12 | **Placement Officer** | T&P officer | Drives, eligibility, registrations, offers |
 | R13 | **Student** | Enrolled students | **Only their own** data |
 | R14 | **Parent / Guardian** | Parent of an enrolled student | Their linked children's data (subject to DPDP rules, §4.2) |
-| R15 | **Public** | Anyone | AI help desk, published notices, Verify page |
+| R15 | **Public** | Anyone | Home page, admission application, Verify page (the AI help desk needs a sign-in) |
 
 ### 2.3 What each login can do
 
@@ -255,8 +255,7 @@ Their data feeds the student portal and the AI help desk ("Is my library book ov
 
 #### R15 — Public (no login)
 
-- **Ask CollegeConnect** about admissions, fees, rules, notices (already built).
-- **Notice board**: public notices only.
+- **Home page**: sign-in panels for students, parents and staff, the admission link, and what CollegeConnect AI does. Asking CollegeConnect needs a sign-in (October 2026).
 - **Verify a document:** scan the QR on a receipt or certificate → see "Genuine: Receipt R/2026-27/001234, ₹25,000, 12 Aug 2026, issued to A•••• P•••• (PRN ••••5678)" or "Not found / cancelled". Shows only masked details.
 - **Apply for admission** (Phase 3).
 
@@ -339,8 +338,8 @@ See §2.4 R14.
 - Channels: in-app (P1), email (P1), SMS and WhatsApp (P3).
 - Read receipts for important notices.
 
-### 3.11 CollegeConnect AI — public help desk exists today; extended in P5
-- **Public help desk** (built): cited answers from official documents in 3 languages.
+### 3.11 CollegeConnect AI — for signed-in people only (since October 2026)
+- **Help desk** (built): cited answers from official documents in 3 languages, in the Ask panel of every portal. It was public until October 2026; the home page now shows sign-in panels instead, and asking needs a sign-in (applicants get the documents marked for them).
 - **Ask my record** (P5): when signed in, answers use the student's own data plus the documents, and cite both.
 - **Deadline radar** (P5): extracts dates from notices and turns them into per-student reminders.
 - **Knowledge gaps** (built as a separate admin page; moved into the ERP dashboards in P5): unanswered questions shown to the office.

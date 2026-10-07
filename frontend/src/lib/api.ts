@@ -1,5 +1,4 @@
 import { childId } from "./child";
-import type { Category, Language, QueryResponse } from "./types";
 
 // Same origin in production (Vercel) and in development (Vite proxies /api to :8000).
 const API_BASE: string = import.meta.env.VITE_API_BASE_URL ?? "";
@@ -40,8 +39,4 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     throw new ApiError(res.status, err?.code ?? "error", err?.message ?? `Request failed (${res.status})`, err?.field);
   }
   return res.status === 204 ? (undefined as T) : res.json();
-}
-
-export function askQuestion(question: string, language: Language, category?: Category): Promise<QueryResponse> {
-  return apiFetch<QueryResponse>("/query", { method: "POST", body: JSON.stringify({ question, language, category }) });
 }
