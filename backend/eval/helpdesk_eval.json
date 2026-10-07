@@ -1,0 +1,376 @@
+{
+ "about": "CollegeConnect AI evaluation set (plan 5.9): questions over the bundled documents in English, Hindi and Marathi. 'document' is the source that must be cited (null: the help desk must say it has no source); 'facts' are numbers the answer must contain (commas ignored).",
+ "cases": [
+  {
+   "id": "en-01",
+   "language": "en",
+   "question": "What is the last date to apply for admission?",
+   "document": "Admissions_Circular_2026.pdf",
+   "facts": [
+    "15"
+   ]
+  },
+  {
+   "id": "en-02",
+   "language": "en",
+   "question": "Which documents do I need for admission?",
+   "document": "Admissions_Circular_2026.pdf",
+   "facts": []
+  },
+  {
+   "id": "en-03",
+   "language": "en",
+   "question": "When are the odd semester exams?",
+   "document": "Exam_Controller_Notice_Sept2026.pdf",
+   "facts": [
+    "25",
+    "12"
+   ]
+  },
+  {
+   "id": "en-04",
+   "language": "en",
+   "question": "When will the exam timetable be released?",
+   "document": "Exam_Controller_Notice_Sept2026.pdf",
+   "facts": [
+    "1"
+   ]
+  },
+  {
+   "id": "en-05",
+   "language": "en",
+   "question": "How do I apply for revaluation and what does it cost?",
+   "document": "Exam_Controller_Notice_Sept2026.pdf",
+   "facts": [
+    "300"
+   ]
+  },
+  {
+   "id": "en-06",
+   "language": "en",
+   "question": "By when must odd semester tuition fees be paid?",
+   "document": "Fees_Accounts_Notice_2026.pdf",
+   "facts": [
+    "10"
+   ]
+  },
+  {
+   "id": "en-07",
+   "language": "en",
+   "question": "What is the late fee for paying fees after the deadline?",
+   "document": "Fees_Accounts_Notice_2026.pdf",
+   "facts": [
+    "500"
+   ]
+  },
+  {
+   "id": "en-08",
+   "language": "en",
+   "question": "What scholarships does the college offer?",
+   "document": "Fees_Accounts_Notice_2026.pdf",
+   "facts": []
+  },
+  {
+   "id": "en-09",
+   "language": "en",
+   "question": "How much is the hostel fee for a double-sharing room?",
+   "document": "Hostel_Facilities_Notice_2026.pdf",
+   "facts": [
+    "45000"
+   ]
+  },
+  {
+   "id": "en-10",
+   "language": "en",
+   "question": "How much is a single room in the hostel?",
+   "document": "Hostel_Facilities_Notice_2026.pdf",
+   "facts": [
+    "60000"
+   ]
+  },
+  {
+   "id": "en-11",
+   "language": "en",
+   "question": "Is the college closed on 2nd October?",
+   "document": "College_Notices_Sept2026.pdf",
+   "facts": [
+    "2"
+   ]
+  },
+  {
+   "id": "en-12",
+   "language": "en",
+   "question": "When is the next campus placement drive?",
+   "document": "Placement_Cell_Bulletin_Sept2026.pdf",
+   "facts": [
+    "20"
+   ]
+  },
+  {
+   "id": "en-13",
+   "language": "en",
+   "question": "By when must I register for the placement drive?",
+   "document": "Placement_Cell_Bulletin_Sept2026.pdf",
+   "facts": [
+    "10"
+   ]
+  },
+  {
+   "id": "en-none-1",
+   "language": "en",
+   "question": "What is the weather on Mars?",
+   "document": null,
+   "facts": []
+  },
+  {
+   "id": "en-none-2",
+   "language": "en",
+   "question": "Who won the cricket world cup in 1983?",
+   "document": null,
+   "facts": []
+  },
+  {
+   "id": "en-none-3",
+   "language": "en",
+   "question": "What is the canteen's lunch menu today?",
+   "document": null,
+   "facts": []
+  },
+  {
+   "id": "hi-01",
+   "language": "hi",
+   "question": "प्रवेश के लिए आवेदन की अंतिम तिथि क्या है?",
+   "document": "Admissions_Circular_2026.pdf",
+   "facts": [
+    "15"
+   ]
+  },
+  {
+   "id": "hi-02",
+   "language": "hi",
+   "question": "प्रवेश के लिए कौन से दस्तावेज़ चाहिए?",
+   "document": "Admissions_Circular_2026.pdf",
+   "facts": []
+  },
+  {
+   "id": "hi-03",
+   "language": "hi",
+   "question": "विषम सेमेस्टर की परीक्षाएँ कब हैं?",
+   "document": "Exam_Controller_Notice_Sept2026.pdf",
+   "facts": [
+    "25"
+   ]
+  },
+  {
+   "id": "hi-04",
+   "language": "hi",
+   "question": "पुनर्मूल्यांकन का शुल्क कितना है?",
+   "document": "Exam_Controller_Notice_Sept2026.pdf",
+   "facts": [
+    "300"
+   ]
+  },
+  {
+   "id": "hi-05",
+   "language": "hi",
+   "question": "विषम सेमेस्टर की ट्यूशन फीस कब तक भरनी है?",
+   "document": "Fees_Accounts_Notice_2026.pdf",
+   "facts": [
+    "10"
+   ]
+  },
+  {
+   "id": "hi-06",
+   "language": "hi",
+   "question": "देर से फीस भरने पर कितना विलंब शुल्क लगता है?",
+   "document": "Fees_Accounts_Notice_2026.pdf",
+   "facts": [
+    "500"
+   ]
+  },
+  {
+   "id": "hi-07",
+   "language": "hi",
+   "question": "कॉलेज कौन सी छात्रवृत्तियाँ देता है?",
+   "document": "Fees_Accounts_Notice_2026.pdf",
+   "facts": []
+  },
+  {
+   "id": "hi-08",
+   "language": "hi",
+   "question": "छात्रावास का डबल शेयरिंग शुल्क कितना है?",
+   "document": "Hostel_Facilities_Notice_2026.pdf",
+   "facts": [
+    "45000"
+   ]
+  },
+  {
+   "id": "hi-09",
+   "language": "hi",
+   "question": "छात्रावास में सिंगल रूम कितने का है?",
+   "document": "Hostel_Facilities_Notice_2026.pdf",
+   "facts": [
+    "60000"
+   ]
+  },
+  {
+   "id": "hi-10",
+   "language": "hi",
+   "question": "क्या 2 अक्टूबर को कॉलेज बंद रहेगा?",
+   "document": "College_Notices_Sept2026.pdf",
+   "facts": [
+    "2"
+   ]
+  },
+  {
+   "id": "hi-11",
+   "language": "hi",
+   "question": "अगला कैंपस प्लेसमेंट ड्राइव कब है?",
+   "document": "Placement_Cell_Bulletin_Sept2026.pdf",
+   "facts": [
+    "20"
+   ]
+  },
+  {
+   "id": "hi-12",
+   "language": "hi",
+   "question": "प्लेसमेंट के लिए पंजीकरण की अंतिम तिथि क्या है?",
+   "document": "Placement_Cell_Bulletin_Sept2026.pdf",
+   "facts": [
+    "10"
+   ]
+  },
+  {
+   "id": "hi-none-1",
+   "language": "hi",
+   "question": "मंगल ग्रह पर मौसम कैसा है?",
+   "document": null,
+   "facts": []
+  },
+  {
+   "id": "hi-none-2",
+   "language": "hi",
+   "question": "आज कैंटीन में दोपहर का खाना क्या है?",
+   "document": null,
+   "facts": []
+  },
+  {
+   "id": "mr-01",
+   "language": "mr",
+   "question": "प्रवेश अर्जाची शेवटची तारीख कोणती आहे?",
+   "document": "Admissions_Circular_2026.pdf",
+   "facts": [
+    "15"
+   ]
+  },
+  {
+   "id": "mr-02",
+   "language": "mr",
+   "question": "प्रवेशासाठी कोणती कागदपत्रे लागतात?",
+   "document": "Admissions_Circular_2026.pdf",
+   "facts": []
+  },
+  {
+   "id": "mr-03",
+   "language": "mr",
+   "question": "विषम सत्राच्या परीक्षा कधी आहेत?",
+   "document": "Exam_Controller_Notice_Sept2026.pdf",
+   "facts": [
+    "25"
+   ]
+  },
+  {
+   "id": "mr-04",
+   "language": "mr",
+   "question": "पुनर्मूल्यांकनासाठी किती शुल्क आहे?",
+   "document": "Exam_Controller_Notice_Sept2026.pdf",
+   "facts": [
+    "300"
+   ]
+  },
+  {
+   "id": "mr-05",
+   "language": "mr",
+   "question": "विषम सत्राचे शिक्षण शुल्क कधीपर्यंत भरायचे आहे?",
+   "document": "Fees_Accounts_Notice_2026.pdf",
+   "facts": [
+    "10"
+   ]
+  },
+  {
+   "id": "mr-06",
+   "language": "mr",
+   "question": "उशिरा शुल्क भरल्यास किती विलंब शुल्क लागते?",
+   "document": "Fees_Accounts_Notice_2026.pdf",
+   "facts": [
+    "500"
+   ]
+  },
+  {
+   "id": "mr-07",
+   "language": "mr",
+   "question": "महाविद्यालय कोणत्या शिष्यवृत्ती देते?",
+   "document": "Fees_Accounts_Notice_2026.pdf",
+   "facts": []
+  },
+  {
+   "id": "mr-08",
+   "language": "mr",
+   "question": "वसतिगृहाचे दोन जणांच्या खोलीचे शुल्क किती आहे?",
+   "document": "Hostel_Facilities_Notice_2026.pdf",
+   "facts": [
+    "45000"
+   ]
+  },
+  {
+   "id": "mr-09",
+   "language": "mr",
+   "question": "वसतिगृहात एकट्याच्या खोलीचे शुल्क किती आहे?",
+   "document": "Hostel_Facilities_Notice_2026.pdf",
+   "facts": [
+    "60000"
+   ]
+  },
+  {
+   "id": "mr-10",
+   "language": "mr",
+   "question": "2 ऑक्टोबरला महाविद्यालय बंद आहे का?",
+   "document": "College_Notices_Sept2026.pdf",
+   "facts": [
+    "2"
+   ]
+  },
+  {
+   "id": "mr-11",
+   "language": "mr",
+   "question": "पुढील कॅम्पस प्लेसमेंट ड्राइव्ह कधी आहे?",
+   "document": "Placement_Cell_Bulletin_Sept2026.pdf",
+   "facts": [
+    "20"
+   ]
+  },
+  {
+   "id": "mr-12",
+   "language": "mr",
+   "question": "प्लेसमेंटसाठी नोंदणीची शेवटची तारीख कोणती?",
+   "document": "Placement_Cell_Bulletin_Sept2026.pdf",
+   "facts": [
+    "10"
+   ]
+  },
+  {
+   "id": "mr-none-1",
+   "language": "mr",
+   "question": "मंगळावर हवामान कसे आहे?",
+   "document": null,
+   "facts": []
+  },
+  {
+   "id": "mr-none-2",
+   "language": "mr",
+   "question": "आज कॅन्टीनमध्ये दुपारचे जेवण काय आहे?",
+   "document": null,
+   "facts": []
+  }
+ ]
+}
