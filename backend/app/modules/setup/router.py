@@ -34,6 +34,12 @@ def overview(ctx: AuthContext = READ) -> dict[str, Any]:
     return service.overview()
 
 
+@router.get("/public")
+def public_profile() -> dict[str, Any]:
+    """No sign-in: the college's name, address and active programmes, for the home page."""
+    return service.public_profile()
+
+
 @router.put("/institution")
 def save_institution(body: InstitutionSettings, request: Request, ctx: AuthContext = MANAGE) -> dict[str, Any]:
     return service.save_institution(ctx, body, client_ip(request))
