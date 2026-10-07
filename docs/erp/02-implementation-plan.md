@@ -933,6 +933,12 @@ The home page was then redesigned as the college's own site: an animated hero wi
 name, about, programmes, campus life, admissions, the login cards and a small "Ask CollegeConnect
 AI" box that leads to the login. Its only data is `GET /setup/public` (no sign-in: the college's
 name, address, university and active programmes; nothing about people or money).
+**Free AI provider and a friendlier assistant (October 2026).** Besides Claude, the AI can be Google
+Gemini on its free tier (`RAG_GEMINI_API_KEY`; Claude wins when both keys are set). The assistant
+talks in simple, warm language, explains terms, replies to greetings and thanks (fixed replies in
+en/hi/mr, no AI call), and politely steers unrelated questions back to college topics with example
+questions. Greetings and unrelated questions are not logged as knowledge gaps. Without any key, the
+"not found" reply is friendlier and lists example questions.
 
 ### 9.4 Status against the Phase 5 acceptance criteria
 - Marathi "मला अजून किती फी भरायची आहे?" → the exact ledger balance, citing the fee account and

@@ -42,7 +42,7 @@ def test_unrelated_or_wrong_office_is_not_grounded(question, category):
 
 def test_not_found_message_is_in_the_requested_language():
     result = answer_question("weather on mars", "mr", None)
-    assert "दस्तऐवज" in result["answer"]
+    assert "कागदपत्रांत सापडले नाही" in result["answer"]
 
 
 def test_tokenizer_stems_plurals_and_drops_filler_words():

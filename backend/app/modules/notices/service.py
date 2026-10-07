@@ -16,7 +16,6 @@ from datetime import UTC, date, datetime, time
 from typing import Any
 from zoneinfo import ZoneInfo
 
-import anthropic
 from bson import ObjectId
 from pymongo import ASCENDING, DESCENDING, IndexModel
 from pymongo.errors import DuplicateKeyError
@@ -239,7 +238,7 @@ def translate(title: str, body: str) -> dict[str, dict[str, str]]:
         )
     try:
         t = generator.translate_notice(title.strip(), body.strip())
-    except anthropic.APIError as e:
+    except generator.LLM_ERRORS as e:
         log.warning("Notice translation failed: %s", type(e).__name__)
         raise AppError(502, "The translation service didn't answer. Try again in a minute.", "unavailable") from e
     if t is None:

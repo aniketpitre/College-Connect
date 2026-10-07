@@ -78,7 +78,7 @@ def run(cases: list[dict[str, Any]]) -> dict[str, Any]:
     times = [r["seconds"] for r in scored]
     summary: dict[str, Any] = {
         "mode": {
-            "generation": generator.CLAUDE_MODEL if generator.llm_available() else "extractive (no AI key)",
+            "generation": generator.model_name() if generator.llm_available() else "extractive (no AI key)",
             "retrieval": "vector" if embeddings_available() and file_index().has_embeddings else "keywords",
         },
         "cases": len(rows),

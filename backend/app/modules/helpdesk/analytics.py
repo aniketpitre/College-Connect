@@ -31,8 +31,8 @@ def log_query(
     channel: str = "public",
 ) -> None:
     """Best effort: a logging failure must never affect the student's answer."""
-    if not db_available():
-        return
+    if not db_available() or result.get("chat"):
+        return  # greetings and unrelated questions are not questions the documents should answer
     try:
         _queries().insert_one(
             {
