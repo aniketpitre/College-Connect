@@ -929,6 +929,10 @@ CollegeConnect AI card that asks people to sign in first), in English, Hindi and
 (and the legacy `/api/query`) now needs a sign-in and answers each person from what they may see,
 like `/assistant/ask`; documents and notices marked "public" are now "everyone, including admission
 applicants". The evaluation script keeps the public-only filter to score the bundled documents.
+The home page was then redesigned as the college's own site: an animated hero with the college
+name, about, programmes, campus life, admissions, the login cards and a small "Ask CollegeConnect
+AI" box that leads to the login. Its only data is `GET /setup/public` (no sign-in: the college's
+name, address, university and active programmes; nothing about people or money).
 
 ### 9.4 Status against the Phase 5 acceptance criteria
 - Marathi "मला अजून किती फी भरायची आहे?" → the exact ledger balance, citing the fee account and

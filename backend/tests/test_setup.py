@@ -139,3 +139,40 @@ def test_staff_can_read_but_only_admin_can_change(client, sign_in):
     student = TestClient(client.app, base_url="https://testserver", headers={"X-Requested-With": "x"})
     sign_in(student, ["student"], kind="student", prn="2026BCA050")
     assert student.get(API).status_code == 403
+
+
+def test_public_profile_needs_no_sign_in_and_shows_nothing_private(client, sign_in, db):
+    _admin(client, sign_in)
+    _bca(client)
+    client.put(
+        f"{API}/institution",
+        json={"name": "Shivaji College", "short_name": "SC", "university": "Savitribai Phule Pune University"},
+    )
+    client.post("/api/v1/auth/logout")
+    fresh = TestClient(client.app)
+    r = fresh.get(f"{API}/public")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["name"] == "Shivaji College" and body["university"].startswith("Savitribai")
+    assert body["programmes"] == [
+        {
+            "code": "BCA",
+            "name": "Bachelor of Computer Applications",
+            "level": "UG",
+            "duration_years": 3,
+            "department": "Computer Science",
+        }
+    ]
+    assert body["departments"] == 1
+    assert set(body) == {
+        "name",
+        "short_name",
+        "address",
+        "phone",
+        "email",
+        "website",
+        "university",
+        "programmes",
+        "departments",
+    }
+    assert fresh.get(API).status_code == 401

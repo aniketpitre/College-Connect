@@ -251,6 +251,25 @@ def institution() -> dict[str, Any]:
     return {name: doc.get(name, "" if f.is_required() else f.default) for name, f in fields.items()}
 
 
+def public_profile() -> dict[str, Any]:
+    """What the public home page may show: no people, no money, nothing private."""
+    db = get_db()
+    inst = institution()
+    depts = {d["_id"]: d["name"] for d in db.departments.find({"status": "active"}, {"name": 1})}
+    programmes = [
+        {
+            "code": p["code"],
+            "name": p["name"],
+            "level": p.get("level", "UG"),
+            "duration_years": p.get("duration_years"),
+            "department": depts.get(p.get("department_id"), ""),
+        }
+        for p in db.programmes.find({"status": "active"}).sort("code", ASCENDING)
+    ]
+    keep = ("name", "short_name", "address", "phone", "email", "website", "university")
+    return {**{k: inst.get(k) or "" for k in keep}, "programmes": programmes, "departments": len(depts)}
+
+
 def save_institution(ctx: AuthContext, body: InstitutionSettings, ip: str) -> dict[str, Any]:
     before = institution()
     data = body.model_dump()
