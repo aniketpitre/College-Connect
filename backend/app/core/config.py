@@ -56,6 +56,9 @@ class Settings:
     # WhatsApp through the Meta Cloud API (approved templates, WHATSAPP_TEMPLATE_<NAME>).
     whatsapp_token: str | None
     whatsapp_phone_id: str | None
+    # Admin, Principal, Accounts and Exam Cell must use 2-step verification. MFA_ENFORCED=false
+    # lifts that (for a public demo only); people who turned 2-step on themselves still use it.
+    mfa_enforced: bool
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -78,6 +81,7 @@ class Settings:
             sms_api_key=os.getenv("SMS_API_KEY") or None,
             whatsapp_token=os.getenv("WHATSAPP_TOKEN") or None,
             whatsapp_phone_id=os.getenv("WHATSAPP_PHONE_ID") or None,
+            mfa_enforced=_flag("MFA_ENFORCED", True),
         )
 
 

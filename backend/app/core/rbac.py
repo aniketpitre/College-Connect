@@ -255,4 +255,6 @@ def permissions_for(roles: list[str]) -> frozenset[P]:
 
 
 def mfa_required(roles: list[str]) -> bool:
-    return any(r in MFA_REQUIRED_ROLES for r in roles)
+    from app.core.config import settings
+
+    return settings.mfa_enforced and any(r in MFA_REQUIRED_ROLES for r in roles)
