@@ -22,7 +22,7 @@ Build order: **core ERP first (Phases 0–2), then other features incl. the uniq
 - Auth and roles: `app/core/auth.py` (cookie sessions, `require(P.X)` dependency), `app/core/rbac.py` (roles → permissions; add new permissions there). Every change of record calls `app/core/audit.record`.
 - API errors always look like `{"error": {"code", "message", "field?"}}`: raise `AppError` from services.
 - `backend/knowledge/<category>/`: the bundled help-desk documents; rebuild `app/data/index.json` with `python -m scripts.ingest` (or `--no-embed`). It is copied into MongoDB on the first change from "Help desk documents" (`/app/knowledge`); after that the database is the knowledge base. Search takes an `allowed` filter (`rag/store.py`): `assistant/access.chunk_filter(ctx)` for signed-in people (applicants: `public_only()`). Notice translations: `rag/generator.translate_notice`.
-- `vercel.json`: frontend and backend deployed as two services on one domain (`/api/*` → backend); the web service falls back to `index.html` so deep links work. In dev, Vite proxies `/api` to `localhost:8000`.
+- `vercel.json`: frontend and backend deployed as two services on one domain (`/api/*` → backend); the web service falls back to `index.html` so deep links work. In dev, Vite proxies `/api` to `localhost:8000`. The functions run in Vercel's Mumbai region (`bom1`, project setting "Function Region"), next to the Atlas cluster: from `iad1` every database round trip took ~185 ms, from `bom1` ~1 ms (`/api/v1/health` reports `db_ms`). Keep them together if either moves.
 
 ## Commands
 - Backend: `cd backend && pip install -r requirements-dev.txt && uvicorn app.main:app --reload --port 8000`
