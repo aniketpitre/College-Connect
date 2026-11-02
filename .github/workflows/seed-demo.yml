@@ -1,0 +1,58 @@
+# Fills a NEW, empty database with the demo college (staff of every role, 60 students, fees,
+# attendance, marks, results, certificates, admissions, library, hostel, placement, NAAC…) for a
+# presentation. Run it from GitHub → Actions → "Load demo data" → Run workflow.
+#
+# Needs the repository secret MONGODB_URI (Settings → Secrets and variables → Actions). The real
+# database ("collegeconnect") is refused; the demo goes into its own database, so switching the
+# site to it and back is just the MONGODB_DB setting in Vercel.
+name: Load demo data
+
+on:
+  workflow_dispatch:
+    inputs:
+      database:
+        description: "Database to fill (must be new or empty; never the real one)"
+        required: true
+        default: collegeconnect_demo
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    name: Seed the demo database
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - name: Install
+        run: pip install -r backend/requirements-dev.txt
+      - name: Check the secret
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          if [ -z "$MONGODB_URI" ]; then
+            echo "::error::Add the MONGODB_URI repository secret first (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+      - name: Load the demo college
+        working-directory: backend
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB: ${{ inputs.database }}
+        run: |
+          python -m scripts.seed_demo --erp | tee seed.log
+          {
+            echo "## Demo data loaded into \`$MONGODB_DB\`"
+            echo
+            echo "In Vercel, set \`MONGODB_DB\` = \`$MONGODB_DB\` (Production) and redeploy. Delete it again to go back to the real data."
+            echo
+            echo '```'
+            grep -A40 "Demo sign-ins" seed.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -131,6 +131,7 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
     admin, office, accounts, principal = api["system_admin"], api["office"], api["accounts"], api["principal"]
 
     admin.call("POST", "/setup/starter-data")
+    _seed_college_profile(admin)
     setup = admin.call("GET", "/setup")
     bca = next(p for p in setup["programmes"] if p["code"] == "BCA")
     year = next(y for y in setup["academic_years"] if y["is_current"])
@@ -302,6 +303,36 @@ def seed(db: Database[dict[str, Any]], rng: random.Random) -> dict[str, int]:
         **mentoring,
         **scholarships,
     }
+
+
+def _seed_college_profile(admin: "_Api") -> None:
+    """A made-up college name, address and more programmes, so the public home page looks real."""
+    admin.call(
+        "PUT",
+        "/setup/institution",
+        json={
+            "name": "Sahyadri College of Arts, Commerce and Science",
+            "short_name": "Sahyadri College",
+            "address": "Karve Road, Pune, Maharashtra 411004",
+            "phone": "020 2545 0000",
+            "email": "office@demo.college",
+            "website": "",
+            "university": "Savitribai Phule Pune University",
+            "college_code": "DEMO-001",
+        },
+    )
+    for dept_code, dept_name, programmes in (
+        ("COM", "Commerce", [("BCOM", "Bachelor of Commerce", 3), ("BBA", "Bachelor of Business Administration", 3)]),
+        ("SCI", "Science", [("BSC", "B.Sc. Computer Science", 3)]),
+        ("ART", "Arts", [("BA", "Bachelor of Arts (English, Marathi, Economics)", 3)]),
+    ):
+        dept = admin.call("POST", "/setup/departments", json={"code": dept_code, "name": dept_name})
+        for code, name, years in programmes:
+            admin.call(
+                "POST",
+                "/setup/programmes",
+                json={"code": code, "name": name, "department_id": dept["id"], "duration_years": years},
+            )
 
 
 def _seed_academics(
