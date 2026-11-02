@@ -148,3 +148,15 @@ def test_admin_can_reset_someones_2_step(client, make_user, sign_in, db):
     sign_in(office, ["office"])
     denied = office.post(f"/api/v1/users/{target['_id']}/reset-2-step", json={"reason": "please reset"})
     assert denied.status_code == 403
+
+
+def test_a_demo_can_lift_the_required_2_step(client, make_user, monkeypatch):
+    from dataclasses import replace
+
+    from app.core import config
+
+    monkeypatch.setattr(config, "settings", replace(config.settings, mfa_enforced=False))
+    make_user(email="admin@college.test", roles=["system_admin"])
+    r = login(client, "admin@college.test")
+    assert r.json()["session_state"] == "active"
+    assert client.get("/api/v1/users").status_code == 200
