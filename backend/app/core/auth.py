@@ -111,10 +111,21 @@ def _load(request: Request) -> AuthContext | None:
         return None
     db = get_db()
     now = datetime.now(UTC)
-    session = db.sessions.find_one({"_id": token_hash(token), "expires_at": {"$gt": now}})
-    if not session:
+    # The session and its user in one round trip (this runs on every signed-in request).
+    rows = list(
+        db.sessions.aggregate(
+            [
+                {"$match": {"_id": token_hash(token), "expires_at": {"$gt": now}}},
+                {"$limit": 1},
+                {"$lookup": {"from": "users", "localField": "user_id", "foreignField": "_id", "as": "_user"}},
+            ]
+        )
+    )
+    if not rows:
         return None
-    user = db.users.find_one({"_id": session["user_id"]})
+    session = rows[0]
+    found = session.pop("_user")
+    user = found[0] if found else None
     if not user or user.get("status") == "disabled":
         db.sessions.delete_one({"_id": session["_id"]})
         return None
