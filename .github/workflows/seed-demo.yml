@@ -22,9 +22,17 @@ jobs:
   seed:
     name: Seed the demo database
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - name: Start a local MongoDB (the demo is built here, then copied to Atlas in bulk)
+        run: |
+          docker run -d --name mongo -p 27017:27017 mongo:7 --replSet rs0 --bind_ip_all
+          for i in $(seq 1 30); do
+            docker exec mongo mongosh --quiet --eval "db.adminCommand('ping').ok" && break
+            sleep 1
+          done
+          docker exec mongo mongosh --quiet --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]})"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -40,17 +48,27 @@ jobs:
             echo "::error::Add the MONGODB_URI repository secret first (Settings → Secrets and variables → Actions)."
             exit 1
           fi
-      - name: Load the demo college
+      - name: Build the demo college (locally)
         working-directory: backend
         env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_URI: mongodb://localhost:27017/?replicaSet=rs0&directConnection=true
           MONGODB_DB: ${{ inputs.database }}
         run: |
-          python -m scripts.seed_demo --erp | tee seed.log
+          set -o pipefail
+          python -m scripts.seed_demo --erp 2>&1 | grep -v "HTTP Request" | tee seed.log
+      - name: Copy it to Atlas
+        working-directory: backend
+        env:
+          TARGET_MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          DB: ${{ inputs.database }}
+        run: |
+          python -m scripts.copy_database --replace \
+            --source-uri "mongodb://localhost:27017/?replicaSet=rs0&directConnection=true" \
+            --source-db "$DB" --target-db "$DB"
           {
-            echo "## Demo data loaded into \`$MONGODB_DB\`"
+            echo "## Demo data loaded into \`$DB\`"
             echo
-            echo "In Vercel, set \`MONGODB_DB\` = \`$MONGODB_DB\` (Production) and redeploy. Delete it again to go back to the real data."
+            echo "In Vercel, set \`MONGODB_DB\` = \`$DB\` (Production) and redeploy. Delete it again to go back to the real data."
             echo
             echo '```'
             grep -A40 "Demo sign-ins" seed.log
